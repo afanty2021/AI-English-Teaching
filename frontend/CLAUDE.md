@@ -70,12 +70,17 @@ npm run preview
 
 ### API客户端
 
-**文件**: `src/api/auth.ts`
-
-核心方法：
+**认证API** (`src/api/auth.ts`):
 - `authApi.register()` - 用户注册
 - `authApi.login()` - 用户登录
 - `authApi.getCurrentUser()` - 获取当前用户
+
+**错题API** (`src/api/mistake.ts`):
+- `mistakeApi.getMyMistakes()` - 获取错题列表
+- `mistakeApi.getStatistics()` - 获取错题统计
+- `mistakeApi.analyzeMistake()` - AI分析错题
+- `mistakeApi.exportMistakes()` - 导出错题本（PDF/Markdown/Word）✨
+- `mistakeApi.exportSingleMistake()` - 导出单个错题 ✨
 
 ---
 
@@ -161,6 +166,12 @@ export default defineConfig({
 
 | 组件 | 路径 | 描述 |
 |------|------|------|
+| DashboardView | `src/views/student/DashboardView.vue` | 学生仪表板 |
+| LearningView | `src/views/student/LearningView.vue` | 课程学习 |
+| **MistakeBookView** | `src/views/student/MistakeBookView.vue` | **错题本（含PDF导出）** ✨ |
+| SpeakingView | `src/views/student/SpeakingView.vue` | 口语练习 |
+| ConversationView | `src/views/student/ConversationView.vue` | AI对话 |
+| ConversationHistoryView | `src/views/student/ConversationHistoryView.vue` | 对话历史 |
 | ProgressView | `src/views/student/ProgressView.vue` | 学习进度 |
 
 ### 通用页面
@@ -283,6 +294,14 @@ npm install
 ---
 
 ## 变更记录
+
+### 2026-02-03 19:00:00
+- 🔧 **修复**: MistakeBookView.vue 导入问题
+  - 移除重复的 Document 图标导入
+  - 添加 ElLoading 导入
+- 📝 **文档**: 更新错题导出功能说明
+  - API 层支持 PDF/Markdown/Word 三种格式导出
+  - UI 层完整实现批量导出和单个错题导出
 
 ### 2026-02-03 09:49:22
 - 创建前端模块文档

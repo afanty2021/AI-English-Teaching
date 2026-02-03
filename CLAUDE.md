@@ -1,12 +1,32 @@
 # AI 赋能英语教学系统
 
-> **最后更新**: 2026-02-03 09:49:22
+> **最后更新**: 2026-02-03 18:30:00
 > **文档版本**: v1.0
 > **项目状态**: 开发中 (MVP阶段)
 
 ---
 
 ## 变更记录
+
+### 2026-02-03 19:00:00
+- 🎨 **前端**: 错题本 PDF 导出功能完善
+  - 修复 MistakeBookView.vue 导入问题（ElLoading、重复图标）
+  - 前端 API 完整支持 PDF/Markdown/Word 导出
+  - 实现批量导出和单个错题导出 UI
+
+### 2026-02-03 18:30:00
+- ✨ **新增**: PDF 渲染服务 (`pdf_renderer_service.py`)
+  - 集成 markdown2 + weasyprint 实现 Markdown 到 PDF 转换
+  - 支持中文内容的跨平台字体检测
+  - 完整的 CSS Paged Media 样式支持（分页、页眉页脚、表格）
+- ✨ **新增**: 错题本 PDF 导出功能
+  - 支持单个错题和批量错题导出
+  - 从 Jinja2 模板生成结构化错题报告
+- ✅ **新增**: PDF 辅助工具 (`pdf_helpers.py`)
+  - 跨平台字体检测（macOS/Windows/Linux）
+  - CSS 字体族生成
+- 📊 **测试**: PDF 渲染服务测试覆盖率 88%
+- 🔧 **依赖**: 添加 markdown2、weasyprint 61.2、pydyf 0.8.0
 
 ### 2026-02-03 09:49:22
 - 初始化 AI 上下文文档体系
@@ -73,6 +93,7 @@ AI 赋能英语教学系统是一个基于"素养打底，考点融入"理念的
 | 后端 | FastAPI + SQLAlchemy + Alembic | 异步支持，ORM管理 |
 | 数据库 | PostgreSQL 15 + Redis 7 | 主数据库+缓存 |
 | 向量库 | Qdrant | 向量相似度搜索 |
+| PDF导出 | markdown2 + weasyprint | Markdown转PDF渲染 |
 | AI服务 | OpenAI GPT-4 / Anthropic Claude | 大语言模型 |
 | 部署 | Docker + Docker Compose | 容器化部署 |
 
@@ -247,6 +268,8 @@ mypy app
 - `app/services/knowledge_graph_service.py`: 知识图谱诊断与更新
 - `app/services/vector_service.py`: 向量搜索服务
 - `app/services/graph_rules.py`: 规则引擎（零成本更新）
+- `app/services/pdf_renderer_service.py`: PDF 渲染服务（markdown2 + weasyprint）
+- `app/services/mistake_export_service.py`: 错题本导出（Markdown/PDF/Word）
 - `app/core/security.py`: 认证与安全
 
 ### 成本优化提示
@@ -296,6 +319,23 @@ docker-compose ps
 确认 API 密钥已正确配置：
 ```bash
 echo $OPENAI_API_KEY
+```
+
+### PDF 导出功能问题
+
+确认 PDF 依赖已安装：
+```bash
+cd backend
+pip list | grep -E "markdown2|weasyprint|pydyf"
+```
+
+版本要求：
+- weasyprint: 61.2（必须精确版本）
+- pydyf: 0.8.0（必须精确版本）
+
+检查中文字体：
+```bash
+python -c "from app.utils.pdf_helpers import check_font_availability; print(check_font_availability())"
 ```
 
 ---

@@ -11,8 +11,8 @@ from passlib.context import CryptContext
 
 from app.core.config import settings
 
-# 密码哈希上下文 - 使用bcrypt算法
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# 密码哈希上下文 - 使用argon2算法（兼容Python 3.14）
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:

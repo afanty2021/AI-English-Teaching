@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import get_password_hash
 from app.db.session_manager import get_db as get_db_session
 from app.models import (
     Content,
@@ -39,6 +40,10 @@ async def create_test_users(db: AsyncSession) -> dict:
 
     users = {}
 
+    # 测试密码
+    test_password = "Test1234"
+    password_hash = get_password_hash(test_password)
+
     # 检查是否已有测试用户
     existing = await db.execute(select(User).where(User.username == "test_student"))
     if existing.scalar_one_or_none():
@@ -49,7 +54,7 @@ async def create_test_users(db: AsyncSession) -> dict:
     student_user = User(
         username="test_student",
         email="student@test.com",
-        password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYzW5qHlq4W",  # Test1234
+        password_hash=password_hash,
         full_name="测试学生",
         role=UserRole.STUDENT,
         is_active=True,
@@ -72,7 +77,7 @@ async def create_test_users(db: AsyncSession) -> dict:
     teacher_user = User(
         username="test_teacher",
         email="teacher@test.com",
-        password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYzW5qHlq4W",  # Test1234
+        password_hash=password_hash,
         full_name="测试教师",
         role=UserRole.TEACHER,
         is_active=True,

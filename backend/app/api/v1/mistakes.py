@@ -19,6 +19,34 @@ from app.services.mistake_export_service import get_mistake_export_service
 router = APIRouter()
 
 
+def get_current_student_id(current_user: User) -> str:
+    """
+    获取当前学生ID的辅助函数
+
+    Args:
+        current_user: 当前认证用户
+
+    Returns:
+        str: 学生ID
+
+    Raises:
+        HTTPException: 如果用户不是学生或学生档案不存在
+    """
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有学生可以执行此操作"
+        )
+
+    if not current_user.student_profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="学生档案不存在，请先完善个人信息"
+        )
+
+    return str(current_user.student_profile.id)
+
+
 @router.post("/", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def create_mistake(
     *,
@@ -80,6 +108,11 @@ async def create_mistake(
 
     # 获取学生ID
     if current_user.role == UserRole.STUDENT:
+        if not current_user.student_profile:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="学生档案不存在，请先完善个人信息"
+            )
         student_id = current_user.student_profile.id
     else:
         # 教师需要指定学生ID
@@ -228,6 +261,13 @@ async def list_my_mistakes(
             detail="只有学生可以查看自己的错题"
         )
 
+    # 检查学生档案是否存在
+    if not current_user.student_profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="学生档案不存在，请先完善个人信息"
+        )
+
     student_id = current_user.student_profile.id
 
     # 解析筛选参数
@@ -299,6 +339,13 @@ async def get_my_mistake_statistics(
             detail="只有学生可以查看自己的错题统计"
         )
 
+    # 检查学生档案是否存在
+    if not current_user.student_profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="学生档案不存在，请先完善个人信息"
+        )
+
     student_id = current_user.student_profile.id
 
     # 获取统计数据
@@ -333,6 +380,13 @@ async def get_my_review_plan(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="只有学生可以查看自己的复习计划"
+        )
+
+    # 检查学生档案是否存在
+    if not current_user.student_profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="学生档案不存在，请先完善个人信息"
         )
 
     student_id = current_user.student_profile.id
@@ -386,6 +440,11 @@ async def get_mistake(
 
     # 权限检查：学生只能查看自己的错题
     if current_user.role == UserRole.STUDENT:
+        if not current_user.student_profile:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="学生档案不存在，请先完善个人信息"
+            )
         if mistake.student_id != current_user.student_profile.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -476,6 +535,11 @@ async def update_mistake_status(
     mistake = await service.get_mistake(mistake_uuid)
 
     if current_user.role == UserRole.STUDENT:
+        if not current_user.student_profile:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="学生档案不存在，请先完善个人信息"
+            )
         if mistake.student_id != current_user.student_profile.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -568,7 +632,7 @@ async def retry_mistake(
     }
 
 
-@router.delete("/{mistake_id}", response_model=dict, status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{mistake_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_mistake(
     *,
     db: AsyncSession = Depends(get_db),
@@ -603,6 +667,11 @@ async def delete_mistake(
 
     # 权限检查：学生只能删除自己的错题，教师可以删除任何错题
     if current_user.role == UserRole.STUDENT:
+        if not current_user.student_profile:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="学生档案不存在，请先完善个人信息"
+            )
         if mistake.student_id != current_user.student_profile.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -670,6 +739,11 @@ async def analyze_mistake(
         )
 
     # 权限检查：只能分析自己的错题
+    if not current_user.student_profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="学生档案不存在，请先完善个人信息"
+        )
     if mistake.student_id != current_user.student_profile.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -790,6 +864,13 @@ async def batch_analyze_mistakes(
             detail="只有学生可以分析自己的错题"
         )
 
+    # 检查学生档案是否存在
+    if not current_user.student_profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="学生档案不存在，请先完善个人信息"
+        )
+
     student_id = current_user.student_profile.id
 
     # 获取需要AI分析的错题
@@ -904,6 +985,13 @@ async def export_mistakes(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="只有学生可以导出错题本"
+        )
+
+    # 检查学生档案是否存在
+    if not current_user.student_profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="学生档案不存在，请先完善个人信息"
         )
 
     # 验证导出格式
@@ -1031,6 +1119,13 @@ async def export_single_mistake(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="只有学生可以导出错题"
+        )
+
+    # 检查学生档案是否存在
+    if not current_user.student_profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="学生档案不存在，请先完善个人信息"
         )
 
     # 验证错题ID格式

@@ -620,7 +620,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
+import type { LoadingInstance } from 'element-plus/es/components/loading/src/loading'
 import {
   Document,
   Collection,
@@ -635,7 +636,6 @@ import {
   TrendCharts,
   MagicStick,
   ArrowDown,
-  Document,
   Tickets,
   Memo
 } from '@element-plus/icons-vue'
@@ -643,7 +643,6 @@ import mistakeApi, {
   type Mistake,
   type MistakeStatistics,
   type ReviewPlan,
-  RetryMistakeRequest,
   type RetryMistakeRequest,
   MistakeStatus,
   MistakeType

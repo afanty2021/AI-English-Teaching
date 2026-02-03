@@ -72,10 +72,30 @@ async def get_current_user_optional(
     except ValueError:
         return None
 
-    # 查询用户
+    # 查询用户 - 根据角色预加载不同的关联数据
+    # 首先获取用户基本信息以确定角色
+    temp_result = await db.execute(
+        select(User).where(User.id == user_uuid)
+    )
+    temp_user = temp_result.scalar_one_or_none()
+
+    if temp_user is None:
+        return None
+
+    # 根据角色构建查询选项
+    from sqlalchemy.orm import selectinload
+
+    if temp_user.role == UserRole.STUDENT.value:
+        options = [selectinload(User.organization), selectinload(User.student_profile)]
+    elif temp_user.role == UserRole.TEACHER.value:
+        options = [selectinload(User.organization), selectinload(User.teacher_profile)]
+    else:
+        options = [selectinload(User.organization)]
+
+    # 重新查询用户并预加载关联数据
     result = await db.execute(
         select(User)
-        .options(selectinload(User.organization))
+        .options(*options)
         .where(User.id == user_uuid)
     )
     user = result.scalar_one_or_none()
@@ -131,20 +151,39 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # 查询用户
-    result = await db.execute(
-        select(User)
-        .options(selectinload(User.organization))
-        .where(User.id == user_uuid)
+    # 查询用户 - 根据角色预加载不同的关联数据
+    # 首先获取用户基本信息以确定角色
+    temp_result = await db.execute(
+        select(User).where(User.id == user_uuid)
     )
-    user = result.scalar_one_or_none()
+    temp_user = temp_result.scalar_one_or_none()
 
-    if user is None:
+    if temp_user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="用户不存在",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # 根据角色构建查询选项
+    from sqlalchemy.orm import selectinload
+
+    if temp_user.role == UserRole.STUDENT.value:
+        # 学生需要预加载 student_profile
+        options = [selectinload(User.organization), selectinload(User.student_profile)]
+    elif temp_user.role == UserRole.TEACHER.value:
+        # 教师需要预加载 teacher_profile
+        options = [selectinload(User.organization), selectinload(User.teacher_profile)]
+    else:
+        options = [selectinload(User.organization)]
+
+    # 重新查询用户并预加载关联数据
+    result = await db.execute(
+        select(User)
+        .options(*options)
+        .where(User.id == user_uuid)
+    )
+    user = result.scalar_one_or_none()
 
     if not user.is_active:
         raise HTTPException(
@@ -227,28 +266,81 @@ async def get_current_teacher(
 
 
 async def get_current_student(
-    current_user: User = Depends(get_current_user),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_db),
 ) -> User:
     """
     获取当前学生用户
 
-    验证用户必须是学生
+    验证用户必须是学生，并预加载学生档案
 
     Args:
-        current_user: 当前用户
+        credentials: HTTP Bearer credentials（必需）
+        db: 数据库会话
 
     Returns:
-        学生User对象
+        学生User对象（已预加载student_profile）
 
     Raises:
         HTTPException: 如果用户不是学生
     """
-    if current_user.role != UserRole.STUDENT:
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="未提供认证凭据",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    token = credentials.credentials
+    user_id = verify_token(token, token_type="access")
+
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的认证凭据",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        user_uuid = uuid.UUID(user_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的用户ID",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # 查询用户并预加载学生档案
+    result = await db.execute(
+        select(User)
+        .options(
+            selectinload(User.organization),
+            selectinload(User.student_profile),
+        )
+        .where(User.id == user_uuid)
+    )
+    user = result.scalar_one_or_none()
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="用户不存在",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="账户已被禁用",
+        )
+
+    if user.role != UserRole.STUDENT:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="需要学生权限"
         )
-    return current_user
+
+    return user
 
 
 async def get_current_organization_admin(
