@@ -1,0 +1,174 @@
+#### 错题详情
+
+**【题目内容】**
+
+> {{ mistake.question }}
+
+**【答题情况】**
+
+| 项目 | 内容 |
+|------|------|
+| ❌ 你的答案 | {{ mistake.wrong_answer }} |
+| ✅ 正确答案 | {{ mistake.correct_answer }} |
+| 📚 题目类型 | {{ mistake.mistake_type | get_type_name }} |
+| 🏷️ 状态 | {{ mistake.status | get_status_name }} |
+| 📊 错误次数 | {{ mistake.mistake_count }} 次 |
+| 🔄 复习次数 | {{ mistake.review_count }} 次 |
+{% if mistake.topic %}
+| 📖 主题 | {{ mistake.topic }} |
+{% endif %}
+{% if mistake.difficulty_level %}
+| 📈 难度 | {{ mistake.difficulty_level }} |
+{% endif %}
+{% if mistake.knowledge_points %}
+| 🎯 知识点 | {{ mistake.knowledge_points | join('、') }} |
+{% endif %}
+{% if mistake.first_mistaken_at %}
+| 📅 首次错误 | {{ mistake.first_mistaken_at.strftime('%Y-%m-%d') }} |
+{% endif %}
+{% if mistake.last_mistaken_at %}
+| 📅 最近错误 | {{ mistake.last_mistaken_at.strftime('%Y-%m-%d') }} |
+{% endif %}
+{% if mistake.mastery_level is not none %}
+| 💎 掌握程度 | {{ (mistake.mastery_level * 100) | int }}% |
+{% endif %}
+
+{% if mistake.ai_analysis %}
+
+**【AI分析】**
+
+##### 错误分类
+
+> **{{ mistake.ai_analysis.mistake_category }}** · 严重程度: {{ mistake.ai_analysis.severity }}
+
+##### 详细解释
+
+{{ mistake.ai_analysis.explanation }}
+
+##### 正确方法
+
+{{ mistake.ai_analysis.correct_approach }}
+
+{% if mistake.ai_analysis.root_cause %}
+
+##### 根本原因分析
+
+- **主要原因**: {{ mistake.ai_analysis.root_cause.primary_cause }}
+{% if mistake.ai_analysis.root_cause.secondary_causes %}
+- **次要原因**:
+{% for cause in mistake.ai_analysis.root_cause.secondary_causes %}
+  - {{ cause }}
+{% endfor %}
+{% endif %}
+{% if mistake.ai_analysis.root_cause.knowledge_gaps %}
+- **知识盲点**:
+{% for gap in mistake.ai_analysis.root_cause.knowledge_gaps %}
+  - {{ gap }}
+{% endfor %}
+{% endif %}
+{% endif %}
+
+{% if mistake.ai_analysis.grammar_errors %}
+
+##### 语法错误详情
+
+{% for error in mistake.ai_analysis.grammar_errors %}
+**{{ loop.index }}. {{ error.error_type }}**
+
+- 位置: {{ error.location }}
+- 正确形式: {{ error.correction }}
+- 解释: {{ error.explanation }}
+
+{% endfor %}
+{% endif %}
+
+{% if mistake.ai_analysis.vocabulary_errors %}
+
+##### 词汇错误详情
+
+{% for error in mistake.ai_analysis.vocabulary_errors %}
+**{{ loop.index }}. {{ error.word }}**
+
+- 正确形式: {{ error.correct_form }}
+- 含义: {{ error.meaning }}
+- 用法示例: {{ error.usage_example }}
+{% if error.common_mistake %}
+- ⚠️ 常见错误
+{% endif %}
+
+{% endfor %}
+{% endif %}
+
+{% if mistake.ai_analysis.comprehension_issues %}
+
+##### 理解问题详情
+
+{% for issue in mistake.ai_analysis.comprehension_issues %}
+**{{ loop.index }}. {{ issue.issue_type }}**
+
+- 误解内容: {{ issue.misunderstanding }}
+- 正确理解: {{ issue.clarification }}
+- 理解技巧: {{ issue.tips }}
+
+{% endfor %}
+{% endif %}
+
+{% if mistake.ai_analysis.recommendations %}
+
+##### 学习建议
+
+{% for rec in mistake.ai_analysis.recommendations %}
+**{{ loop.index }}. {{ rec.title }}** (优先级: P{{ rec.priority }})
+
+> {{ rec.description }}
+
+{% if rec.resources %}
+📚 推荐资源:
+{% for resource in rec.resources %}
+- {{ resource }}
+{% endfor %}
+{% endif %}
+
+{% if rec.practice_exercises %}
+✏️ 练习建议:
+{% for exercise in rec.practice_exercises %}
+- {{ exercise }}
+{% endfor %}
+{% endif %}
+
+{% if rec.estimated_time %}
+⏱️ 预计时间: {{ rec.estimated_time }}
+{% endif %}
+
+{% endfor %}
+{% endif %}
+
+{% if mistake.ai_analysis.review_plan %}
+
+##### 复习计划
+
+- 📅 **复习频率**: {{ mistake.ai_analysis.review_plan.review_frequency }}
+- 🔄 **复习间隔**: {{ mistake.ai_analysis.review_plan.next_review_days | join('天、') }}天
+- 🎯 **掌握标准**: {{ mistake.ai_analysis.review_plan.mastery_criteria }}
+- 📝 **复习方法**: {{ mistake.ai_analysis.review_plan.review_method }}
+
+{% endif %}
+
+{% if mistake.ai_analysis.encouragement %}
+
+---
+
+> 💪 {{ mistake.ai_analysis.encouragement }}
+
+{% endif %}
+
+{% elif mistake.explanation %}
+
+**【教师解析】**
+
+{{ mistake.explanation }}
+
+{% endif %}
+
+---
+

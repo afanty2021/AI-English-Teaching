@@ -1,0 +1,16 @@
+# Build outputs
+node_modules/
+dist/
+build/
+
+# Logs
+*.log
+
+# Lock files
+*.lock
+
+# Minified files
+*.min.js
+
+# Data directories
+public/data/

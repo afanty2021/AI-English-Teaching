@@ -1,0 +1,243 @@
+# {{ student.name }} 的英语错题本
+
+> **学号**: {{ student.student_id or '未设置' }}
+> **英语水平**: {{ student.level or '未评估' }}
+> **导出时间**: {{ export_date }}
+{% if not is_single_export %}
+> **错题数量**: {{ statistics.total }} 道
+{% endif %}
+
+---
+
+## 目录
+
+{% for item in table_of_contents %}
+{% if item.level == 1 %}
+{{ loop.index }}. [{{ item.title }}](#{{ item.anchor }})
+{% else %}
+  {{ loop.index }}. [{{ item.title }}](#{{ item.anchor }})
+{% endif %}
+{% endfor %}
+
+---
+
+## 学习概况
+
+### 学生信息
+
+| 项目 | 信息 |
+|------|------|
+| 姓名 | {{ student.name }} |
+{% if student.english_name %}
+| 英文名 | {{ student.english_name }} |
+{% endif %}
+{% if student.student_id %}
+| 学号 | {{ student.student_id }} |
+{% endif %}
+{% if student.level %}
+| 英语水平 | {{ student.level }} |
+{% endif %}
+| 导出时间 | {{ export_date }} |
+
+{% if not is_single_export %}
+
+### 整体统计
+
+| 统计项 | 数值 |
+|--------|------|
+| **错题总数** | {{ statistics.total }} 道 |
+| **已掌握** | {{ statistics.by_status.get('已掌握', {}).count or 0 }} 道 ({{ statistics.mastery_rate }}%) |
+| **待复习** | {{ statistics.by_status.get('待复习', {}).count or 0 }} 道 |
+| **复习中** | {{ statistics.by_status.get('复习中', {}).count or 0 }} 道 |
+| **平均错误次数** | {{ statistics.avg_mistake_count }} 次 |
+
+### 学习状态分布
+
+{% for status_name, status_data in statistics.by_status.items() %}
+- **{{ status_name }}**: {{ status_data.count }} 道 ({{ status_data.percentage }}%)
+{% endfor %}
+
+### 错题类型分布
+
+{% for type_name, count in statistics.by_type.items() %}
+- **{{ type_name }}**: {{ count }} 道
+{% endfor %}
+
+{% endif %}
+
+---
+
+## 错题统计
+
+{% if is_single_export %}
+### 单题详情
+
+本报告包含 **1** 道错题的详细分析。
+
+{% else %}
+
+### 掌握情况
+
+- 🎯 **已掌握**: {{ statistics.by_status.get('已掌握', {}).count or 0 }} 道 - 这些错题已经通过复习掌握
+- 📖 **复习中**: {{ statistics.by_status.get('复习中', {}).count or 0 }} 道 - 正在积极复习中
+- ⏳ **待复习**: {{ statistics.by_status.get('待复习', {}).count or 0 }} 道 - 尚未开始复习
+
+### 学习建议
+
+{% if statistics.mastery_rate >= 80 %}
+✅ **表现优秀！** 你的掌握率已达到{{ statistics.mastery_rate }}%，继续保持！
+{% elif statistics.mastery_rate >= 50 %}
+👍 **进展良好！** 你已经掌握了{{ statistics.mastery_rate }}%的错题，继续努力！
+{% else %}
+💪 **加油！** 建议制定复习计划，逐步提高掌握率。
+{% endif %}
+
+{% endif %}
+
+---
+
+## 错题详情
+
+{% if is_single_export %}
+{% set mistake = mistakes[0] %}
+{% include 'mistake_detail.md.j2' %}
+{% else %}
+{% set section_num = 1 %}
+
+### 按状态分类
+
+{% for status_name, status_mistakes in categorized_mistakes.get('按状态', {}).items() %}
+
+#### {{ status_name }} ({{ status_mistakes|length }} 道)
+
+{% for mistake in status_mistakes %}
+{% include 'mistake_detail.md.j2' %}
+{% endfor %}
+
+{% endfor %}
+
+### 按类型分类
+
+{% for type_name, type_mistakes in categorized_mistakes.get('按类型', {}).items() %}
+
+#### {{ type_name }} ({{ type_mistakes|length }} 道)
+
+{% for mistake in type_mistakes %}
+{% include 'mistake_detail.md.j2' %}
+{% endfor %}
+
+{% endfor %}
+
+### 按主题分类
+
+{% for topic_name, topic_mistakes in categorized_mistakes.get('按主题', {}).items() %}
+
+#### {{ topic_name }} ({{ topic_mistakes|length }} 道)
+
+{% for mistake in topic_mistakes %}
+{% include 'mistake_detail.md.j2' %}
+{% endfor %}
+
+{% endfor %}
+
+{% endif %}
+
+---
+
+## 学习建议
+
+### 复习计划
+
+基于当前错题情况，建议采用以下复习策略：
+
+#### 1. 优先级排序
+
+1. **高优先级**: 错误次数≥3的错题，需要重点关注
+2. **中优先级**: 错误次数2次的错题，定期复习
+3. **低优先级**: 错误次数1次的错题，按需复习
+
+#### 2. 复习频率
+
+采用间隔重复法（Spaced Repetition）：
+
+- 第1次复习: 学习后1天
+- 第2次复习: 学习后3天
+- 第3次复习: 学习后7天
+- 第4次复习: 学习后14天
+- 第5次复习: 学习后30天
+
+#### 3. 复习方法
+
+1. **理解错误原因**: 先看AI分析，理解为什么错
+2. **重做错题**: 不看答案，重新做一遍
+3. **类似练习**: 找2-3道类似题目巩固
+4. **记录笔记**: 将知识点整理到笔记中
+
+### 学习资源推荐
+
+{% if is_single_extract %}
+{% set mistake = mistakes[0] %}
+{% if mistake.ai_analysis and mistake.ai_analysis.get('recommendations') %}
+#### 针对「{{ mistake.question[:50] }}...」的学习建议
+
+{% for rec in mistake.ai_analysis.recommendations %}
+**{{ loop.index }}. {{ rec.title }}** (优先级: {{ rec.priority }})
+
+> {{ rec.description }}
+
+{% if rec.resources %}
+**推荐资源**:
+{% for resource in rec.resources %}
+- {{ resource }}
+{% endfor %}
+{% endif %}
+
+{% if rec.practice_exercises %}
+**练习建议**:
+{% for exercise in rec.practice_exercises %}
+- {{ exercise }}
+{% endfor %}
+{% endif %}
+
+{% endfor %}
+{% endif %}
+{% else %}
+{% for mistake in mistakes %}
+{% if mistake.ai_analysis and mistake.ai_analysis.get('recommendations') %}
+{% for rec in mistake.ai_analysis.recommendations[:1] %}
+**[{{ mistake.mistake_type | get_type_name }}]** {{ rec.title }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+---
+
+## 附录
+
+### AI分析说明
+
+本报告中的AI分析由AI英语教学系统自动生成，包括：
+
+- **错误分类**: 识别错误类型（如时态错误、词汇搭配等）
+- **详细解释**: 分析错误原因，说明正确答案
+- **根本原因**: 挖掘知识盲点和薄弱环节
+- **学习建议**: 提供针对性的学习方法和练习建议
+- **复习计划**: 基于遗忘曲线制定个性化复习计划
+
+### 使用建议
+
+1. **定期导出**: 每月导出一次错题本，跟踪学习进度
+2. **重点复习**: 关注错误次数多的题目和类型
+3. **查漏补缺**: 根据AI建议，系统性地学习薄弱知识点
+4. **记录进步**: 对比不同时期的错题本，见证成长
+
+---
+
+> 📝 本报告由 **AI赋能英语教学系统** 自动生成
+>
+> 💡 如有疑问或建议，请联系任课教师
+
+---
+
+**报告结束**

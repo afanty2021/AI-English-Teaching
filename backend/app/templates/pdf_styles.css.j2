@@ -1,0 +1,427 @@
+{#
+  PDF 样式模板 - AI英语教学系统错题本
+  使用 CSS Paged Media 标准，配合 weasyprint 渲染 PDF
+#}
+
+/* ================================
+   页面设置
+   ================================ */
+@page {
+    size: A4;
+    margin: 2cm 2.5cm;
+
+    /* 页眉 */
+    @top-center {
+        content: "{{ title or 'AI英语教学系统 - 错题本' }}";
+        font-size: 9pt;
+        color: #666;
+        padding-bottom: 0.5em;
+        border-bottom: 1px solid #eee;
+    }
+
+    /* 页脚 */
+    @bottom-center {
+        content: "第 " counter(page) " 页 / 共 " counter(pages) " 页";
+        font-size: 8pt;
+        color: #999;
+        padding-top: 0.5em;
+        border-top: 1px solid #eee;
+    }
+
+    /* 首页不同 */
+    @first-page {
+        margin: 3cm 2.5cm 2cm 2.5cm;
+
+        @top-center {
+            content: none;
+        }
+    }
+}
+
+/* ================================
+   基础样式
+   ================================ */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Heiti SC", "SimHei", sans-serif;
+    font-size: 11pt;
+    line-height: 1.7;
+    color: #2c3e50;
+    word-wrap: break-word;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ================================
+   排版样式
+   ================================ */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    color: #1a1a1a;
+    page-break-after: avoid;
+}
+
+h1 {
+    font-size: 22pt;
+    margin-top: 1.2em;
+    margin-bottom: 0.8em;
+    padding-bottom: 0.3em;
+    border-bottom: 3px solid #3498db;
+}
+
+h2 {
+    font-size: 18pt;
+    margin-top: 1.5em;
+    margin-bottom: 0.8em;
+    padding-bottom: 0.2em;
+    border-bottom: 2px solid #ecf0f1;
+}
+
+h3 {
+    font-size: 14pt;
+    margin-top: 1.2em;
+    margin-bottom: 0.6em;
+}
+
+h4 {
+    font-size: 12pt;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    color: #555;
+}
+
+h5, h6 {
+    font-size: 11pt;
+    margin-top: 0.8em;
+    margin-bottom: 0.4em;
+    color: #666;
+}
+
+/* 段落 */
+p {
+    margin: 0.6em 0;
+    text-align: justify;
+}
+
+/* ================================
+   列表样式
+   ================================ */
+ul, ol {
+    margin: 0.8em 0;
+    padding-left: 2em;
+}
+
+li {
+    margin: 0.3em 0;
+}
+
+li::marker {
+    color: #3498db;
+}
+
+/* ================================
+   表格样式
+   ================================ */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.2em 0;
+    font-size: 10pt;
+    page-break-inside: avoid;
+}
+
+th, td {
+    border: 1px solid #dcdcdc;
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+}
+
+th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+}
+
+tr:nth-child(even) {
+    background-color: #fafbfc;
+}
+
+tr:hover {
+    background-color: #f0f7fb;
+}
+
+/* 表格中的特殊标记 */
+table .emoji {
+    font-size: 1.1em;
+}
+
+/* ================================
+   引用块样式
+   ================================ */
+blockquote {
+    margin: 1.2em 0;
+    padding: 0.8em 1.2em;
+    border-left: 4px solid #3498db;
+    background-color: #f8f9fa;
+    color: #555;
+    page-break-inside: avoid;
+}
+
+blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+/* ================================
+   代码样式
+   ================================ */
+code {
+    font-family: "Consolas", "Monaco", "Courier New", monospace;
+    background-color: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: #e74c3c;
+}
+
+pre {
+    margin: 1.2em 0;
+    padding: 1em;
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    border-radius: 6px;
+    overflow-x: auto;
+    page-break-inside: avoid;
+}
+
+pre code {
+    background-color: transparent;
+    padding: 0;
+    color: #ecf0f1;
+}
+
+/* ================================
+   链接样式
+   ================================ */
+a {
+    color: #3498db;
+    text-decoration: none;
+    border-bottom: 1px dotted #3498db;
+}
+
+a:hover {
+    color: #2980b9;
+    border-bottom-style: solid;
+}
+
+/* ================================
+   分隔线
+   ================================ */
+hr {
+    border: none;
+    height: 2px;
+    background: linear-gradient(to right, transparent, #ecf0f1, transparent);
+    margin: 2em 0;
+    page-break-after: always;
+}
+
+/* ================================
+   特殊内容样式
+   ================================ */
+
+/* 标签/chip */
+.chip {
+    display: inline-block;
+    padding: 2px 8px;
+    margin: 2px;
+    background-color: #ecf0f1;
+    border-radius: 12px;
+    font-size: 0.85em;
+    color: #555;
+}
+
+/* 状态徽章 */
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+.badge-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.badge-warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.badge-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.badge-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+
+/* ================================
+   打印控制
+   ================================ */
+
+/* 避免孤行和寡行 */
+h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+}
+
+table, blockquote, pre, img {
+    page-break-inside: avoid;
+}
+
+/* 避免标题后紧跟分页 */
+h1 + *, h2 + *, h3 + * {
+    page-break-before: avoid;
+}
+
+/* 列表项不跨页 */
+li {
+    page-break-inside: avoid;
+}
+
+/* ================================
+   目录样式
+   ================================ */
+.toc {
+    background-color: #f8f9fa;
+    padding: 1.2em 1.5em;
+    border-radius: 8px;
+    margin: 1.5em 0;
+    page-break-inside: avoid;
+}
+
+.toc h2 {
+    margin-top: 0;
+    border-bottom: none;
+    font-size: 16pt;
+}
+
+.toc ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.toc li {
+    margin: 0.5em 0;
+}
+
+.toc a {
+    color: #2c3e50;
+    border-bottom: none;
+}
+
+.toc a:hover {
+    color: #3498db;
+}
+
+/* ================================
+   错题详情专用样式
+   ================================ */
+.mistake-detail {
+    margin: 1.5em 0;
+    padding: 1em;
+    border: 1px solid #ecf0f1;
+    border-radius: 6px;
+    page-break-inside: avoid;
+}
+
+.mistake-detail h4 {
+    margin-top: 0;
+    color: #3498db;
+}
+
+.question-box {
+    background-color: #fff9e6;
+    padding: 1em;
+    border-left: 4px solid #f39c12;
+    margin: 1em 0;
+    page-break-inside: avoid;
+}
+
+.answer-table {
+    margin: 1em 0;
+}
+
+.answer-table tr.correct-row {
+    background-color: #d4edda;
+}
+
+.answer-table tr.wrong-row {
+    background-color: #f8d7da;
+}
+
+/* AI 分析区域 */
+.ai-analysis {
+    background-color: #e8f4fd;
+    padding: 1em;
+    border-radius: 6px;
+    margin: 1em 0;
+    page-break-inside: avoid;
+}
+
+.ai-analysis h5 {
+    color: #2980b9;
+    margin-top: 0.5em;
+}
+
+/* ================================
+   页脚信息
+   ================================ */
+.footer-note {
+    margin-top: 3em;
+    padding-top: 1em;
+    border-top: 1px solid #ecf0f1;
+    text-align: center;
+    color: #95a5a6;
+    font-size: 9pt;
+    page-break-inside: avoid;
+}
+
+/* ================================
+   媒体查询（针对不同纸张大小）
+   ================================ */
+@media print and (max-width: 21cm) {
+    body {
+        font-size: 10pt;
+    }
+
+    h1 { font-size: 20pt; }
+    h2 { font-size: 16pt; }
+    h3 { font-size: 13pt; }
+}
+
+/* ================================
+   辅助类
+   ================================ */
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-muted { color: #95a5a6; }
+.mt-1 { margin-top: 0.5em; }
+.mt-2 { margin-top: 1em; }
+.mb-1 { margin-bottom: 0.5em; }
+.mb-2 { margin-bottom: 1em; }
