@@ -265,10 +265,10 @@ class MistakeExportService:
 
         return {
             'id': str(student.id),
-            'name': user.real_name if user else '未知',
-            'english_name': student.english_name,
-            'level': student.cefr_level,
-            'student_id': student.student_id,
+            'name': user.full_name if user else '未知',
+            'english_name': student.student_no if student.student_no else '',
+            'level': student.current_cefr_level if student.current_cefr_level else 'N/A',
+            'student_id': student.student_no if student.student_no else '',
         }
 
     async def _get_single_mistake(

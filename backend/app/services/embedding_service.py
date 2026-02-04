@@ -3,7 +3,7 @@
 支持智谱AI、OpenAI等多种嵌入服务
 """
 import asyncio
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from openai import AsyncOpenAI
 from tenacity import (

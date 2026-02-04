@@ -236,10 +236,10 @@ class VectorService:
             if must_conditions:
                 filter_conditions = models.Filter(must=must_conditions)
 
-        # 执行搜索
-        search_results = await client.search(
+        # 执行搜索（使用 query_points API）
+        query_response = await client.query_points(
             collection_name=collection,
-            query_vector=query_vector,
+            query=query_vector,
             query_filter=filter_conditions,
             limit=limit,
             score_threshold=score_threshold,
@@ -247,7 +247,7 @@ class VectorService:
 
         # 格式化结果
         results = []
-        for result in search_results:
+        for result in query_response.points:
             results.append({
                 "id": result.id,
                 "score": result.score,
@@ -321,20 +321,24 @@ class VectorService:
 
         # 获取参考内容的向量
         try:
-            point = await client.retrieve(
+            records = await client.retrieve(
                 collection_name=collection,
                 ids=[str(content_id)],
+                with_vectors=True,
             )
-            if not point:
+            if not records:
+                return []
+            query_vector = records[0].vector
+            if not query_vector:
                 return []
             query_vector = point[0].vector
         except Exception:
             return []
 
-        # 执行搜索
-        results = await client.search(
+        # 执行搜索（使用 query_points API）
+        query_response = await client.query_points(
             collection_name=collection,
-            query_vector=query_vector,
+            query=query_vector,
             query_filter=models.Filter(
                 must=[
                     models.FieldCondition(
@@ -348,7 +352,7 @@ class VectorService:
 
         # 格式化结果
         formatted_results = []
-        for result in results:
+        for result in query_response.points:
             if exclude_current and result.id == str(content_id):
                 continue
             formatted_results.append({

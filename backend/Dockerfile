@@ -6,9 +6,14 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
+    libglib2.0-0 \
+    libpango-1.0-0 \
+    libharfbuzz0b \
+    libpangoft2-1.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
+# Copy README first (required by pyproject.toml)
+COPY README.md ./
 COPY pyproject.toml ./
 
 # Install Python dependencies
