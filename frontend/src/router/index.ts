@@ -67,6 +67,18 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, requiresStudent: true, title: '错题本' }
   },
   {
+    path: '/student/reports',
+    name: 'StudentReports',
+    component: () => import('@/views/student/ReportsView.vue'),
+    meta: { requiresAuth: true, requiresStudent: true, title: '学习报告' }
+  },
+  {
+    path: '/student/reports/:id',
+    name: 'ReportDetail',
+    component: () => import('@/views/student/ReportDetailView.vue'),
+    meta: { requiresAuth: true, requiresStudent: true, title: '报告详情' }
+  },
+  {
     path: '/teacher',
     name: 'TeacherDashboard',
     component: () => import('@/views/teacher/DashboardView.vue'),

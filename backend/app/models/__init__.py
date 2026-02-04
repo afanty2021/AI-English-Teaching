@@ -31,6 +31,7 @@ from app.models.mistake import (
     MistakeType,
 )
 from app.models.class_model import ClassInfo, ClassStudent
+from app.models.learning_report import LearningReport
 
 __all__ = [
     "User",
@@ -58,4 +59,5 @@ __all__ = [
     "MistakeType",
     "ClassInfo",
     "ClassStudent",
+    "LearningReport",
 ]
