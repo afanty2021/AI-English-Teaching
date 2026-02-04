@@ -138,9 +138,9 @@
                   </div>
                   <div v-if="generatedPlan.objectives.language_skills" class="mb-2">
                     <strong>语言技能：</strong>
-                    <div v-for="(skills, type) in generatedPlan.objectives.language_skills" :key="type" class="ml-3">
-                      <span class="skill-tag">{{ type }}:</span>
-                      <span v-for="(skill, i) in skills" :key="i">{{ skill }}{{ i < skills.length - 1 ? '、' : '' }}</span>
+                    <div v-for="item in languageSkillsList" :key="item.type" class="ml-3">
+                      <span class="skill-tag">{{ item.type }}:</span>
+                      <span v-for="(skill, i) in item.skills" :key="i">{{ skill }}{{ i < item.skills.length - 1 ? '、' : '' }}</span>
                     </div>
                   </div>
                 </div>
@@ -178,14 +178,13 @@
                 <div v-if="generatedPlan.structure">
                   <el-timeline>
                     <el-timeline-item
-                      v-for="(data, phase) in generatedPlan.structure"
-                      :key="phase"
-                      :timestamp="`${data.duration || 0}分钟`"
+                      v-for="item in structureItems"
+                      :key="item.key"
+                      :timestamp="`${item.duration}分钟`"
                       placement="top"
-                      v-if="typeof data === 'object' && data.title"
                     >
-                      <h4>{{ data.title }}</h4>
-                      <p v-if="data.description">{{ data.description }}</p>
+                      <h4>{{ item.title }}</h4>
+                      <p v-if="item.description">{{ item.description }}</p>
                     </el-timeline-item>
                   </el-timeline>
                 </div>
@@ -223,6 +222,35 @@ const planForm = reactive({
   studentCount: 10,
   focus: ['speaking'],
   notes: ''
+})
+
+// 计算属性：处理语言技能数据
+const languageSkillsList = computed(() => {
+  if (!generatedPlan.value?.objectives?.language_skills) return []
+  const result: Array<{ type: string; skills: string[] }> = []
+  for (const [type, skills] of Object.entries(generatedPlan.value.objectives.language_skills)) {
+    if (Array.isArray(skills)) {
+      result.push({ type, skills })
+    }
+  }
+  return result
+})
+
+// 计算属性：处理教学流程数据
+const structureItems = computed(() => {
+  if (!generatedPlan.value?.structure) return []
+  const result: Array<{ key: string; duration: number; title: string; description?: string }> = []
+  for (const [key, value] of Object.entries(generatedPlan.value.structure)) {
+    if (typeof value === 'object' && value !== null && 'title' in value) {
+      result.push({
+        key,
+        duration: (value as any).duration || 0,
+        title: (value as any).title || '',
+        description: (value as any).description
+      })
+    }
+  }
+  return result
 })
 
 async function generatePlan() {

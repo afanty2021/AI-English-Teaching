@@ -48,7 +48,7 @@
                     <span class="lesson-duration">{{ lesson.duration }} 分钟</span>
                   </div>
                 </div>
-                <el-dropdown @command="(cmd) => handleAction(cmd, lesson)" @click.stop>
+                <el-dropdown @command="(cmd: string) => handleAction(cmd, lesson)" @click.stop>
                   <el-button circle :icon="MoreFilled" />
                   <template #dropdown>
                     <el-dropdown-menu>
@@ -107,7 +107,8 @@
         <!-- 操作栏 -->
         <div class="detail-actions">
           <el-button :icon="Edit" @click="editLesson">编辑</el-button>
-          <el-button :icon="CopyDocument" @click="duplicateLesson">复制</el-button>
+          <!-- TODO: duplicate feature not implemented yet -->
+          <!-- <el-button :icon="CopyDocument" @click="duplicateLesson">复制</el-button> -->
           <el-dropdown @command="handleExport" style="display: inline-block">
             <el-button :icon="Download">
               导出 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
@@ -470,12 +471,13 @@ import {
   DocumentCopy,
   Operation,
   InfoFilled,
-  Bold,
-  Italic,
-  Underline,
+  // Bold, // Not available in @element-plus/icons-vue
+  // Italic, // Not available in @element-plus/icons-vue
+  // Underline, // Not available in @element-plus/icons-vue
   List,
   Menu,
-  RemoveFormat,
+  // RemoveFormat, // Not available in @element-plus/icons-vue (use Remove or RemoveFilled instead)
+  Remove,
   Picture,
   VideoCamera
 } from '@element-plus/icons-vue'
@@ -484,13 +486,12 @@ import {
   getLessonPlans,
   getLessonPlan,
   deleteLessonPlan,
-  duplicateLessonPlan,
+  // duplicateLessonPlan, // TODO: not implemented in API
   updateLessonContent,
   exportLessonPlan,
   getExportUrl,
   exportToMarkdown as apiExportToMarkdown
 } from '@/api/lesson'
-import type { LessonPlan } from '@/types/lesson'
 
 // 类型定义
 interface LessonPlan {
@@ -734,25 +735,26 @@ const editLesson = () => {
   }
 }
 
-const duplicateLesson = async () => {
-  if (!currentLesson.value) return
-
-  try {
-    await ElMessageBox.confirm('确定要复制此教案吗？', '确认', {
-      type: 'warning'
-    })
-
-    await duplicateLessonPlan(currentLesson.value.id)
-    ElMessage.success('教案复制成功')
-    showDetailDrawer.value = false
-    await loadLessons()
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('复制教案失败:', error)
-      ElMessage.error('复制教案失败')
-    }
-  }
-}
+// TODO: duplicateLessonPlan not implemented in API yet
+// const duplicateLesson = async () => {
+//   if (!currentLesson.value) return
+//
+//   try {
+//     await ElMessageBox.confirm('确定要复制此教案吗？', '确认', {
+//       type: 'warning'
+//     })
+//
+//     await duplicateLessonPlan(currentLesson.value.id)
+//     ElMessage.success('教案复制成功')
+//     showDetailDrawer.value = false
+//     await loadLessons()
+//   } catch (error) {
+//     if (error !== 'cancel') {
+//       console.error('复制教案失败:', error)
+//       ElMessage.error('复制教案失败')
+//     }
+//   }
+// }
 
 const deleteLesson = async () => {
   if (!currentLesson.value) return
@@ -785,7 +787,8 @@ const handleAction = (command: string, lesson: LessonPlan) => {
       break
     case 'duplicate':
       currentLesson.value = lesson
-      duplicateLesson()
+      // duplicateLesson() // TODO: not implemented in API
+      ElMessage.info('复制功能暂未实现')
       break
     case 'export':
       currentLesson.value = lesson

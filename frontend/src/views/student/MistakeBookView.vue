@@ -788,7 +788,7 @@ const handleViewDetail = (mistake: Mistake) => {
 
 // 重做错题
 const handleRetry = (mistake: Mistake) => {
-  currentMistake.value = mistake
+  currentMistake.value = mistake as Mistake & { ai_analysis?: AIAnalysis }
   retryForm.user_answer = ''
   showRetryDialog.value = true
 }
@@ -878,9 +878,8 @@ const handleAnalyze = async (mistake: Mistake) => {
       mistakes.value[index] = {
         ...mistakes.value[index],
         ai_suggestion: result.analysis.encouragement + '\n\n' + result.analysis.explanation,
-        ai_analysis: result.analysis,
-        needs_ai_analysis: false
-      }
+        ai_analysis: result.analysis
+      } as unknown as Mistake & { ai_analysis?: AIAnalysis; needs_ai_analysis?: boolean }
     }
 
     ElMessage.success('AI分析完成！')

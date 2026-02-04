@@ -17,6 +17,7 @@
             <el-menu-item index="/student/learning">学习内容</el-menu-item>
             <el-menu-item index="/student/speaking">口语练习</el-menu-item>
             <el-menu-item index="/student/mistakes">错题本</el-menu-item>
+            <el-menu-item index="/student/reports">学习报告</el-menu-item>
             <el-menu-item index="/student/progress">学习进度</el-menu-item>
             <el-menu-item index="/" @click="handleLogout">退出</el-menu-item>
           </el-menu>
@@ -249,7 +250,7 @@ async function loadData() {
   try {
     const token = localStorage.getItem('access_token')
     const response = await axios.get(
-      'http://localhost:8000/api/v1/contents/recommend',
+      '/api/v1/contents/recommend',
       {
         headers: { Authorization: `Bearer ${token}` },
         params: { max_recommendations: 4 }
