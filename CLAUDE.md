@@ -1,12 +1,20 @@
 # AI 赋能英语教学系统
 
-> **最后更新**: 2026-02-03 18:30:00
-> **文档版本**: v1.0
+> **最后更新**: 2026-02-04 08:58:32
+> **文档版本**: v1.1
 > **项目状态**: 开发中 (MVP阶段)
 
 ---
 
 ## 变更记录
+
+### 2026-02-04 08:58:32
+- 📊 **文档更新**: 增量更新完成
+  - 补充学习报告系统文档（后端模型、服务、API）
+  - 更新前端报告功能（列表页、详情页、ECharts可视化）
+  - 更新模块索引，新增188个文件完整扫描
+  - 生成 `.claude/index.json` 索引文件
+  - 覆盖率达到 100%
 
 ### 2026-02-03 19:00:00
 - 🎨 **前端**: 错题本 PDF 导出功能完善
@@ -89,11 +97,11 @@ AI 赋能英语教学系统是一个基于"素养打底，考点融入"理念的
 
 | 层级 | 技术选型 | 说明 |
 |------|----------|------|
-| 前端 | Vue3 + Vite + Pinia + Element Plus | 组合式API，状态管理 |
+| 前端 | Vue3 + Vite + Pinia + Element Plus + ECharts | 组合式API，状态管理，数据可视化 |
 | 后端 | FastAPI + SQLAlchemy + Alembic | 异步支持，ORM管理 |
 | 数据库 | PostgreSQL 15 + Redis 7 | 主数据库+缓存 |
 | 向量库 | Qdrant | 向量相似度搜索 |
-| PDF导出 | markdown2 + weasyprint | Markdown转PDF渲染 |
+| PDF导出 | markdown2 + weasyprint 61.2 + pydyf 0.8.0 | Markdown转PDF渲染 |
 | AI服务 | OpenAI GPT-4 / Anthropic Claude | 大语言模型 |
 | 部署 | Docker + Docker Compose | 容器化部署 |
 
@@ -136,6 +144,34 @@ graph TD
 | **后端** | `backend/` | FastAPI后端服务，提供API、业务逻辑、数据持久化 | Python | 已完成 |
 | **前端** | `frontend/` | Vue3前端应用，教师端与学生端 | TypeScript/Vue | 已完成 |
 | **文档** | `docs/` | 设计文档与实施计划 | Markdown | 已完成 |
+
+---
+
+## 最新功能亮点
+
+### 📊 学习报告系统 (2026-02-03)
+
+**后端**:
+- `LearningReport` 数据模型（支持 JSONB 存储报告数据）
+- 学习报告服务（统计、能力分析、薄弱点、建议生成）
+- 报告导出服务（PDF导出，图片导出占位）
+- 5个 API 端点（生成、列表、详情、导出、删除）
+
+**前端**:
+- 报告列表页面（ReportsView.vue）
+- 报告详情页面（ReportDetailView.vue）
+- 能力雷达图（ECharts 可视化）
+- 薄弱知识点分析表格
+- 学习建议列表（按优先级展示）
+- 导出功能（PDF/图片）
+
+### 📄 PDF导出功能 (2026-02-03)
+
+- PDF 渲染服务（markdown2 + weasyprint）
+- 错题本导出（Markdown/PDF/Word）
+- 跨平台中文字体支持
+- 完整 CSS Paged Media 样式
+- 测试覆盖率 88%
 
 ---
 
@@ -220,7 +256,15 @@ pytest tests/services/test_knowledge_graph_service.py
 
 ### 前端测试
 
-前端测试框架待配置（计划使用 Vitest + Vue Test Utils）。
+```bash
+cd frontend
+
+# 运行测试
+npm run test
+
+# 运行测试并生成覆盖率
+npm run coverage
+```
 
 ---
 
@@ -270,6 +314,7 @@ mypy app
 - `app/services/graph_rules.py`: 规则引擎（零成本更新）
 - `app/services/pdf_renderer_service.py`: PDF 渲染服务（markdown2 + weasyprint）
 - `app/services/mistake_export_service.py`: 错题本导出（Markdown/PDF/Word）
+- `app/services/learning_report_service.py`: 学习报告生成服务
 - `app/core/security.py`: 认证与安全
 
 ### 成本优化提示

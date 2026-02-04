@@ -8,6 +8,39 @@
 
 ---
 
+## 变更记录
+
+### 2026-02-04 08:58:32
+- 📊 **文档更新**: 增量更新完成
+  - 补充学习报告系统文档（模型、服务、API）
+  - 更新模块索引，新增143个Python文件完整扫描
+  - 更新 PDF 导出功能文档
+  - 新增模板文件和工具文件说明
+
+### 2026-02-03 20:00:00
+- ✨ **新增**: 学习报告生成功能完整实现
+  - 模型：LearningReport 数据模型，支持 JSONB 存储报告数据
+  - 服务：学习报告服务（统计、能力分析、薄弱点、建议生成）
+  - 导出：报告导出服务（PDF导出，图片导出占位）
+  - API：5个端点（生成、列表、详情、导出、删除）
+  - 数据库：Alembic 迁移已执行
+
+### 2026-02-03 18:30:00
+- ✨ **新增**: PDF渲染服务 (`pdf_renderer_service.py`)
+- ✨ **新增**: PDF辅助工具 (`pdf_helpers.py`)
+- ✨ **新增**: PDF样式模板 (`pdf_styles.css.j2`)
+- ✅ **更新**: 错题导出服务实现PDF导出功能
+- ✨ **新增**: PDF渲染单元测试
+- 🔧 **更新**: pyproject.toml 添加PDF导出依赖
+- 📊 **测试**: PDF渲染服务测试覆盖率88%
+
+### 2026-02-03 09:49:22
+- 创建后端模块文档
+- 整理核心服务与API接口
+- 记录数据模型与测试结构
+
+---
+
 ## 模块职责
 
 backend 模块是 AI 赋能英语教学系统的核心后端服务，提供：
@@ -19,7 +52,8 @@ backend 模块是 AI 赋能英语教学系统的核心后端服务，提供：
 5. **内容管理**: 教学内容的CRUD操作
 6. **学习记录**: 学生练习记录与进度追踪
 7. **错题本系统**: 错题收集、AI分析、复习管理
-8. **PDF导出功能**: Markdown转PDF导出（weasyprint）
+8. **学习报告系统**: 生成学生学习报告、PDF导出
+9. **PDF导出功能**: Markdown转PDF导出（weasyprint）
 
 ---
 
@@ -48,6 +82,54 @@ make dev
 
 ---
 
+## 测试账号
+
+> **重要**: 以下为开发/测试环境的固定测试账号，请勿随意修改密码或删除。
+
+### 学生端测试账号
+
+| 项目 | 值 |
+|------|-----|
+| **用户名** | `test_student` |
+| **密码** | `Test1234` |
+| **邮箱** | `student@test.com` |
+| **角色** | 学生 (student) |
+| **学号** | S2024001 |
+| **年级** | 大一 |
+| **目标考试** | CET4 |
+| **目标分数** | 500 |
+| **当前水平** | B1 (intermediate) |
+
+### 教师端测试账号
+
+| 项目 | 值 |
+|------|-----|
+| **用户名** | `test_teacher` |
+| **密码** | `Test1234` |
+| **邮箱** | `teacher@test.com` |
+| **角色** | 教师 (teacher) |
+| **专业领域** | 英语口语、写作教学、语法 |
+| **简介** | 专注于AI辅助英语教学，拥有10年教学经验 |
+
+### 使用方式
+
+**API 登录示例**:
+```bash
+# 学生登录
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "test_student", "password": "Test1234"}'
+
+# 教师登录
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "test_teacher", "password": "Test1234"}'
+```
+
+**前端登录**: 直接使用上述用户名和密码在前端登录页面登录。
+
+---
+
 ## 对外接口
 
 ### API路由结构
@@ -58,12 +140,18 @@ make dev
 │   ├── POST /register
 │   ├── POST /login
 │   └── GET  /me
-├── /students/         # 学生管理 (已实现)
-├── /mistakes/         # 错题本 (已实现)
-├── /practices/        # 练习记录 (已实现)
-├── /contents/         # 内容管理 (已实现)
-├── /conversations/    # 口语对话 (已实现)
-└── /lesson-plans/     # 教案管理 (已实现)
+├── /students/          # 学生管理 (已实现)
+├── /mistakes/          # 错题本 (已实现)
+├── /practices/         # 练习记录 (已实现)
+├── /contents/          # 内容管理 (已实现)
+├── /conversations/     # 口语对话 (已实现)
+├── /reports/           # 学习报告 (✨ 新增)
+│   ├── POST /generate
+│   ├── GET  /me
+│   ├── GET  /{report_id}
+│   ├── POST /{report_id}/export
+│   └── DELETE /{report_id}
+└── /lesson-plans/      # 教案管理 (已实现)
 ```
 
 ### 核心API端点
@@ -83,6 +171,13 @@ make dev
 - `POST /api/v1/mistakes/export` - 导出错题本 (支持 markdown/pdf/word)
 - `POST /api/v1/mistakes/{mistake_id}/export` - 导出单个错题
 
+**学习报告接口** (`app/api/v1/learning_reports.py`): ✨
+- `POST /api/v1/reports/generate` - 生成学习报告
+- `GET /api/v1/reports/me` - 获取我的报告列表
+- `GET /api/v1/reports/{report_id}` - 获取报告详情
+- `POST /api/v1/reports/{report_id}/export` - 导出报告（PDF/图片）
+- `DELETE /api/v1/reports/{report_id}` - 删除报告
+
 ---
 
 ## 关键依赖与配置
@@ -98,7 +193,7 @@ make dev
 | 缓存 | Redis, Hiredis | >=5.0.1 |
 | 向量库 | Qdrant Client | >=1.7.0 |
 | AI服务 | OpenAI, Anthropic | >=1.10.0 |
-| 认证 | python-jose, passlib | >=3.3.0 |
+| 认证 | python-jose, passlib, argon2-cffi | >=3.3.0 |
 | 模板引擎 | Jinja2 | >=3.1.3 |
 | **PDF导出** | markdown2, weasyprint, CairoSVG | >=2.4.12, >=60.0,<62.0 |
 
@@ -159,14 +254,47 @@ REFRESH_TOKEN_EXPIRE_DAYS=7
 | Practice | `app/models/practice.py` | ✅ 已实现 | 练习记录 |
 | Conversation | `app/models/conversation.py` | ✅ 已实现 | 口语对话 |
 | Mistake | `app/models/mistake.py` | ✅ 已实现 | 错题本 |
+| **LearningReport** | `app/models/learning_report.py` | ✨ 新增 | 学习报告 |
 | LessonPlan | `app/models/lesson_plan.py` | ✅ 已实现 | 教案 |
 | ClassModel | `app/models/class_model.py` | ✅ 已实现 | 班级 |
+
+### LearningReport 模型详情 ✨
+
+**文件**: `app/models/learning_report.py`
+
+```python
+class LearningReport(Base):
+    """学习报告模型 - 存储学生的学习报告快照和统计数据"""
+
+    # 主键
+    id: UUID
+
+    # 关联
+    student_id: UUID  # 外键到 students
+
+    # 报告类型和时间范围
+    report_type: str  # weekly, monthly, custom
+    period_start: datetime
+    period_end: datetime
+
+    # JSONB 字段存储报告数据
+    statistics: dict          # 统计数据快照
+    ability_analysis: dict    # 能力分析快照
+    weak_points: dict         # 薄弱点分析
+    recommendations: dict     # 学习建议
+    ai_insights: dict         # AI分析结果
+
+    # 状态和元数据
+    status: str              # draft, completed, archived
+    title: str               # 可选报告标题
+    description: str         # 可选报告描述
+```
 
 ---
 
 ## 业务服务
 
-### PDF渲染服务 (NEW)
+### PDF渲染服务 ✨
 
 **文件**: `app/services/pdf_renderer_service.py`
 
@@ -189,8 +317,34 @@ REFRESH_TOKEN_EXPIRE_DAYS=7
 - `prepare_export_data()` - 准备导出数据
 - `render_markdown_report()` - 渲染 Markdown 报告
 - `export_as_markdown()` - 导出 Markdown 格式
-- `export_as_pdf()` - 导出 PDF 格式 ✨ 已实现
+- `export_as_pdf()` - 导出 PDF 格式 ✅ 已实现
 - `export_as_word()` - 导出 Word 格式 (TODO)
+
+### 学习报告服务 ✨
+
+**文件**: `app/services/learning_report_service.py`
+
+**功能**: 生成学生综合学习报告，包括统计、能力分析、薄弱点识别和建议生成
+
+核心方法：
+- `generate_report()` - 生成完整学习报告
+- `generate_statistics()` - 生成学习统计数据
+- `analyze_ability_progress()` - 分析能力进步（基于知识图谱）
+- `analyze_weak_points()` - 分析薄弱知识点
+- `generate_recommendations()` - 生成学习建议（规则引擎）
+- `generate_ai_recommendations()` - 生成 AI 个性化建议
+- `get_student_reports()` - 获取学生报告列表
+
+### 报告导出服务 ✨
+
+**文件**: `app/services/report_export_service.py`
+
+**功能**: 将学习报告导出为 PDF 或图片格式
+
+核心方法：
+- `export_as_pdf()` - 导出为 PDF（使用 PDF 渲染服务）
+- `export_as_image()` - 导出为图片（占位实现，待集成 Playwright）
+- `_render_markdown_report()` - 渲染 Markdown 报告内容
 
 ### 知识图谱服务
 
@@ -248,6 +402,45 @@ REFRESH_TOKEN_EXPIRE_DAYS=7
 
 ---
 
+## 工具函数
+
+### PDF辅助工具 ✨
+
+**文件**: `app/utils/pdf_helpers.py`
+
+**功能**: 跨平台字体检测和CSS字体族生成
+
+核心函数：
+- `check_font_availability()` - 检测系统中文字体可用性
+- `get_css_font_family()` - 生成跨平台兼容的CSS字体族
+- `get_pdf_css()` - 获取完整PDF样式（包含字体配置）
+
+**支持的平台**:
+- macOS: PingFang SC, STHeiti
+- Windows: Microsoft YaHei, SimHei
+- Linux: WenQuanYi Micro Hei, Noto Sans CJK
+
+---
+
+## 模板文件
+
+### PDF样式模板 ✨
+
+**文件**: `app/templates/pdf_styles.css.j2`
+
+- 完整的 PDF 打印样式（CSS Paged Media）
+- 中文字体支持（跨平台兼容）
+- 分页控制、页眉页脚、表格样式
+- 支持错题详情专用样式类
+
+### Markdown模板
+
+**文件**: `app/templates/mistake_report.md.j2`
+
+**文件**: `app/templates/mistake_detail.md.j2`
+
+---
+
 ## 测试与质量
 
 ### 测试结构
@@ -263,7 +456,7 @@ tests/
     ├── test_knowledge_graph_service.py
     ├── test_vector_service.py
     ├── test_graph_rules.py
-    ├── test_pdf_renderer_service.py  # NEW - PDF渲染测试
+    ├── test_pdf_renderer_service.py  # ✨ PDF渲染测试
     └── test_embedding_service.py
 ```
 
@@ -302,25 +495,6 @@ mypy app
 |------|--------|------|
 | `pdf_renderer_service.py` | 88% | ✅ |
 | `pdf_helpers.py` | 71% | ✅ |
-
----
-
-## 模板文件
-
-### PDF样式模板
-
-**文件**: `app/templates/pdf_styles.css.j2`
-
-- 完整的 PDF 打印样式（CSS Paged Media）
-- 中文字体支持（跨平台兼容）
-- 分页控制、页眉页脚、表格样式
-- 支持错题详情专用样式类
-
-### Markdown模板
-
-**文件**: `app/templates/mistake_report.md.j2`
-
-**文件**: `app/templates/mistake_detail.md.j2`
 
 ---
 
@@ -386,8 +560,10 @@ echo $OPENAI_API_KEY
 
 | 文件 | 描述 | 状态 |
 |------|------|------|
-| `app/services/pdf_renderer_service.py` | PDF渲染服务 | ✨ 新增 |
-| `app/services/mistake_export_service.py` | 错题导出服务 | ✅ 已更新 |
+| `app/services/pdf_renderer_service.py` | PDF渲染服务 | ✅ |
+| `app/services/mistake_export_service.py` | 错题导出服务 | ✅ |
+| `app/services/learning_report_service.py` | 学习报告服务 | ✨ 新增 |
+| `app/services/report_export_service.py` | 报告导出服务 | ✨ 新增 |
 | `app/services/knowledge_graph_service.py` | 知识图谱服务 | ✅ |
 | `app/services/vector_service.py` | 向量搜索服务 | ✅ |
 | `app/services/ai_service.py` | AI服务 | ✅ |
@@ -416,12 +592,30 @@ echo $OPENAI_API_KEY
 |------|------|------|
 | `app/api/v1/auth.py` | 认证API | ✅ |
 | `app/api/v1/mistakes.py` | 错题API | ✅ |
+| `app/api/v1/learning_reports.py` | 学习报告API | ✨ 新增 |
 | `app/api/v1/students.py` | 学生API | ✅ |
 | `app/api/v1/contents.py` | 内容API | ✅ |
 | `app/api/v1/practices.py` | 练习API | ✅ |
 | `app/api/v1/conversations.py` | 对话API | ✅ |
 | `app/api/v1/lesson_plans.py` | 教案API | ✅ |
 | `app/api/deps.py` | API依赖 | ✅ |
+
+### 数据模型文件
+
+| 文件 | 描述 | 状态 |
+|------|------|------|
+| `app/models/user.py` | 用户模型 | ✅ |
+| `app/models/student.py` | 学生模型 | ✅ |
+| `app/models/teacher.py` | 教师模型 | ✅ |
+| `app/models/organization.py` | 组织模型 | ✅ |
+| `app/models/knowledge_graph.py` | 知识图谱模型 | ✅ |
+| `app/models/content.py` | 内容模型 | ✅ |
+| `app/models/practice.py` | 练习模型 | ✅ |
+| `app/models/conversation.py` | 对话模型 | ✅ |
+| `app/models/mistake.py` | 错题模型 | ✅ |
+| `app/models/learning_report.py` | 学习报告模型 | ✨ 新增 |
+| `app/models/lesson_plan.py` | 教案模型 | ✅ |
+| `app/models/class_model.py` | 班级模型 | ✅ |
 
 ### 测试文件
 
@@ -431,20 +625,12 @@ echo $OPENAI_API_KEY
 | `tests/api/test_auth.py` | 认证API测试 | ✅ |
 | `tests/services/test_pdf_renderer_service.py` | PDF渲染测试 | ✨ 新增 |
 
----
+### 数据库迁移文件
 
-## 变更记录
-
-### 2026-02-03 18:30:00
-- ✨ **新增**: PDF渲染服务 (`pdf_renderer_service.py`)
-- ✨ **新增**: PDF辅助工具 (`pdf_helpers.py`)
-- ✨ **新增**: PDF样式模板 (`pdf_styles.css.j2`)
-- ✅ **更新**: 错题导出服务实现PDF导出功能
-- ✅ **新增**: PDF渲染单元测试
-- 🔧 **更新**: pyproject.toml 添加PDF导出依赖
-- 📊 **测试**: PDF渲染服务测试覆盖率88%
-
-### 2026-02-03 09:49:22
-- 创建后端模块文档
-- 整理核心服务与API接口
-- 记录数据模型与测试结构
+| 文件 | 描述 | 状态 |
+|------|------|------|
+| `alembic/versions/20260203_2100_add_learning_report_model.py` | 学习报告模型迁移 | ✨ 新增 |
+| `alembic/versions/20260203_1200_add_mistake_model.py` | 错题模型迁移 | ✅ |
+| `alembic/versions/20260203_1026_6180530e656a_add_practice_and_class_models.py` | 练习和班级模型迁移 | ✅ |
+| `alembic/versions/20260202_1258_9a6282cdb4bd_add_conversation_model.py` | 对话模型迁移 | ✅ |
+| `alembic/versions/20260202_1107_f0c40f107c40_初始化ai英语教学系统数据库.py` | 初始数据库迁移 | ✅ |
