@@ -13,22 +13,22 @@ const api = axios.create({
 
 // 请求拦截器：添加 token
 api.interceptors.request.use(
-  (config) => {
+  (config: any) => {
     const token = localStorage.getItem('access_token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
     return config
   },
-  (error) => {
+  (error: any) => {
     return Promise.reject(error)
   }
 )
 
 // 响应拦截器：处理错误
 api.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
+  (response: any) => response.data,
+  (error: any) => {
     if (error.response?.status === 401) {
       // 清除 token，跳转登录
       localStorage.removeItem('access_token')
@@ -348,7 +348,7 @@ export const mistakeApi = {
     let filename = '错题本导出'
     if (contentDisposition) {
       const filenameMatch = contentDisposition.match(/filename\*=UTF-8''(.+)/)
-      if (filenameMatch) {
+      if (filenameMatch && filenameMatch[1]) {
         filename = decodeURIComponent(filenameMatch[1])
       }
     }
@@ -400,7 +400,7 @@ export const mistakeApi = {
     let filename = '错题导出'
     if (contentDisposition) {
       const filenameMatch = contentDisposition.match(/filename\*=UTF-8''(.+)/)
-      if (filenameMatch) {
+      if (filenameMatch && filenameMatch[1]) {
         filename = decodeURIComponent(filenameMatch[1])
       }
     }

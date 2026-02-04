@@ -143,7 +143,7 @@
                 <div class="avatar">👤</div>
                 <div class="content">
                   <p>{{ msg.content }}</p>
-                  <span class="time">{{ formatTime(msg.timestamp) }}</span>
+                  <span class="time">{{ formatTimestamp(msg.timestamp) }}</span>
                 </div>
               </div>
             </template>
@@ -188,7 +188,7 @@
                     </el-button>
                   </div>
 
-                  <span class="time">{{ formatTime(msg.timestamp) }}</span>
+                  <span class="time">{{ formatTimestamp(msg.timestamp) }}</span>
                 </div>
                 <div class="avatar">🤖</div>
               </div>
@@ -414,7 +414,7 @@ interface ConversationFeedback {
 
 interface LearningRecommendation {
   tip: string
-  type: 'grammar' | 'vocabulary' | 'pronunciation' | 'fluency'
+  type: 'grammar' | 'vocabulary' | 'pronunciation' | 'fluency' | string
 }
 
 const route = useRoute()
@@ -436,15 +436,18 @@ const currentRound = ref(0)
 const elapsedTime = ref(0)
 const timerInterval = ref<number | null>(null)
 
-// 消息数据
-const messages = ref<Message[]>([])
-const conversationHistory = ref<Array<{
+// 对话历史记录类型
+interface ConversationHistoryItem {
   id: string
   scenario: string
   date: string
   duration: string
   messages: number
-}>[]>([])
+}
+
+// 消息数据
+const messages = ref<Message[]>([])
+const conversationHistory = ref<ConversationHistoryItem[]>([])
 
 // 评分和反馈
 const currentFeedback = ref<ConversationFeedback | null>(null)
@@ -536,7 +539,7 @@ const scenarios = [
 ]
 
 // 方法
-function getScoreType(score?: number): 'success' | 'warning' | 'info' {
+function getScoreType(score?: number): 'success' | 'warning' | 'info' | 'danger' {
   if (!score) return 'info'
   if (score >= 80) return 'success'
   if (score >= 60) return 'warning'
@@ -551,6 +554,11 @@ function formatTime(seconds: number): string {
   const mins = Math.floor(seconds / 60)
   const secs = seconds % 60
   return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+function formatTimestamp(timestamp: string | Date): string {
+  const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp
+  return formatTime(Math.floor(date.getTime() / 1000))
 }
 
 function formatDuration(seconds: number): string {
@@ -697,7 +705,7 @@ function getMockResponse(userMessage: string): string {
     return 'Goodbye! It was nice talking to you. Have a great day!'
   }
 
-  return responses[Math.floor(Math.random() * responses.length)]
+  return responses[Math.floor(Math.random() * responses.length)] || 'Could you please say that again?'
 }
 
 function scrollToBottom() {

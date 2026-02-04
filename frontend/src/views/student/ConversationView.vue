@@ -12,7 +12,10 @@
         <div
           v-for="scenario in scenarios"
           :key="scenario.value"
-          :class="['scenario-card', { 'scenario-card-selected': selectedScenario === scenario.value }]"
+          :class="[
+            'scenario-card',
+            { 'scenario-card-selected': selectedScenario === scenario.value },
+          ]"
           @click="selectScenario(scenario.value)"
         >
           <el-icon :size="48" :color="getScenarioColor(scenario.value)">
@@ -40,7 +43,10 @@
     </div>
 
     <!-- 对话界面 -->
-    <div v-else-if="currentStep === 'conversation'" class="conversation-interface">
+    <div
+      v-else-if="currentStep === 'conversation'"
+      class="conversation-interface"
+    >
       <!-- 顶部栏 -->
       <div class="conversation-header">
         <el-button link @click="goBack">
@@ -49,7 +55,7 @@
         </el-button>
         <div class="header-info">
           <h2>{{ getScenarioName(selectedScenario) }}</h2>
-          <el-tag size="small">{{ level || 'A2' }}</el-tag>
+          <el-tag size="small">{{ level || "A2" }}</el-tag>
         </div>
         <div class="header-actions">
           <el-button circle :icon="Setting" @click="showSettings = true" />
@@ -58,7 +64,7 @@
 
       <!-- 状态指示器 -->
       <div class="status-bar">
-        <ConversationStatus
+        <ConversationStatusComponent
           :status="conversationStatus"
           :message-count="messages.length"
           :target-messages="targetMessages"
@@ -67,7 +73,7 @@
 
       <!-- 消息列表 -->
       <div ref="messagesContainer" class="messages-container">
-        <ConversationMessage
+        <ConversationMessageComponent
           v-for="message in messages"
           :key="message.id"
           :message="message"
@@ -124,7 +130,9 @@
                   <span></span>
                   <span></span>
                 </div>
-                <span class="voice-text">{{ interimTranscript || '正在听...' }}</span>
+                <span class="voice-text">{{
+                  interimTranscript || "正在听..."
+                }}</span>
               </div>
             </transition>
           </div>
@@ -196,7 +204,7 @@ import {
   Promotion,
   CircleCheck,
   Loading,
-  CoffeeShop,
+  Coffee,
   Food,
   ShoppingBag,
   Location,
@@ -205,8 +213,8 @@ import {
   Picture,
   ChatDotRound
 } from '@element-plus/icons-vue'
-import ConversationMessage from '@/components/ConversationMessage.vue'
-import ConversationStatus from '@/components/ConversationStatus.vue'
+import ConversationMessageComponent from '@/components/ConversationMessage.vue'
+import ConversationStatusComponent from '@/components/ConversationStatus.vue'
 import ConversationFeedbackDrawer from '@/components/ConversationFeedbackDrawer.vue'
 import {
   createConversation,
@@ -217,8 +225,11 @@ import {
 import type {
   ConversationScenario,
   ConversationMessage,
-  ConversationStatus as ConvStatus,
   ConversationScores
+} from '@/types/conversation'
+import {
+  MessageRole,
+  MessageType
 } from '@/types/conversation'
 import {
   createVoiceRecognition,
@@ -244,7 +255,7 @@ const scenarios = [
     value: 'cafe_order' as ConversationScenario,
     label: '咖啡店点餐',
     description: '学习如何在咖啡店点餐和询问推荐',
-    icon: CoffeeShop,
+    icon: Coffee,
     level: 'A1-A2',
     color: '#8B4513'
   },
@@ -313,7 +324,7 @@ const targetMessages = ref(10)
 const autoPronunciation = ref(true)
 
 const conversationId = ref<string>('')
-const conversationStatus = ref<ConvStatus | 'connecting' | 'thinking' | 'listening'>('connecting')
+const conversationStatus = ref<'in_progress' | 'completed' | 'abandoned' | 'connecting' | 'thinking' | 'listening'>('connecting')
 const messages = ref<ConversationMessage[]>([])
 const isAIThinking = ref(false)
 const isSending = ref(false)
@@ -353,7 +364,7 @@ const quickReplies = computed(() => {
     return ['Hello!', 'Hi, how are you?', 'Excuse me...']
   }
   const lastMessage = messages.value[messages.value.length - 1]
-  if (lastMessage.role === 'assistant') {
+  if (lastMessage && lastMessage.role === 'assistant') {
     return [
       'Yes, please.',
       'No, thank you.',
@@ -447,8 +458,8 @@ const sendMessage = async () => {
     // 添加用户消息
     const userMessage: ConversationMessage = {
       id: `msg-${Date.now()}`,
-      role: 'user',
-      type: 'text',
+      role: MessageRole.USER,
+      type: MessageType.TEXT,
       content,
       timestamp: new Date().toISOString()
     }
@@ -465,8 +476,8 @@ const sendMessage = async () => {
     const aiMessageId = `msg-${Date.now() + 1}`
     streamingMessage.value = {
       id: aiMessageId,
-      role: 'assistant',
-      type: 'text',
+      role: MessageRole.ASSISTANT,
+      type: MessageType.TEXT,
       content: '',
       timestamp: new Date().toISOString()
     }
@@ -684,6 +695,7 @@ const stopVoiceRecognition = () => {
   }
   isVoiceInput.value = false
   interimTranscript.value = ''
+}
 
 // 滚动到底部
 const scrollToBottom = async () => {
@@ -792,7 +804,7 @@ onUnmounted(() => {
     streamCleanup.value = null
   }
   // 停止自动保存
-  conversationRecovery.stopAutoSave()
+  conversationRecovery.stopAutoSave();
 })
 </script>
 
@@ -961,7 +973,8 @@ onUnmounted(() => {
 }
 
 @keyframes voice-pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 0 0 rgba(64, 158, 255, 0.4);
   }
   50% {
@@ -1007,7 +1020,8 @@ onUnmounted(() => {
 }
 
 @keyframes wave {
-  0%, 100% {
+  0%,
+  100% {
     height: 12px;
   }
   50% {
@@ -1042,7 +1056,8 @@ onUnmounted(() => {
 }
 
 @keyframes blink {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {

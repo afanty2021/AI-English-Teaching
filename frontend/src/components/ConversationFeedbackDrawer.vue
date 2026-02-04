@@ -148,6 +148,12 @@ const emit = defineEmits<{
   'view-report': []
 }>()
 
+// v-model for visible
+const visible = computed({
+  get: () => props.visible,
+  set: (value: boolean) => emit('update:visible', value)
+})
+
 // 抽屉标题
 const drawerTitle = computed(() => {
   return props.isComplete ? '对话完成' : '实时反馈'

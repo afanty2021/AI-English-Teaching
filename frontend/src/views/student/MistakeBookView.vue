@@ -352,11 +352,11 @@
             <!-- 错误分类和严重程度 -->
             <div class="analysis-item mb-3">
               <div class="analysis-label">错误分类：</div>
-              <el-tag :type="getSeverityTagType(currentMistake.ai_analysis.severity)">
-                {{ currentMistake.ai_analysis.mistake_category }}
+              <el-tag :type="getSeverityTagType(String(currentMistake.ai_analysis?.severity || ''))">
+                {{ currentMistake.ai_analysis?.mistake_category || '-' }}
               </el-tag>
               <el-tag type="info" class="ml-2">
-                {{ getSeverityText(currentMistake.ai_analysis.severity) }}
+                {{ getSeverityText(String(currentMistake.ai_analysis?.severity || '')) }}
               </el-tag>
             </div>
 
@@ -419,7 +419,7 @@
                 </div>
                 <div class="plan-item">
                   <span class="plan-label">复习间隔：</span>
-                  <span class="plan-value">{{ currentMistake.ai_analysis.review_plan.next_review_days.join('天、') }}天</span>
+                  <span class="plan-value">{{ Array.isArray(currentMistake.ai_analysis?.review_plan?.next_review_days) ? currentMistake.ai_analysis.review_plan.next_review_days.join('天、') : currentMistake.ai_analysis?.review_plan?.next_review_days }}天</span>
                 </div>
                 <div class="plan-item">
                   <span class="plan-label">掌握标准：</span>
@@ -648,6 +648,39 @@ import mistakeApi, {
   MistakeType
 } from '@/api/mistake'
 
+// AI分析类型定义
+interface AIAnalysis {
+  severity: 'low' | 'medium' | 'high'
+  mistake_category: string
+  explanation?: string
+  correct_approach?: string
+  recommendations?: AIRecommendation[]
+  grammar_explanation?: string
+  vocabulary_notes?: string
+  practice_exercises?: PracticeExercise[]
+  review_plan?: {
+    review_frequency: string
+    next_review_days: number | number[]
+    mastery_criteria: string
+  }
+}
+
+interface AIRecommendation {
+  priority: 'high' | 'medium' | 'low'
+  category: string
+  title: string
+  description: string
+  resources?: string[]
+  practice_exercises?: PracticeExercise[]
+}
+
+interface PracticeExercise {
+  type: string
+  question: string
+  options?: string[]
+  answer: string
+}
+
 // 数据状态
 const loading = ref(false)
 const mistakes = ref<Mistake[]>([])
@@ -687,7 +720,7 @@ const showDetailDialog = ref(false)
 const showRetryDialog = ref(false)
 const showReviewPlan = ref(false)
 const showCollectDialog = ref(false)
-const currentMistake = ref<Mistake | null>(null)
+const currentMistake = ref<Mistake & { ai_analysis?: AIAnalysis } | null>(null)
 
 // 重做表单
 const retryForm = reactive({
@@ -749,7 +782,7 @@ const loadReviewPlan = async () => {
 
 // 查看详情
 const handleViewDetail = (mistake: Mistake) => {
-  currentMistake.value = mistake
+  currentMistake.value = mistake as Mistake & { ai_analysis?: AIAnalysis }
   showDetailDialog.value = true
 }
 
@@ -864,7 +897,7 @@ const handleAnalyze = async (mistake: Mistake) => {
 // 批量AI分析
 const handleBatchAnalyze = async () => {
   await ElMessageBox.confirm(
-    `将对${statistics.need_review_count}道待AI分析的错题进行批量分析，这可能需要一些时间。是否继续？`,
+    `将对${statistics.value.need_review_count}道待AI分析的错题进行批量分析，这可能需要一些时间。是否继续？`,
     '批量AI分析确认',
     {
       confirmButtonText: '开始分析',
@@ -935,7 +968,7 @@ const handleExport = async (format: 'markdown' | 'pdf' | 'word') => {
 
   try {
     await ElMessageBox.confirm(
-      `将导出当前筛选条件下的${statistics.total_mistakes}道错题为${formatNames[format]}格式。是否继续？`,
+      `将导出当前筛选条件下的${statistics.value.total_mistakes}道错题为${formatNames[format]}格式。是否继续？`,
       '导出确认',
       {
         confirmButtonText: '确认导出',
@@ -1085,10 +1118,10 @@ const getSeverityText = (severity: string) => {
   return severity
 }
 
-const getPriorityTagType = (priority: number) => {
-  if (priority === 1) return 'danger'
-  if (priority === 2) return 'warning'
-  if (priority === 3) return 'primary'
+const getPriorityTagType = (priority: string | number) => {
+  if (priority === 'high' || priority === 1) return 'danger'
+  if (priority === 'medium' || priority === 2) return 'warning'
+  if (priority === 'low' || priority === 3) return 'primary'
   return ''
 }
 

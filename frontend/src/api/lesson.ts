@@ -7,8 +7,7 @@ import type {
   LessonPlanListResponse,
   LessonPlanResponse,
   GenerateLessonPlanRequest,
-  UpdateLessonPlanRequest,
-  LessonPlanExportResponse
+  UpdateLessonPlanRequest
 } from '@/types/lesson'
 
 const BASE_URL = '/api/v1/lesson-plans'
@@ -155,11 +154,6 @@ export async function exportToMarkdown(lesson: LessonPlan): Promise<string> {
  * 生成 Markdown 格式
  */
 function generateMarkdown(lesson: LessonPlan): string {
-  const formatDateTime = (dateStr: string) => {
-    const date = new Date(dateStr)
-    return date.toLocaleString('zh-CN')
-  }
-
   const getSkillTypeName = (type: string) => {
     const names: Record<string, string> = {
       'speaking': '口语',

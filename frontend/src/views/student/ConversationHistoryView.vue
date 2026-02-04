@@ -198,7 +198,7 @@ import {
   User,
   Refresh,
   VideoPlay,
-  CoffeeShop,
+  Coffee,
   Food,
   ShoppingBag,
   Location,
@@ -221,7 +221,7 @@ const selectedConversation = ref<Conversation | null>(null)
 
 // 场景配置
 const scenarios = [
-  { value: 'cafe_order' as ConversationScenario, label: '咖啡店点餐', icon: CoffeeShop, color: '#8B4513' },
+  { value: 'cafe_order' as ConversationScenario, label: '咖啡店点餐', icon: Coffee, color: '#8B4513' },
   { value: 'restaurant' as ConversationScenario, label: '餐厅用餐', icon: Food, color: '#E74C3C' },
   { value: 'shopping' as ConversationScenario, label: '购物', icon: ShoppingBag, color: '#3498DB' },
   { value: 'asking_direction' as ConversationScenario, label: '问路', icon: Location, color: '#27AE60' },

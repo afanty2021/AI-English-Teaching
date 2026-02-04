@@ -38,13 +38,12 @@ import {
   Clock,
   SuccessFilled,
   WarningFilled,
-  CircleCheck,
-  Loading
+  Loading,
+  Microphone
 } from '@element-plus/icons-vue'
-import type { ConversationStatus } from '@/types/conversation'
 
 interface Props {
-  status: ConversationStatus | 'connecting' | 'thinking' | 'listening'
+  status: 'in_progress' | 'completed' | 'abandoned' | 'connecting' | 'thinking' | 'listening'
   messageCount?: number
   targetMessages?: number
 }
@@ -59,9 +58,9 @@ const statusIcons = {
   connecting: Clock,
   thinking: Loading,
   listening: Microphone,
-  [ConversationStatus.IN_PROGRESS]: Clock,
-  [ConversationStatus.COMPLETED]: SuccessFilled,
-  [ConversationStatus.ABANDONED]: WarningFilled
+  in_progress: Clock,
+  completed: SuccessFilled,
+  abandoned: WarningFilled
 }
 
 // 状态文本映射
@@ -69,9 +68,9 @@ const statusTexts = {
   connecting: '连接中...',
   thinking: 'AI 思考中...',
   listening: '正在听...',
-  [ConversationStatus.IN_PROGRESS]: '进行中',
-  [ConversationStatus.COMPLETED]: '已完成',
-  [ConversationStatus.ABANDONED]: '已放弃'
+  in_progress: '进行中',
+  completed: '已完成',
+  abandoned: '已放弃'
 }
 
 // 状态样式类
@@ -85,7 +84,7 @@ const statusText = computed(() => statusTexts[props.status] || props.status)
 
 // 是否显示进度
 const showProgress = computed(() => {
-  return props.status === ConversationStatus.IN_PROGRESS &&
+  return props.status === 'in_progress' &&
          props.messageCount > 0 &&
          props.targetMessages > 0
 })

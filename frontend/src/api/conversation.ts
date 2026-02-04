@@ -6,7 +6,6 @@ import type {
   Conversation,
   ConversationMessage,
   ConversationScenario,
-  ConversationStatus,
   CreateConversationRequest,
   SendMessageRequest,
   ConversationScores
@@ -154,7 +153,7 @@ export function streamMessage(
   }
 
   // 错误处理
-  eventSource.onerror = (error) => {
+  eventSource.onerror = (_error: Event) => {
     eventSource.close()
     onError?.(new Error('Stream connection error'))
     onEnd?.()

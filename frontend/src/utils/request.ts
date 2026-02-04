@@ -2,14 +2,16 @@
  * HTTP 请求工具模块
  * 基于 Axios 封装，提供统一的请求接口和错误处理
  */
-import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosError } from 'axios'
+// @ts-check
+import axios from 'axios'
+import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 
 /**
  * 请求配置接口
  */
-interface RequestConfig extends AxiosRequestConfig {
+interface RequestConfig extends InternalAxiosRequestConfig {
   skipAuth?: boolean
   skipErrorHandler?: boolean
 }
@@ -41,9 +43,9 @@ const instance: AxiosInstance = axios.create({
  * 自动添加认证令牌
  */
 instance.interceptors.request.use(
-  (config) => {
+  (config: RequestConfig) => {
     // 如果不跳过认证，添加访问令牌
-    if (!config.skipAuth) {
+    if (!config.skipAuth && config.headers) {
       const authStore = useAuthStore()
       const token = authStore.accessToken
       if (token) {
@@ -52,7 +54,7 @@ instance.interceptors.request.use(
     }
     return config
   },
-  (error) => {
+  (error: any) => {
     return Promise.reject(error)
   }
 )
@@ -62,7 +64,7 @@ instance.interceptors.request.use(
  * 处理认证错误和通用错误
  */
 instance.interceptors.response.use(
-  (response) => {
+  (response: any) => {
     // 直接返回响应数据
     return response.data
   },
