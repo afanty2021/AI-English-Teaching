@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "vocabulary.schema.json",
+  "title": "Vocabulary Schema",
+  "description": "Schema for English vocabulary items",
+  "type": "object",
+  "properties": {
+    "vocabularies": {
+      "type": "array",
+      "description": "Array of vocabulary items",
+      "items": {
+        "type": "object",
+        "required": ["word"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier for the vocabulary"
+          },
+          "word": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "The word or phrase"
+          },
+          "phonetic": {
+            "type": "string",
+            "description": "IPA phonetic transcription"
+          },
+          "part_of_speech": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["n.", "v.", "adj.", "adv.", "prep.", "conj.", "interj.", "pron.", "det.", "num.", "art."]
+            },
+            "description": "Parts of speech"
+          },
+          "definitions": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Chinese definitions"
+          },
+          "english_definition": {
+            "type": "string",
+            "description": "English definition"
+          },
+          "examples": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Example sentences"
+          },
+          "etymology": {
+            "type": "string",
+            "description": "Etymology and word roots"
+          },
+          "difficulty_level": {
+            "type": "string",
+            "enum": ["beginner", "elementary", "intermediate", "upper_intermediate", "advanced", "proficient"],
+            "description": "Difficulty level"
+          },
+          "frequency_level": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "description": "Frequency level (1-10, 10 being most frequent)"
+          },
+          "related_words": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Related words"
+          },
+          "synonyms": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Synonyms"
+          },
+          "antonyms": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Antonyms"
+          },
+          "collocations": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Common collocations"
+          },
+          "extra_data": {
+            "type": "object",
+            "description": "Additional metadata"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["vocabularies"]
+}

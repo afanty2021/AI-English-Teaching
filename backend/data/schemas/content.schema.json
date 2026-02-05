@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "content.schema.json",
+  "title": "Content Schema",
+  "description": "Schema for English learning content items",
+  "type": "object",
+  "properties": {
+    "contents": {
+      "type": "array",
+      "description": "Array of content items",
+      "items": {
+        "type": "object",
+        "required": ["title", "content_type", "difficulty_level"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier for the content"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "Title of the content"
+          },
+          "description": {
+            "type": "string",
+            "description": "Brief description of the content"
+          },
+          "content_type": {
+            "type": "string",
+            "enum": ["reading", "listening", "video", "grammar", "vocabulary", "writing"],
+            "description": "Type of content"
+          },
+          "difficulty_level": {
+            "type": "string",
+            "enum": ["beginner", "elementary", "intermediate", "upper_intermediate", "advanced", "proficient"],
+            "description": "Difficulty level of the content"
+          },
+          "exam_type": {
+            "type": "string",
+            "enum": ["ielts", "toefl", "cet4", "cet6", "gre", "gmat", "toeic", "general"],
+            "description": "Target exam type, if applicable"
+          },
+          "topic": {
+            "type": "string",
+            "description": "Topic category (e.g., technology, environment, education)"
+          },
+          "tags": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Tags for categorization"
+          },
+          "content_text": {
+            "type": "string",
+            "description": "Main content text"
+          },
+          "media_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL for audio/video media"
+          },
+          "duration": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Duration in seconds for audio/video content"
+          },
+          "word_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Word count of the content"
+          },
+          "knowledge_points": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Key knowledge points covered"
+          },
+          "is_featured": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether this is a featured content"
+          },
+          "is_published": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this content is published"
+          },
+          "sort_order": {
+            "type": "integer",
+            "default": 0,
+            "description": "Sort order for display"
+          },
+          "view_count": {
+            "type": "integer",
+            "default": 0,
+            "description": "Number of views"
+          },
+          "extra_metadata": {
+            "type": "object",
+            "description": "Additional metadata"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["contents"]
+}

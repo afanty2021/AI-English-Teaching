@@ -501,6 +501,145 @@ class VectorService:
         except Exception:
             return False
 
+    async def batch_index_contents(
+        self,
+        db: AsyncSession,
+        content_ids: Optional[List[uuid.UUID]] = None,
+        batch_size: int = 50,
+        progress_callback: Optional[callable] = None,
+        collection_name: str = None,
+    ) -> dict:
+        """
+        批量索引内容向量
+
+        Args:
+            db: 数据库会话
+            content_ids: 指定的内容ID列表，None表示索引所有未索引的内容
+            batch_size: 每批处理数量
+            progress_callback: 进度回调函数(phase, current, total, message)
+            collection_name: 集合名称
+
+        Returns:
+            索引统计信息 {"total": int, "indexed": int, "failed": int, "skipped": int}
+        """
+        # 获取待索引的内容
+        if content_ids is None:
+            # 只索引未建立向量的内容
+            result = await db.execute(
+                select(Content).where(
+                    (Content.vector_id.is_(None)) | (Content.vector_id == '')
+                )
+            )
+            contents = result.scalars().all()
+        else:
+            result = await db.execute(
+                select(Content).where(Content.id.in_(content_ids))
+            )
+            contents = result.scalars().all()
+
+        total = len(contents)
+        indexed = 0
+        failed = 0
+        skipped = 0
+
+        if total == 0:
+            if progress_callback:
+                progress_callback("complete", 0, 0, "No contents to index")
+            return {"total": 0, "indexed": 0, "failed": 0, "skipped": 0}
+
+        # 批量处理
+        for i in range(0, total, batch_size):
+            batch = contents[i:i + batch_size]
+
+            if progress_callback:
+                progress_callback(
+                    "indexing",
+                    i,
+                    total,
+                    f"Processing batch {i // batch_size + 1}/{(total + batch_size - 1) // batch_size}"
+                )
+
+            try:
+                # 生成向量
+                texts = []
+                for c in batch:
+                    text = self.embedding_service.generate_content_embedding(
+                        title=c.title,
+                        content_text=c.content_text,
+                        description=c.description,
+                        topic=c.topic,
+                        difficulty_level=c.difficulty_level if c.difficulty_level else None,
+                        exam_type=c.exam_type if c.exam_type else None,
+                    )
+                    texts.append((c.id, text))
+
+                # 批量生成嵌入
+                embedding_texts = [t[1] for t in texts]
+                vectors = await self.embedding_service.batch_generate_embeddings(
+                    embedding_texts, batch_size=100
+                )
+
+                # 构建Qdrant点
+                points = []
+                for (content_id, _), vector in zip(texts, vectors):
+                    points.append(
+                        models.PointStruct(
+                            id=str(content_id),
+                            vector=vector,
+                            payload={
+                                "content_id": str(content_id),
+                                "title": next((c.title for c in batch if c.id == content_id), ""),
+                                "content_type": next((c.content_type for c in batch if c.id == content_id), ""),
+                                "difficulty_level": next((c.difficulty_level for c in batch if c.id == content_id), ""),
+                                "exam_type": next((c.exam_type for c in batch if c.id == content_id), None),
+                                "topic": next((c.topic for c in batch if c.id == content_id), None),
+                                "tags": next((c.tags for c in batch if c.id == content_id), []),
+                                "is_published": next((c.is_published for c in batch if c.id == content_id), True),
+                            }
+                        )
+                    )
+
+                # 确保集合存在
+                await self.ensure_collection(collection_name)
+
+                # 批量Upsert到Qdrant
+                await self.client.upsert(
+                    collection_name=collection_name or self.CONTENT_COLLECTION,
+                    points=points,
+                )
+
+                # 更新数据库vector_id
+                for content_id, vector in zip([t[0] for t in texts], vectors):
+                    await db.execute(
+                        select(Content)
+                        .where(Content.id == content_id)
+                        .values(vector_id=str(content_id))
+                    )
+
+                indexed += len(batch)
+                await db.commit()
+
+            except Exception as e:
+                logger.error(f"Batch {i // batch_size + 1} failed: {e}")
+                failed += len(batch)
+                # 回滚当前批次的事务
+                await db.rollback()
+
+        if progress_callback:
+            progress_callback(
+                "complete",
+                total,
+                total,
+                f"Indexed: {indexed}, Failed: {failed}, Skipped: {skipped}"
+            )
+
+        return {
+            "total": total,
+            "indexed": indexed,
+            "failed": failed,
+            "skipped": skipped
+        }
+
 
 # 创建全局单例
 _vector_service: Optional[VectorService] = None

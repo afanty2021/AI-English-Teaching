@@ -1,0 +1,52 @@
+{
+  "vocabularies": [
+    {
+      "word": "communicate",
+      "phonetic": "/kəˈmjuːnɪkeɪt/",
+      "part_of_speech": ["v."],
+      "definitions": ["交流", "沟通", "传达"],
+      "english_definition": "to share or exchange information, news, or ideas",
+      "examples": [
+        "We need to communicate more effectively with our team.",
+        "Technology has changed how people communicate with each other."
+      ],
+      "difficulty_level": "intermediate",
+      "frequency_level": 8,
+      "synonyms": ["share", "convey", "transmit"],
+      "antonyms": ["hide", "conceal"],
+      "collocations": ["communicate effectively", "communicate with", "poor communication"]
+    },
+    {
+      "word": "sustainable",
+      "phonetic": "/səˈsteɪnəbl/",
+      "part_of_speech": ["adj."],
+      "definitions": ["可持续的", "能维持的"],
+      "english_definition": "able to be maintained at a certain rate or level without depleting natural resources",
+      "examples": [
+        "Sustainable development meets the needs of the present without compromising future generations.",
+        "The company is committed to sustainable business practices."
+      ],
+      "difficulty_level": "intermediate",
+      "frequency_level": 6,
+      "synonyms": ["maintainable", "viable", "lasting"],
+      "antonyms": ["unsustainable", "depleting"],
+      "collocations": ["sustainable development", "sustainable energy", "sustainable growth"]
+    },
+    {
+      "word": "comprehensive",
+      "phonetic": "/ˌkɒmprɪˈhensɪv/",
+      "part_of_speech": ["adj.", "n."],
+      "definitions": ["全面的", "综合的", "comprehension 理解力"],
+      "english_definition": "including or dealing with all or nearly all elements or aspects of something",
+      "examples": [
+        "The report provides a comprehensive analysis of the market trends.",
+        "We offer comprehensive training programs for all employees."
+      ],
+      "difficulty_level": "intermediate",
+      "frequency_level": 5,
+      "synonyms": ["complete", "thorough", "full"],
+      "antonyms": ["partial", "limited", "incomplete"],
+      "collocations": ["comprehensive study", "comprehensive review", "comprehensive understanding"]
+    }
+  ]
+}
