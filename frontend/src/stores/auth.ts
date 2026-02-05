@@ -9,8 +9,17 @@ import type { RegisterRequest, LoginRequest } from '@/types/auth'
 import { authApi } from '@/api/auth'
 
 export const useAuthStore = defineStore('auth', () => {
-  // State
-  const user = ref<User | null>(null)
+  // State - 从 localStorage 恢复认证状态
+  const getUserFromStorage = (): User | null => {
+    try {
+      const userStr = localStorage.getItem('user')
+      return userStr ? JSON.parse(userStr) : null
+    } catch {
+      return null
+    }
+  }
+
+  const user = ref<User | null>(getUserFromStorage())
   const accessToken = ref<string | null>(localStorage.getItem('access_token'))
   const refreshToken = ref<string | null>(localStorage.getItem('refresh_token'))
 

@@ -3,5 +3,12 @@
 包含所有业务逻辑服务
 """
 from app.services import auth_service, recommendation_service
+from app.services import question_service, question_bank_service, practice_session_service
 
-__all__ = ["auth_service", "recommendation_service"]
+__all__ = [
+    "auth_service",
+    "recommendation_service",
+    "question_service",
+    "question_bank_service",
+    "practice_session_service",
+]

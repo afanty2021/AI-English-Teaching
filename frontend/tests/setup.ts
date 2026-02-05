@@ -1,4 +1,5 @@
 import { vi } from 'vitest'
+import { config } from '@vue/test-utils'
 
 // 全局 mock 配置
 Object.defineProperty(window, 'matchMedia', {
@@ -33,3 +34,55 @@ global.ResizeObserver = class ResizeObserver {
   observe() {}
   unobserve() {}
 } as any
+
+// Mock contenteditable
+document.execCommand = vi.fn(() => true)
+document.queryCommandState = vi.fn(() => false)
+
+// 配置 Vue Test Utils 全局 stubs
+config.global.stubs = {
+  'el-icon': true,
+  'el-button': true,
+  'el-input': true,
+  'el-input-number': true,
+  'el-select': true,
+  'el-option': true,
+  'el-checkbox': true,
+  'el-tag': true,
+  'el-form': true,
+  'el-form-item': true,
+  'el-divider': true,
+  'el-row': true,
+  'el-col': true,
+  'el-dialog': true,
+  'el-drawer': true,
+  'el-upload': true,
+  'el-alert': true,
+  'el-message': {
+    error: vi.fn(),
+    success: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn()
+  }
+}
+
+// Mock localStorage
+const localStorageMock = (() => {
+  let store: Record<string, string> = {}
+  return {
+    getItem: (key: string) => store[key] || null,
+    setItem: (key: string, value: string) => {
+      store[key] = value.toString()
+    },
+    removeItem: (key: string) => {
+      delete store[key]
+    },
+    clear: () => {
+      store = {}
+    }
+  }
+})()
+
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock
+})

@@ -32,6 +32,16 @@ from app.models.mistake import (
 )
 from app.models.class_model import ClassInfo, ClassStudent
 from app.models.learning_report import LearningReport
+from app.models.question import (
+    Question,
+    QuestionBank,
+    QuestionType,
+    CEFRLevel,
+)
+from app.models.practice_session import (
+    PracticeSession,
+    SessionStatus,
+)
 
 __all__ = [
     "User",
@@ -60,4 +70,10 @@ __all__ = [
     "ClassInfo",
     "ClassStudent",
     "LearningReport",
+    "Question",
+    "QuestionBank",
+    "QuestionType",
+    "CEFRLevel",
+    "PracticeSession",
+    "SessionStatus",
 ]

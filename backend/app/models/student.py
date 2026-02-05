@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from app.models.class_model import ClassStudent
     from app.models.mistake import Mistake
     from app.models.learning_report import LearningReport
+    from app.models.practice_session import PracticeSession
 
 
 class Student(Base):
@@ -178,6 +179,15 @@ class Student(Base):
         foreign_keys="LearningReport.student_id",
         cascade="all, delete-orphan",
         order_by="desc(LearningReport.created_at)"
+    )
+
+    # 关系 - 练习会话（答题进度）
+    practice_sessions: Mapped[list["PracticeSession"]] = relationship(
+        "PracticeSession",
+        back_populates="student",
+        foreign_keys="PracticeSession.student_id",
+        cascade="all, delete-orphan",
+        order_by="desc(PracticeSession.created_at)"
     )
 
     def __repr__(self) -> str:

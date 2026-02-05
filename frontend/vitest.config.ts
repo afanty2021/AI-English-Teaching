@@ -8,6 +8,11 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
+    include: ['**/*.{test,spec}.{js,ts}'],
+    transformMode: {
+      web: [/\.[jt]sx?$/],
+      ssr: [/\.vue$/]
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
