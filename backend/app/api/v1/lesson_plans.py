@@ -325,42 +325,259 @@ async def delete_lesson_plan(
         )
 
 
-@router.get("/{lesson_plan_id}/export/{export_format}")
-async def export_lesson_plan(
+@router.get("/{lesson_plan_id}/export/pdf")
+async def export_lesson_plan_pdf(
     lesson_plan_id: uuid.UUID,
-    export_format: str,
+    include_objectives: bool = Query(True, description="是否包含教学目标"),
+    include_structure: bool = Query(True, description="是否包含教学流程"),
+    include_vocabulary: bool = Query(True, description="是否包含词汇表"),
+    include_grammar: bool = Query(True, description="是否包含语法点"),
+    include_materials: bool = Query(True, description="是否包含分层材料"),
+    include_exercises: bool = Query(True, description="是否包含练习题"),
+    include_ppt_outline: bool = Query(True, description="是否包含PPT大纲"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     lesson_plan_service: LessonPlanService = Depends(get_lesson_plan_service),
 ):
     """
-    导出教案文件
+    导出教案为PDF格式
 
-    支持导出为Word (.docx)、PowerPoint (.pptx) 或 PDF (.pdf) 格式。
-    直接返回文件流供下载。
+    支持自定义导出内容，提供灵活的导出选项。
 
     Args:
         lesson_plan_id: 教案ID
-        export_format: 导出格式 (docx/pptx/pdf)
+        include_objectives: 是否包含教学目标
+        include_structure: 是否包含教学流程
+        include_vocabulary: 是否包含词汇表
+        include_grammar: 是否包含语法点
+        include_materials: 是否包含分层材料
+        include_exercises: 是否包含练习题
+        include_ppt_outline: 是否包含PPT大纲
         db: 数据库会话
         current_user: 当前用户
         lesson_plan_service: 教案服务
 
     Returns:
-        FileResponse: 导出的文件
+        FileResponse: PDF文件
 
     Raises:
-        HTTPException: 如果教案不存在、无权访问或格式不支持
+        HTTPException: 如果教案不存在或无权访问
     """
     from fastapi.responses import Response
-    from app.services.export_service import ExportService
+    from app.services.lesson_plan_export_service import get_lesson_plan_export_service
 
-    # 验证导出格式
-    valid_formats = ["docx", "pptx", "pdf"]
-    if export_format not in valid_formats:
+    # 获取教案
+    lesson_plan = await lesson_plan_service.get_lesson_plan(db, lesson_plan_id)
+
+    if not lesson_plan:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="教案不存在"
+        )
+
+    # 检查权限
+    if (
+        current_user.role == UserRole.TEACHER
+        and not current_user.is_superuser
+        and lesson_plan.teacher_id != current_user.id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权导出此教案"
+        )
+
+    try:
+        # 准备导出选项
+        options = {
+            'include_objectives': include_objectives,
+            'include_structure': include_structure,
+            'include_vocabulary': include_vocabulary,
+            'include_grammar': include_grammar,
+            'include_materials': include_materials,
+            'include_exercises': include_exercises,
+            'include_ppt_outline': include_ppt_outline,
+        }
+
+        # 准备教师信息
+        teacher = {
+            'username': current_user.username,
+            'email': current_user.email,
+        }
+
+        # 准备教案数据
+        lesson_plan_data = lesson_plan.__dict__.copy()
+
+        # 使用导出服务
+        export_service = get_lesson_plan_export_service()
+        pdf_content = await export_service.export_as_pdf(
+            lesson_plan=lesson_plan_data,
+            teacher=teacher,
+            options=options
+        )
+
+        # 生成文件名
+        file_name = f"教案-{lesson_plan.title}-{lesson_plan.level}.pdf"
+
+        # 返回PDF文件
+        return Response(
+            content=pdf_content,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{file_name}"'
+            }
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"PDF导出失败: {str(e)}"
+        )
+
+
+@router.get("/{lesson_plan_id}/export/markdown")
+async def export_lesson_plan_markdown(
+    lesson_plan_id: uuid.UUID,
+    include_objectives: bool = Query(True, description="是否包含教学目标"),
+    include_structure: bool = Query(True, description="是否包含教学流程"),
+    include_vocabulary: bool = Query(True, description="是否包含词汇表"),
+    include_grammar: bool = Query(True, description="是否包含语法点"),
+    include_materials: bool = Query(True, description="是否包含分层材料"),
+    include_exercises: bool = Query(True, description="是否包含练习题"),
+    include_ppt_outline: bool = Query(True, description="是否包含PPT大纲"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    lesson_plan_service: LessonPlanService = Depends(get_lesson_plan_service),
+):
+    """
+    导出教案为Markdown格式
+
+    支持自定义导出内容，提供灵活的导出选项。
+
+    Args:
+        lesson_plan_id: 教案ID
+        include_objectives: 是否包含教学目标
+        include_structure: 是否包含教学流程
+        include_vocabulary: 是否包含词汇表
+        include_grammar: 是否包含语法点
+        include_materials: 是否包含分层材料
+        include_exercises: 是否包含练习题
+        include_ppt_outline: 是否包含PPT大纲
+        db: 数据库会话
+        current_user: 当前用户
+        lesson_plan_service: 教案服务
+
+    Returns:
+        Markdown文本
+
+    Raises:
+        HTTPException: 如果教案不存在或无权访问
+    """
+    from fastapi.responses import Response
+
+    # 获取教案
+    lesson_plan = await lesson_plan_service.get_lesson_plan(db, lesson_plan_id)
+
+    if not lesson_plan:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="教案不存在"
+        )
+
+    # 检查权限
+    if (
+        current_user.role == UserRole.TEACHER
+        and not current_user.is_superuser
+        and lesson_plan.teacher_id != current_user.id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权导出此教案"
+        )
+
+    try:
+        # 准备导出选项
+        options = {
+            'include_objectives': include_objectives,
+            'include_structure': include_structure,
+            'include_vocabulary': include_vocabulary,
+            'include_grammar': include_grammar,
+            'include_materials': include_materials,
+            'include_exercises': include_exercises,
+            'include_ppt_outline': include_ppt_outline,
+        }
+
+        # 准备教师信息
+        teacher = {
+            'username': current_user.username,
+            'email': current_user.email,
+        }
+
+        # 准备教案数据
+        lesson_plan_data = lesson_plan.__dict__.copy()
+
+        # 使用导出服务
+        export_service = get_lesson_plan_export_service()
+        markdown_content = await export_service.export_as_markdown(
+            lesson_plan=lesson_plan_data,
+            teacher=teacher,
+            options=options
+        )
+
+        # 返回Markdown内容
+        return Response(
+            content=markdown_content,
+            media_type="text/markdown",
+            headers={
+                "Content-Disposition": f'attachment; filename="教案-{lesson_plan.title}-{lesson_plan.level}.md"'
+            }
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Markdown导出失败: {str(e)}"
+        )
+
+
+@router.get("/{lesson_plan_id}/export/ppt")
+async def export_lesson_plan_ppt(
+    lesson_plan_id: uuid.UUID,
+    color_scheme: str = Query("default", description="PPT配色方案"),
+    include_slide_numbers: bool = Query(True, description="是否包含幻灯片编号"),
+    include_notes: bool = Query(True, description="是否包含演讲者备注"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    lesson_plan_service: LessonPlanService = Depends(get_lesson_plan_service),
+):
+    """
+    导出教案为PPT格式
+
+    支持自定义PPT样式和选项。
+
+    Args:
+        lesson_plan_id: 教案ID
+        color_scheme: PPT配色方案 (default/blue/green/purple)
+        include_slide_numbers: 是否包含幻灯片编号
+        include_notes: 是否包含演讲者备注
+        db: 数据库会话
+        current_user: 当前用户
+        lesson_plan_service: 教案服务
+
+    Returns:
+        FileResponse: PPTX文件
+
+    Raises:
+        HTTPException: 如果教案不存在或无权访问
+    """
+    from fastapi.responses import Response
+    from app.services.ppt_export_service import get_ppt_export_service
+
+    # 验证配色方案
+    valid_schemes = ["default", "blue", "green", "purple"]
+    if color_scheme not in valid_schemes:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"不支持的导出格式: {export_format}。支持的格式: {', '.join(valid_formats)}"
+            detail=f"不支持的配色方案: {color_scheme}。支持的方案: {', '.join(valid_schemes)}"
         )
 
     # 获取教案
@@ -384,23 +601,30 @@ async def export_lesson_plan(
         )
 
     try:
-        export_service = ExportService()
+        # 准备导出选项
+        options = {
+            'color_scheme': color_scheme,
+            'include_slide_numbers': include_slide_numbers,
+            'include_notes': include_notes,
+        }
 
-        # 根据格式导出
-        if export_format == "docx":
-            file_content, file_name = await export_service.export_to_word(lesson_plan)
-            media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        elif export_format == "pptx":
-            file_content, file_name = await export_service.export_to_ppt(lesson_plan)
-            media_type = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-        else:  # pdf
-            file_content, file_name = await export_service.export_to_pdf(lesson_plan)
-            media_type = "application/pdf"
+        # 准备教案数据
+        lesson_plan_data = lesson_plan.__dict__.copy()
 
-        # 返回文件
+        # 使用PPT导出服务
+        ppt_service = get_ppt_export_service(color_scheme)
+        ppt_content = await ppt_service.export_as_pptx(
+            lesson_plan=lesson_plan_data,
+            options=options
+        )
+
+        # 生成文件名
+        file_name = f"教案PPT-{lesson_plan.title}-{lesson_plan.level}.pptx"
+
+        # 返回PPTX文件
         return Response(
-            content=file_content,
-            media_type=media_type,
+            content=ppt_content,
+            media_type="application/vnd.openxmlformats-officedocument.presentationml.presentation",
             headers={
                 "Content-Disposition": f'attachment; filename="{file_name}"'
             }
@@ -409,7 +633,78 @@ async def export_lesson_plan(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"导出教案失败: {str(e)}"
+            detail=f"PPT导出失败: {str(e)}"
+        )
+
+
+@router.get("/{lesson_plan_id}/ppt/preview")
+async def preview_lesson_plan_ppt(
+    lesson_plan_id: uuid.UUID,
+    color_scheme: str = Query("default", description="PPT配色方案"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    lesson_plan_service: LessonPlanService = Depends(get_lesson_plan_service),
+):
+    """
+    预览教案PPT
+
+    以HTML格式返回PPT预览，支持在线查看。
+
+    Args:
+        lesson_plan_id: 教案ID
+        color_scheme: PPT配色方案
+        db: 数据库会话
+        current_user: 当前用户
+        lesson_plan_service: 教案服务
+
+    Returns:
+        HTML格式的PPT预览
+
+    Raises:
+        HTTPException: 如果教案不存在或无权访问
+    """
+    from fastapi.responses import Response
+
+    # 获取教案
+    lesson_plan = await lesson_plan_service.get_lesson_plan(db, lesson_plan_id)
+
+    if not lesson_plan:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="教案不存在"
+        )
+
+    # 检查权限
+    if (
+        current_user.role == UserRole.TEACHER
+        and not current_user.is_superuser
+        and lesson_plan.teacher_id != current_user.id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权预览此教案"
+        )
+
+    try:
+        # 准备教案数据
+        lesson_plan_data = lesson_plan.__dict__.copy()
+
+        # 使用PPT导出服务生成HTML
+        ppt_service = get_ppt_export_service(color_scheme)
+        html_content = await ppt_service.export_as_html(
+            lesson_plan=lesson_plan_data
+        )
+
+        # 返回HTML预览
+        return Response(
+            content=html_content,
+            media_type="text/html"
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"PPT预览失败: {str(e)}"
         )
 
 

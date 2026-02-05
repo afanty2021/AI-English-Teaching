@@ -180,6 +180,82 @@ def generate_font_css() -> str:
     """
 
 
+def get_pdf_css() -> str:
+    """
+    获取完整的PDF样式
+
+    Returns:
+        CSS 样式字符串
+    """
+    font_css = generate_font_css()
+
+    return f"""
+    {font_css}
+
+    /* PDF打印样式 */
+    @page {{
+        margin: 2cm;
+        size: A4;
+    }}
+
+    body {{
+        line-height: 1.6;
+        color: #333;
+        font-size: 12pt;
+    }}
+
+    h1, h2, h3, h4, h5, h6 {{
+        color: #2c3e50;
+        page-break-after: avoid;
+    }}
+
+    h1 {{
+        font-size: 24pt;
+        text-align: center;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 10pt;
+    }}
+
+    h2 {{
+        font-size: 18pt;
+        color: #2980b9;
+        margin-top: 20pt;
+    }}
+
+    h3 {{
+        font-size: 14pt;
+        color: #34495e;
+        margin-top: 15pt;
+    }}
+
+    table {{
+        border-collapse: collapse;
+        width: 100%;
+        margin: 10pt 0;
+    }}
+
+    th, td {{
+        border: 1px solid #ddd;
+        padding: 8pt;
+        text-align: left;
+    }}
+
+    th {{
+        background-color: #f8f9fa;
+        font-weight: bold;
+    }}
+
+    ul, ol {{
+        margin: 10pt 0;
+        padding-left: 20pt;
+    }}
+
+    li {{
+        margin: 5pt 0;
+    }}
+    """
+
+
 def log_font_info() -> None:
     """记录字体信息到日志"""
     font_info = check_font_availability()

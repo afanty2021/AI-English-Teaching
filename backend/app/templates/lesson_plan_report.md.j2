@@ -1,0 +1,251 @@
+# {{ lesson_plan.title }}
+
+**AI英语教学系统生成**
+
+---
+
+## 基本信息
+
+| 项目 | 内容 |
+|------|------|
+| 教案标题 | {{ lesson_plan.title }} |
+| 教师 | {{ teacher.username }} |
+| 等级 | {{ lesson_plan.level }} |
+| 时长 | {{ lesson_plan.duration }}分钟 |
+| 主题 | {{ lesson_plan.topic }} |
+{% if lesson_plan.target_exam %}| 目标考试 | {{ lesson_plan.target_exam }} |{% endif %}
+| 生成时间 | {{ lesson_plan.created_at }} |
+
+{% if lesson_plan.description %}
+## 教案描述
+
+{{ lesson_plan.description }}
+{% endif %}
+
+{% if options.include_objectives and lesson_plan.objectives %}
+## 教学目标
+
+{% for category, items in lesson_plan.objectives.items() %}
+{% if items %}
+### {{ category | title | replace('_', ' ') }}
+
+{% if category == 'language_skills' %}
+{% for skill, skill_items in items.items() %}
+{% if skill_items %}
+**{{ skill | title }}:**
+{% for item in skill_items %}
+- {{ item }}
+{% endfor %}
+
+{% endif %}
+{% endfor %}
+{% elif category == 'language_knowledge' or category == 'learning_strategies' or category == 'cultural_awareness' or category == 'emotional_attitudes' %}
+{% for item in items %}
+- {{ item }}
+{% endfor %}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if options.include_structure and lesson_plan.teaching_structure %}
+## 教学流程
+
+{% for phase, data in lesson_plan.teaching_structure.items() %}
+{% if data %}
+### {{ phase | title | replace('_', ' ') }} - {{ data.title if data.title is defined else phase | title | replace('_', ' ') }}
+
+**时长**: {{ data.duration }}分钟
+
+**描述**: {{ data.description }}
+
+{% if data.activities and data.activities | length > 0 %}
+**活动**:
+{% for activity in data.activities %}
+- {{ activity }}
+{% endfor %}
+{% endif %}
+
+{% if data.teacher_actions and data.teacher_actions | length > 0 %}
+**教师活动**:
+{% for action in data.teacher_actions %}
+- {{ action }}
+{% endfor %}
+{% endif %}
+
+{% if data.student_actions and data.student_actions | length > 0 %}
+**学生活动**:
+{% for action in data.student_actions %}
+- {{ action }}
+{% endfor %}
+{% endif %}
+
+{% if data.materials and data.materials | length > 0 %}
+**所需材料**:
+{% for material in data.materials %}
+- {{ material }}
+{% endfor %}
+{% endif %}
+
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if options.include_vocabulary and lesson_plan.vocabulary %}
+## 核心词汇
+
+{% for pos_type, words in lesson_plan.vocabulary.items() %}
+{% if words %}
+### {{ pos_type | title }}
+
+| 单词 | 音标 | 词性 | 中文释义 | 例句 |
+|------|------|------|----------|------|
+{% for word_data in words %}
+| {{ word_data.word }} | {{ word_data.phonetic or '' }} | {{ word_data.part_of_speech or '' }} | {{ word_data.meaning_cn or '' }} | {{ word_data.example_sentence or '' }} |
+{% endfor %}
+
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if options.include_grammar and lesson_plan.grammar_points %}
+## 语法点
+
+{% for gp in lesson_plan.grammar_points %}
+### {{ gp.name }}
+
+**描述**: {{ gp.description }}
+
+**规则**: {{ gp.rule }}
+
+{% if gp.examples and gp.examples | length > 0 %}
+**例句**:
+{% for example in gp.examples %}
+- {{ example }}
+{% endfor %}
+{% endif %}
+
+{% if gp.common_mistakes and gp.common_mistakes | length > 0 %}
+**常见错误**:
+{% for mistake in gp.common_mistakes %}
+- {{ mistake }}
+{% endfor %}
+{% endif %}
+
+{% if gp.practice_tips and gp.practice_tips | length > 0 %}
+**练习建议**:
+{% for tip in gp.practice_tips %}
+- {{ tip }}
+{% endfor %}
+{% endif %}
+
+{% endfor %}
+{% endif %}
+
+{% if options.include_materials and lesson_plan.leveled_materials %}
+## 分层阅读材料
+
+{% for material in lesson_plan.leveled_materials %}
+### {{ material.title }} (CEFR {{ material.level }})
+
+**等级**: {{ material.level }}
+**字数**: {{ material.word_count }}字
+
+### 内容
+
+{{ material.content }}
+
+{% if material.vocabulary_list and material.vocabulary_list | length > 0 %}
+### 重点词汇
+
+{% for vocab in material.vocabulary_list %}
+- **{{ vocab.word }}**: {{ vocab.meaning_cn or '' }}{% if vocab.example_sentence %} - 例句: {{ vocab.example_sentence }}{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if material.comprehension_questions and material.comprehension_questions | length > 0 %}
+### 理解问题
+
+{% for question in material.comprehension_questions %}
+- {{ question }}
+{% endfor %}
+{% endif %}
+
+{% if material.difficulty_notes %}
+**难度说明**: {{ material.difficulty_notes }}
+{% endif %}
+
+---
+{% endfor %}
+{% endif %}
+
+{% if options.include_exercises and lesson_plan.exercises %}
+## 练习题
+
+{% for ex_type, exercise_list in lesson_plan.exercises.items() %}
+{% if exercise_list %}
+### {{ ex_type | title | replace('_', ' ') }}
+
+{% for idx, exercise in enumerate(exercise_list, 1) %}
+**{{ idx }}. {{ exercise.question }}**
+
+{% if exercise.options %}
+{% set options = ['A', 'B', 'C', 'D'] %}
+{% for option, option_text in options | zip(exercise.options) %}
+{{ option }}. {{ option_text }}
+{% endfor %}
+{% endif %}
+
+**答案**: {{ exercise.correct_answer }}
+
+**解析**: {{ exercise.explanation }}
+
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% if options.include_ppt_outline and lesson_plan.ppt_outline %}
+## PPT大纲
+
+| 幻灯片 | 标题 | 内容要点 |
+|---------|------|----------|
+{% for slide in lesson_plan.ppt_outline %}
+| {{ slide.slide_number }} | {{ slide.title }} | {{ slide.content | join(', ') }} |
+{% endfor %}
+{% endif %}
+
+{% if lesson_plan.resources %}
+## 教学资源与素材
+
+{% for resource_type, resources in lesson_plan.resources.items() %}
+### {{ resource_type | title | replace('_', ' ') }}
+
+{% for resource in resources %}
+- {{ resource }}
+{% endfor %}
+{% endfor %}
+{% endif %}
+
+{% if lesson_plan.teaching_notes %}
+## 教学反思
+
+{{ lesson_plan.teaching_notes }}
+{% endif %}
+
+---
+
+## 附录
+
+### 生成信息
+
+- **AI生成时间**: {{ lesson_plan.generation_time_ms }}ms
+- **最后更新**: {{ lesson_plan.updated_at }}
+- **系统版本**: AI英语教学系统 v1.0
+
+### 版权声明
+
+本教案由AI英语教学系统自动生成，仅供教学参考使用。
+
+---
+*Generated by AI English Teaching System*
