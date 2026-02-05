@@ -14,11 +14,8 @@ from app.db.base import Base
 from app.models import User, Organization, Student, Teacher, KnowledgeGraph
 from app.main import app
 
-# 测试数据库URL - 使用 PostgreSQL 以获得完整功能支持
-# 如果 Docker PostgreSQL 不可用，将自动使用 SQLite
-import os
-POSTGRES_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/english_teaching_test"
-TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL", POSTGRES_URL)
+# 测试数据库URL - 使用 Docker PostgreSQL
+TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/english_teaching"
 
 
 # ============================================================================
@@ -291,6 +288,72 @@ def sample_user_data() -> dict:
     }
 
 
+@pytest.fixture
+def sample_student(db, test_organization):
+    """示例学生用户"""
+    from app.models import Student, User
+    user = User(
+        id=uuid4(),
+        username="sample_student",
+        email="sample_student@test.com",
+        hashed_password="hashed_password",
+        role="student",
+        is_active=True
+    )
+    student = Student(
+        id=uuid4(),
+        user_id=user.id,
+        organization_id=test_organization.id,
+        target_exam="CET4",
+        current_cefr_level="B1"
+    )
+    db.add(user)
+    db.add(student)
+    return student
+
+
+@pytest.fixture
+def sample_teacher(db, test_organization):
+    """示例教师用户"""
+    from app.models import Teacher, User
+    user = User(
+        id=uuid4(),
+        username="sample_teacher",
+        email="sample_teacher@test.com",
+        hashed_password="hashed_password",
+        role="teacher",
+        is_active=True
+    )
+    teacher = Teacher(
+        id=uuid4(),
+        user_id=user.id,
+        organization_id=test_organization.id,
+        specialization=["reading", "writing"]
+    )
+    db.add(user)
+    db.add(teacher)
+    return teacher
+
+
+@pytest.fixture
+def sample_content(db):
+    """示例内容"""
+    from app.models import Content
+    content = Content(
+        id=uuid4(),
+        title="Test Reading Article",
+        description="A test reading article",
+        content_type="reading",
+        difficulty_level="intermediate",
+        topic="technology",
+        content_text="This is a test article.",
+        is_published=True,
+        view_count=10
+    )
+    db.add(content)
+    return content
+
+
 @pytest.fixture(scope="session")
 def event_loop() -> Generator:
     """创建事件循环"""
@@ -304,15 +367,16 @@ async def db_engine():
     """
     创建测试数据库引擎
 
-    使用 PostgreSQL 以获得完整功能支持
-    确保测试数据库已创建: createdb english_teaching_test
+    使用 SQLite 进行本地测试，无需 Docker
     """
     from sqlalchemy.ext.asyncio import AsyncEngine
 
     engine: AsyncEngine = create_async_engine(
         TEST_DATABASE_URL,
         echo=False,
-        future=True
+        future=True,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool
     )
 
     # 创建所有表
@@ -342,3 +406,59 @@ async def db(db_engine) -> AsyncGenerator[AsyncSession, None]:
     async with async_session_maker() as session:
         yield session
         await session.rollback()
+
+
+@pytest.fixture
+def test_organization(db: AsyncSession) -> Organization:
+    """测试组织"""
+    org = Organization(
+        id=uuid4(),
+        name="测试学校"
+    )
+    db.add(org)
+    return org
+
+
+@pytest.fixture
+def test_student(db: AsyncSession, test_organization: Organization) -> Student:
+    """测试学生用户"""
+    user = User(
+        id=uuid4(),
+        username="test_student",
+        email="student@test.com",
+        hashed_password="hashed_password",
+        role="student",
+        is_active=True
+    )
+    student = Student(
+        id=uuid4(),
+        user_id=user.id,
+        organization_id=test_organization.id,
+        target_exam="CET4",
+        current_cefr_level="B1"
+    )
+    db.add(user)
+    db.add(student)
+    return student
+
+
+@pytest.fixture
+def test_teacher(db: AsyncSession, test_organization: Organization) -> Teacher:
+    """测试教师用户"""
+    user = User(
+        id=uuid4(),
+        username="test_teacher",
+        email="teacher@test.com",
+        hashed_password="hashed_password",
+        role="teacher",
+        is_active=True
+    )
+    teacher = Teacher(
+        id=uuid4(),
+        user_id=user.id,
+        organization_id=test_organization.id,
+        specialization=["reading", "writing"]
+    )
+    db.add(user)
+    db.add(teacher)
+    return teacher

@@ -32,7 +32,7 @@
 
     <!-- 题库列表 -->
     <el-card v-loading="loading" class="bank-list">
-      <el-empty v-if="!banks.length && !loading" description="暂无题库，点击"新建题库"开始创建" />
+      <el-empty v-if="!banks.length && !loading" description="暂无题库，点击「新建题库」开始创建" />
 
       <el-table v-else :data="banks" stripe @row-click="handleView">
         <el-table-column prop="name" label="题库名称" min-width="200" />

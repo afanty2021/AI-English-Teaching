@@ -342,6 +342,23 @@
             </div>
           </el-tab-pane>
 
+          <!-- PPT 预览 -->
+          <el-tab-pane label="PPT 预览" name="ppt">
+            <div class="tab-content ppt-preview-content">
+              <PPTPreview
+                v-if="currentLesson.ppt_outline && currentLesson.ppt_outline.length > 0"
+                :slides="currentLesson.ppt_outline"
+                :title="currentLesson.title"
+                :lesson-id="currentLesson.id"
+                @change="handleSlideChange"
+                @export="handleExportSlide"
+              />
+              <el-empty v-else description="暂无 PPT 内容">
+                <el-button type="primary" @click="goToAIPlanning">使用 AI 生成 PPT</el-button>
+              </el-empty>
+            </div>
+          </el-tab-pane>
+
           <!-- 在线编辑 -->
           <el-tab-pane label="在线编辑" name="edit">
             <div class="tab-content edit-content">
@@ -492,6 +509,8 @@ import {
   getExportUrl,
   exportToMarkdown as apiExportToMarkdown
 } from '@/api/lesson'
+import PPTPreview from '@/components/PPTPreview.vue'
+import type { PPTSlide } from '@/types/lesson'
 
 // 类型定义
 interface LessonPlan {
@@ -531,6 +550,7 @@ interface LessonPlan {
     description: string
     url: string
   }>
+  ppt_outline?: PPTSlide[]
   created_at: string
   updated_at: string
 }
@@ -634,6 +654,7 @@ const convertToLessonPlan = (detail: any): LessonPlan => {
     grammar_points: detail.grammar_points,
     structure: convertStructureToArray(detail.structure),
     materials: detail.resources ? convertResourcesToMaterials(detail.resources) : undefined,
+    ppt_outline: detail.ppt_outline || [],
     created_at: detail.created_at,
     updated_at: detail.updated_at
   }
@@ -1024,6 +1045,15 @@ const getMaterialIcon = (type: string) => {
 const downloadMaterial = (material: any) => {
   // TODO: 下载材料
   ElMessage.info('下载功能开发中...')
+}
+
+// PPT 预览事件处理
+const handleSlideChange = (slide: PPTSlide, index: number) => {
+  console.log('切换到幻灯片:', index + 1, slide.title)
+}
+
+const handleExportSlide = (slide: PPTSlide) => {
+  ElMessage.info(`导出幻灯片: ${slide.title}（功能开发中）`)
 }
 
 // 辅助函数：生成语法点HTML
@@ -1451,6 +1481,17 @@ onMounted(() => {
   gap: 12px;
   padding-top: 12px;
   border-top: 1px solid var(--el-border-color-lighter);
+}
+
+/* PPT 预览 */
+.ppt-preview-content {
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.ppt-preview-content :deep(.ppt-preview) {
+  height: 100%;
 }
 
 @media (max-width: 768px) {

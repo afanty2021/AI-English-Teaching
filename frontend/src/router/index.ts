@@ -169,6 +169,18 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, requiresTeacher: true, title: '编辑题目' }
   },
   {
+    path: '/teacher/lesson-export',
+    name: 'LessonExport',
+    component: () => import('@/views/teacher/LessonExportView.vue'),
+    meta: { requiresAuth: true, requiresTeacher: true, title: '教案导出' }
+  },
+  {
+    path: '/teacher/template-library',
+    name: 'TemplateLibrary',
+    component: () => import('@/views/teacher/TemplateLibraryView.vue'),
+    meta: { requiresAuth: true, requiresTeacher: true, title: '模板库' }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/NotFoundView.vue'),

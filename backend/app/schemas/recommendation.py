@@ -4,7 +4,7 @@
 """
 import uuid
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -210,3 +210,138 @@ class RecommendationFilter(BaseModel):
     min_score: Optional[float] = Field(None, description="最低推荐分数")
     exclude_completed: bool = Field(default=True, description="排除已完成的内容")
     max_recommendations: int = Field(default=10, description="最大推荐数量")
+
+
+# ==================== 推荐反馈相关 Schemas ====================
+
+class FeedbackRequest(BaseModel):
+    """提交推荐反馈请求"""
+    content_id: uuid.UUID = Field(..., description="内容ID")
+    satisfaction: int = Field(..., ge=1, le=5, description="满意度评分 1-5")
+    reason: Optional[str] = Field(None, description="反馈原因")
+    feedback_type: str = Field(default="recommendation", description="反馈类型")
+
+
+class FeedbackResponse(BaseModel):
+    """反馈响应"""
+    success: bool = Field(..., description="是否成功")
+    message: str = Field(..., description="响应消息")
+
+
+class ContentCompletionRequest(BaseModel):
+    """标记内容完成请求"""
+    content_id: uuid.UUID = Field(..., description="内容ID")
+    content_type: str = Field(..., description="内容类型")
+    completed_at: datetime = Field(default_factory=datetime.utcnow, description="完成时间")
+    score: Optional[int] = Field(None, description="得分")
+    time_spent: Optional[int] = Field(None, description="用时（秒）")
+
+
+class ContentCompletionResponse(BaseModel):
+    """内容完成响应"""
+    success: bool = Field(..., description="是否成功")
+    message: str = Field(..., description="响应消息")
+    earned_points: int = Field(default=0, description="获得的积分")
+    mastery_update: dict = Field(default_factory=dict, description="掌握度更新")
+
+
+# ==================== 推荐历史相关 Schemas ====================
+
+class RecommendationHistoryItem(BaseModel):
+    """推荐历史项"""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID = Field(..., description="记录ID")
+    content_id: uuid.UUID = Field(..., description="内容ID")
+    content_type: str = Field(..., description="内容类型")
+    title: str = Field(..., description="内容标题")
+    recommended_at: datetime = Field(..., description="推荐时间")
+    completed_at: Optional[datetime] = Field(None, description="完成时间")
+    satisfaction: Optional[int] = Field(None, description="满意度评分")
+    feedback: Optional[str] = Field(None, description="反馈")
+
+
+class RecommendationHistoryResponse(BaseModel):
+    """推荐历史响应"""
+    items: List[RecommendationHistoryItem] = Field(..., description="历史列表")
+    total: int = Field(..., description="总数")
+    page: int = Field(..., description="当前页")
+    limit: int = Field(..., description="每页数量")
+    has_more: bool = Field(..., description="是否有更多")
+
+
+# ==================== 推荐统计相关 Schemas ====================
+
+class RecommendationStatsResponse(BaseModel):
+    """推荐统计响应"""
+    total_recommendations: int = Field(..., description="总推荐数")
+    completion_rate: float = Field(..., description="完成率")
+    average_satisfaction: float = Field(..., description="平均满意度")
+    most_popular_topics: List[str] = Field(..., description="最热门主题")
+    improvement_areas: List[str] = Field(..., description="待提升领域")
+
+
+# ==================== 推荐偏好相关 Schemas ====================
+
+class UpdatePreferencesRequest(BaseModel):
+    """更新偏好请求"""
+    preferred_topics: Optional[List[str]] = Field(None, description="偏好主题")
+    preferred_content_types: Optional[List[str]] = Field(None, description="偏好的内容类型")
+    difficulty_preference: Optional[str] = Field(None, description="难度偏好", pattern="^(easier|same|harder)$")
+    study_time_preference: Optional[int] = Field(None, ge=0, le=480, description="每日学习时长偏好（分钟）")
+
+
+class RecommendationPreferenceResponse(BaseModel):
+    """推荐偏好响应"""
+    user_id: uuid.UUID = Field(..., description="用户ID")
+    preferred_topics: List[str] = Field(default_factory=list, description="偏好主题")
+    preferred_content_types: List[str] = Field(default_factory=list, description="偏好的内容类型")
+    difficulty_preference: Optional[str] = Field(None, description="难度偏好")
+    study_time_preference: Optional[int] = Field(None, description="每日学习时长偏好")
+    updated_at: datetime = Field(..., description="更新时间")
+
+
+# ==================== 内容搜索相关 Schemas ====================
+
+class ContentSearchResult(BaseModel):
+    """内容搜索结果"""
+    id: uuid.UUID = Field(..., description="内容ID")
+    title: str = Field(..., description="标题")
+    content_type: str = Field(..., description="内容类型")
+    difficulty_level: str = Field(..., description="难度等级")
+    topic: Optional[str] = Field(None, description="主题")
+    description: Optional[str] = Field(None, description="描述")
+    match_score: float = Field(..., description="匹配分数")
+
+
+class ContentSearchResponse(BaseModel):
+    """内容搜索响应"""
+    results: List[ContentSearchResult] = Field(..., description="搜索结果")
+    total: int = Field(..., description="总数")
+    query: str = Field(..., description="搜索词")
+
+
+# ==================== 每日推荐响应（完整版） ====================
+
+class DailyRecommendationsResponse(BaseModel):
+    """
+    每日推荐响应（完整版）
+    与前端 DailyRecommendations 类型对应
+    """
+    model_config = ConfigDict(from_attributes=True)
+
+    date: datetime = Field(..., description="推荐日期")
+
+    # 学生画像摘要
+    student_profile: dict = Field(..., description="学生画像")
+
+    # 推荐内容
+    reading: List[ReadingRecommendation] = Field(default_factory=list, description="阅读推荐")
+    listening: List[Any] = Field(default_factory=list, description="听力推荐")
+    vocabulary: List[Any] = Field(default_factory=list, description="词汇推荐")
+    grammar: List[Any] = Field(default_factory=list, description="语法推荐")
+    speaking: Optional[SpeakingRecommendation] = Field(None, description="口语推荐")
+
+    # 统计信息
+    total_recommendations: int = Field(default=0, description="总推荐数")
+    has_more: bool = Field(default=False, description="是否有更多推荐")

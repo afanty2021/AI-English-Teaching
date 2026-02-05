@@ -42,6 +42,11 @@ from app.models.practice_session import (
     PracticeSession,
     SessionStatus,
 )
+from app.models.recommendation import (
+    RecommendationFeedback,
+    RecommendationHistory,
+    RecommendationPreference,
+)
 
 __all__ = [
     "User",
@@ -76,4 +81,7 @@ __all__ = [
     "CEFRLevel",
     "PracticeSession",
     "SessionStatus",
+    "RecommendationFeedback",
+    "RecommendationHistory",
+    "RecommendationPreference",
 ]

@@ -380,3 +380,100 @@ class LessonPlanTemplateListResponse(BaseModel):
     """教案模板列表响应"""
     templates: List[LessonPlanTemplateResponse] = Field(..., description="模板列表")
     total: int = Field(..., description="总数")
+
+
+# ==================== 前端API对应的新增Schema ====================
+
+class TemplateSection(BaseModel):
+    """模板章节"""
+    key: str = Field(..., description="章节key")
+    label: str = Field(..., description="章节标签")
+    duration: int = Field(..., description="时长（分钟）")
+    required: bool = Field(..., description="是否必需")
+    content_template: Optional[str] = Field(None, description="内容模板")
+
+
+class TemplateStructure(BaseModel):
+    """模板结构"""
+    sections: List[TemplateSection] = Field(..., description="章节列表")
+    objectives: Optional[List[str]] = Field(None, description="目标")
+    vocabulary: Optional[Dict[str, int]] = Field(None, description="词汇数量")
+    grammar_points: Optional[List[str]] = Field(None, description="语法点")
+
+
+class TemplateCategory(BaseModel):
+    """模板分类"""
+    key: str = Field(..., description="分类key")
+    label: str = Field(..., description="分类标签")
+    icon: Optional[str] = Field(None, description="图标")
+
+
+class TemplateListItem(BaseModel):
+    """模板列表项（摘要视图）"""
+    id: uuid.UUID = Field(..., description="模板ID")
+    name: str = Field(..., description="模板名称")
+    description: Optional[str] = Field(None, description="模板描述")
+    category_key: str = Field(..., description="分类key")
+    category_label: str = Field(..., description="分类标签")
+    level: str = Field(..., description="CEFR等级")
+    duration: int = Field(..., description="时长（分钟）")
+    thumbnail_url: Optional[str] = Field(None, description="缩略图URL")
+    is_public: bool = Field(..., description="是否公开")
+    is_official: bool = Field(..., description="是否官方")
+    usage_count: int = Field(default=0, description="使用次数")
+    rating: float = Field(default=0.0, description="评分")
+    created_at: datetime = Field(..., description="创建时间")
+
+
+class CreateTemplateRequest(BaseModel):
+    """创建模板请求"""
+    name: str = Field(..., min_length=1, max_length=255, description="模板名称")
+    description: Optional[str] = Field(None, description="模板描述")
+    category_key: str = Field(..., description="分类key")
+    level: str = Field(..., description="CEFR等级")
+    duration: int = Field(default=45, description="时长（分钟）")
+    structure: TemplateStructure = Field(..., description="模板结构")
+    is_public: bool = Field(default=True, description="是否公开")
+
+
+class UpdateTemplateRequest(BaseModel):
+    """更新模板请求"""
+    name: Optional[str] = Field(None, min_length=1, max_length=255, description="模板名称")
+    description: Optional[str] = Field(None, description="模板描述")
+    category_key: Optional[str] = Field(None, description="分类key")
+    level: Optional[str] = Field(None, description="CEFR等级")
+    duration: Optional[int] = Field(None, description="时长（分钟）")
+    structure: Optional[TemplateStructure] = Field(None, description="模板结构")
+    is_public: Optional[bool] = Field(None, description="是否公开")
+
+
+class TemplateQueryParams(BaseModel):
+    """模板查询参数"""
+    page: int = Field(default=1, ge=1, description="页码")
+    page_size: int = Field(default=20, ge=1, le=100, description="每页数量")
+    category: Optional[str] = Field(None, description="分类过滤")
+    level: Optional[str] = Field(None, description="等级过滤")
+    search: Optional[str] = Field(None, description="搜索关键词")
+    is_public: Optional[bool] = Field(None, description="是否公开过滤")
+    is_official: Optional[bool] = Field(None, description="官方模板过滤")
+    sort_by: str = Field(default="created_at", description="排序字段")
+    sort_order: str = Field(default="desc", description="排序方向")
+
+
+class TemplateListResponse(BaseModel):
+    """模板列表响应"""
+    items: List[TemplateListItem] = Field(..., description="模板列表")
+    total: int = Field(..., description="总数")
+    page: int = Field(..., description="当前页")
+    page_size: int = Field(..., description="每页数量")
+
+
+class TemplateDetailResponse(BaseModel):
+    """模板详情响应"""
+    template: LessonPlanTemplateResponse = Field(..., description="模板详情")
+
+
+class ApplyTemplateResponse(BaseModel):
+    """应用模板响应"""
+    lesson_plan_id: uuid.UUID = Field(..., description="生成的教案ID")
+    lesson_plan: Dict[str, Any] = Field(..., description="教案内容")
