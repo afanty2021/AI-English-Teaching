@@ -27,16 +27,24 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        // 使用预保存的认证状态
-        storageState: 'e2e/.auth/storage-state.json'
+        // 教师认证状态
+        storageState: 'e2e/.auth/teacher-storage-state.json'
+      },
+    },
+    {
+      name: 'chromium-student',
+      use: {
+        ...devices['Desktop Chrome'],
+        // 学生认证状态
+        storageState: 'e2e/.auth/student-storage-state.json'
       },
     },
   ],
 
   // 在全局测试前启动开发服务器
-  // webServer: {
-  //   command: 'npm run dev',
-  //   port: 5173,
-  //   reuseExistingServer: !process.env.CI
-  // }
+  webServer: {
+    command: 'npm run dev',
+    port: 5174,
+    reuseExistingServer: !process.env.CI
+  }
 })

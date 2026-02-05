@@ -8,6 +8,12 @@ from app.utils.pdf_helpers import (
     generate_font_css,
     log_font_info,
 )
+from app.utils.content_validators import (
+    ContentValidator,
+    VocabularyValidator,
+    get_content_validator,
+    get_vocabulary_validator,
+)
 
 __all__ = [
     "get_chinese_fonts",
@@ -15,4 +21,8 @@ __all__ = [
     "get_css_font_families",
     "generate_font_css",
     "log_font_info",
+    "ContentValidator",
+    "VocabularyValidator",
+    "get_content_validator",
+    "get_vocabulary_validator",
 ]
