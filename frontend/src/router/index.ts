@@ -79,6 +79,24 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, requiresStudent: true, title: '报告详情' }
   },
   {
+    path: '/student/practice-list',
+    name: 'practice-list',
+    component: () => import('@/views/student/PracticeListView.vue'),
+    meta: { requiresAuth: true, requiresStudent: true, title: '练习中心' }
+  },
+  {
+    path: '/student/practice/:sessionId',
+    name: 'practice',
+    component: () => import('@/views/student/PracticeView.vue'),
+    meta: { requiresAuth: true, requiresStudent: true, title: '练习答题' }
+  },
+  {
+    path: '/student/practice-result/:sessionId',
+    name: 'practice-result',
+    component: () => import('@/views/student/PracticeResultView.vue'),
+    meta: { requiresAuth: true, requiresStudent: true, title: '练习结果' }
+  },
+  {
     path: '/teacher',
     name: 'TeacherDashboard',
     component: () => import('@/views/teacher/DashboardView.vue'),
@@ -101,6 +119,54 @@ const routes: RouteRecordRaw[] = [
     name: 'TeacherAIPlanning',
     component: () => import('@/views/teacher/AIPlanningView.vue'),
     meta: { requiresAuth: true, requiresTeacher: true, title: 'AI 备课' }
+  },
+  {
+    path: '/teacher/reports',
+    name: 'TeacherReports',
+    component: () => import('@/views/teacher/StudentReportsView.vue'),
+    meta: { requiresAuth: true, requiresTeacher: true, title: '学生报告' }
+  },
+  {
+    path: '/teacher/reports/students/:studentId',
+    name: 'TeacherStudentReports',
+    component: () => import('@/views/teacher/StudentReportDetailView.vue'),
+    meta: { requiresAuth: true, requiresTeacher: true, title: '学生报告详情' }
+  },
+  {
+    path: '/teacher/reports/students/:studentId/reports/:reportId',
+    name: 'TeacherStudentReport',
+    component: () => import('@/views/teacher/StudentReportDetailView.vue'),
+    meta: { requiresAuth: true, requiresTeacher: true, title: '学生报告详情' }
+  },
+  {
+    path: '/teacher/reports/class-overview',
+    name: 'ClassOverview',
+    component: () => import('@/views/teacher/ClassOverviewView.vue'),
+    meta: { requiresAuth: true, requiresTeacher: true, title: '班级学习状况' }
+  },
+  {
+    path: '/teacher/question-banks',
+    name: 'question-bank-list',
+    component: () => import('@/views/teacher/QuestionBankListView.vue'),
+    meta: { requiresAuth: true, requiresTeacher: true, title: '题库管理' }
+  },
+  {
+    path: '/teacher/question-banks/:bankId',
+    name: 'question-bank-detail',
+    component: () => import('@/views/teacher/QuestionBankDetailView.vue'),
+    meta: { requiresAuth: true, requiresTeacher: true, title: '题库详情' }
+  },
+  {
+    path: '/teacher/question-banks/:bankId/questions/new',
+    name: 'question-create',
+    component: () => import('@/views/teacher/QuestionEditorView.vue'),
+    meta: { requiresAuth: true, requiresTeacher: true, title: '新建题目' }
+  },
+  {
+    path: '/teacher/questions/:questionId',
+    name: 'question-edit',
+    component: () => import('@/views/teacher/QuestionEditorView.vue'),
+    meta: { requiresAuth: true, requiresTeacher: true, title: '编辑题目' }
   },
   {
     path: '/:pathMatch(.*)*',
@@ -158,21 +224,100 @@ router.beforeEach(async (to, from, next) => {
   }
 
   // 需要认证的页面
-  if (!authStore.isAuthenticated) {
+  // 首先检查 Pinia store 的认证状态
+  let isAuthenticated = authStore.isAuthenticated
+  let isTeacher = authStore.isTeacher
+  let isStudent = authStore.isStudent
+  let isAdmin = authStore.isAdmin
+
+  // 调试：初始状态
+  console.log('[Router] Initial auth state:', {
+    path: to.path,
+    isAuthenticated,
+    isTeacher,
+    isStudent,
+    isAdmin,
+    user: authStore.user,
+    accessToken: authStore.accessToken
+  })
+
+  // 如果 store 未完全初始化，检查 localStorage 作为回退（支持 E2E 测试和应用刷新）
+  if (!isAuthenticated || (!isTeacher && !isStudent && !isAdmin)) {
+    // 添加重试机制，延迟检查 localStorage（解决 E2E 测试时序问题）
+    let retryCount = 0
+    const maxRetries = 10
+
+    const checkLocalStorage = () => {
+      try {
+        const token = localStorage.getItem('access_token')
+        const userStr = localStorage.getItem('user')
+        console.log('[Router] Fallback check:', { token: !!token, userStr: !!userStr, retryCount })
+
+        if (token && userStr) {
+          const user = JSON.parse(userStr)
+          // 有 token 和用户数据，视为已认证
+          isAuthenticated = true
+          // 从用户数据确定角色
+          isTeacher = user.role === 'teacher'
+          isStudent = user.role === 'student'
+          isAdmin = user.role === 'admin'
+          console.log('[Router] Parsed from localStorage:', { isAuthenticated, isTeacher, isStudent, isAdmin, user })
+          return true
+        }
+
+        // 如果没有数据且还有重试次数，等待后重试
+        if (retryCount < maxRetries) {
+          retryCount++
+          setTimeout(checkLocalStorage, 200)
+          return false
+        }
+
+        return false
+      } catch (e) {
+        // localStorage 可能不可用或数据无效
+        console.error('[Router] Failed to read from localStorage:', e)
+        return false
+      }
+    }
+
+    // 立即检查一次
+    checkLocalStorage()
+  }
+
+  // 调试日志（仅开发环境）
+  if (import.meta.env.DEV) {
+    console.log('[Router] Final auth check:', {
+      path: to.path,
+      isAuthenticated,
+      isTeacher,
+      isStudent,
+      isAdmin,
+      requiresAuth,
+      requiresTeacher,
+      requiresStudent
+    })
+  }
+
+  if (!isAuthenticated) {
+    console.log('[Router] Not authenticated, redirecting to login')
     next('/login')
     return
   }
 
   // 角色权限检查
-  if (requiresTeacher && !authStore.isTeacher && !authStore.isAdmin) {
+  if (requiresTeacher && !isTeacher && !isAdmin) {
+    console.log('[Router] Not teacher, redirecting to home')
     next('/')
     return
   }
 
-  if (requiresStudent && !authStore.isStudent && !authStore.isAdmin) {
+  if (requiresStudent && !isStudent && !isAdmin) {
+    console.log('[Router] Not student, redirecting to home')
     next('/')
     return
   }
+
+  console.log('[Router] Auth check passed, proceeding to:', to.path)
 
   next()
 })

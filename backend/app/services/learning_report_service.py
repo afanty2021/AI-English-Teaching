@@ -533,6 +533,402 @@ class LearningReportService:
 
         return list(reports), total
 
+    async def get_teacher_student_reports(
+        self,
+        teacher_id: uuid.UUID,
+        class_id: Optional[uuid.UUID] = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> tuple[List[Dict[str, Any]], int]:
+        """
+        获取教师班级学生列表及报告概览
+
+        Args:
+            teacher_id: 教师ID
+            class_id: 班级ID（可选）
+            limit: 返回数量限制
+            offset: 偏移量
+
+        Returns:
+            (学生列表, 总数)
+        """
+        # 导入模型避免循环导入
+        from app.models.class_model import ClassInfo, ClassStudent
+        from app.models.student import Student
+        from app.models.user import User
+
+        # 构建查询：获取教师负责的班级下的学生
+        query = (
+            select(
+                Student.id,
+                Student.student_number,
+                User.username,
+                User.email,
+                ClassInfo.id.label("class_id"),
+                ClassInfo.name.label("class_name"),
+                ClassInfo.grade,
+                LearningReport.id.label("latest_report_id"),
+                LearningReport.created_at.label("latest_report_created_at"),
+                LearningReport.report_type.label("latest_report_type"),
+            )
+            .select_from(Student)
+            .join(User, Student.user_id == User.id)
+            .join(ClassStudent, Student.id == ClassStudent.student_id)
+            .join(ClassInfo, ClassStudent.class_id == ClassInfo.id)
+            .join(
+                # 获取最新的学习报告（LEFT JOIN）
+                LearningReport,
+                and_(
+                    LearningReport.student_id == Student.id,
+                    LearningReport.created_at == (
+                        select(func.max(LearningReport.created_at))
+                        .where(LearningReport.student_id == Student.id)
+                        .correlate(Student)
+                    ),
+                ),
+                isouter=True,
+            )
+            .where(
+                and_(
+                    ClassInfo.head_teacher_id == teacher_id,
+                    ClassStudent.enrollment_status == "active",
+                    ClassInfo.status == "active",
+                )
+            )
+        )
+
+        # 如果指定了班级ID，添加筛选
+        if class_id:
+            query = query.where(ClassInfo.id == class_id)
+
+        # 查询总数
+        count_query = select(func.count()).select_from(query.subquery())
+        count_result = await self.db.execute(count_query)
+        total = count_result.scalar()
+
+        # 查询学生列表
+        query = query.order_by(User.username.asc()).limit(limit).offset(offset)
+        result = await self.db.execute(query)
+        rows = result.all()
+
+        # 转换为字典格式
+        students = []
+        for row in rows:
+            students.append({
+                "student_id": str(row.id),
+                "student_number": row.student_number,
+                "student_name": row.username,
+                "email": row.email,
+                "class_id": str(row.class_id),
+                "class_name": row.class_name,
+                "grade": row.grade,
+                "latest_report": {
+                    "report_id": str(row.latest_report_id) if row.latest_report_id else None,
+                    "created_at": row.latest_report_created_at.isoformat() if row.latest_report_created_at else None,
+                    "report_type": row.latest_report_type if row.latest_report_type else None,
+                } if row.latest_report_id else None,
+                "has_reports": bool(row.latest_report_id),
+            })
+
+        return students, total
+
+    async def get_student_reports_for_teacher(
+        self,
+        teacher_id: uuid.UUID,
+        student_id: uuid.UUID,
+        report_type: Optional[str] = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> tuple[List["LearningReport"], int]:
+        """
+        获取指定学生的报告列表（教师视角）
+
+        Args:
+            teacher_id: 教师ID
+            student_id: 学生ID
+            report_type: 报告类型筛选
+            limit: 返回数量限制
+            offset: 偏移量
+
+        Returns:
+            (报告列表, 总数)
+
+        Raises:
+            HTTPException: 如果学生不属于该教师
+        """
+        # 验证学生是否属于该教师
+        await self.verify_student_belongs_to_teacher(teacher_id, student_id)
+
+        # 导入模型避免循环导入
+        from app.models.learning_report import LearningReport
+
+        # 构建查询
+        query = select(LearningReport).where(LearningReport.student_id == student_id)
+
+        # 添加报告类型筛选
+        if report_type:
+            query = query.where(LearningReport.report_type == report_type)
+
+        # 查询总数
+        count_result = await self.db.execute(select(func.count()).select_from(query.subquery()))
+        total = count_result.scalar()
+
+        # 查询报告列表
+        query = query.order_by(LearningReport.created_at.desc()).limit(limit).offset(offset)
+        result = await self.db.execute(query)
+        reports = result.scalars().all()
+
+        return list(reports), total
+
+    async def verify_student_belongs_to_teacher(
+        self,
+        teacher_id: uuid.UUID,
+        student_id: uuid.UUID,
+    ) -> None:
+        """
+        验证学生是否属于该教师
+
+        Args:
+            teacher_id: 教师ID
+            student_id: 学生ID
+
+        Raises:
+            HTTPException 404: 如果学生不属于该教师
+        """
+        from app.models.class_model import ClassInfo, ClassStudent
+        from fastapi import HTTPException, status
+
+        # 查询学生是否在教师负责的班级中
+        result = await self.db.execute(
+            select(func.count(ClassStudent.id))
+            .select_from(ClassStudent)
+            .join(ClassInfo, ClassStudent.class_id == ClassInfo.id)
+            .where(
+                and_(
+                    ClassStudent.student_id == student_id,
+                    ClassInfo.head_teacher_id == teacher_id,
+                    ClassStudent.enrollment_status == "active",
+                    ClassInfo.status == "active",
+                )
+            )
+        )
+        count = result.scalar()
+
+        if count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="学生不存在或不属于该教师"
+            )
+
+    async def generate_class_summary(
+        self,
+        teacher_id: uuid.UUID,
+        class_id: uuid.UUID,
+        period_start: Optional[datetime] = None,
+        period_end: Optional[datetime] = None,
+    ) -> Dict[str, Any]:
+        """
+        生成班级学习状况汇总
+
+        Args:
+            teacher_id: 教师ID
+            class_id: 班级ID
+            period_start: 统计开始时间
+            period_end: 统计结束时间
+
+        Returns:
+            dict: 班级学习状况汇总
+
+        Raises:
+            HTTPException: 如果班级不属于该教师
+        """
+        from app.models.class_model import ClassInfo, ClassStudent
+        from app.models.student import Student
+        from app.models.user import User
+        from fastapi import HTTPException, status
+
+        # 确定时间范围
+        if not period_end:
+            period_end = datetime.utcnow()
+        if not period_start:
+            period_start = period_end - timedelta(days=30)
+
+        # 验证班级是否属于该教师
+        result = await self.db.execute(
+            select(ClassInfo)
+            .where(
+                and_(
+                    ClassInfo.id == class_id,
+                    ClassInfo.head_teacher_id == teacher_id,
+                    ClassInfo.status == "active",
+                )
+            )
+        )
+        class_info = result.scalar_one_or_none()
+
+        if not class_info:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="班级不存在或不属于该教师"
+            )
+
+        # 获取班级学生总数
+        total_students_result = await self.db.execute(
+            select(func.count(ClassStudent.id))
+            .select_from(ClassStudent)
+            .where(
+                and_(
+                    ClassStudent.class_id == class_id,
+                    ClassStudent.enrollment_status == "active",
+                )
+            )
+        )
+        total_students = total_students_result.scalar()
+
+        # 获取有报告的学生数（活跃学生）
+        active_students_result = await self.db.execute(
+            select(func.count(func.distinct(LearningReport.student_id)))
+            .select_from(LearningReport)
+            .join(ClassStudent, LearningReport.student_id == ClassStudent.student_id)
+            .where(
+                and_(
+                    ClassStudent.class_id == class_id,
+                    ClassStudent.enrollment_status == "active",
+                    LearningReport.created_at >= period_start,
+                    LearningReport.created_at <= period_end,
+                )
+            )
+        )
+        active_students = active_students_result.scalar() or 0
+
+        # 获取班级整体统计数据
+        stats_result = await self.db.execute(
+            select(
+                func.avg(LearningReport.statistics["completion_rate"].asfloat()),
+                func.avg(LearningReport.statistics["avg_correct_rate"].asfloat()),
+                func.sum(LearningReport.statistics["total_duration_minutes"].asfloat()),
+            )
+            .select_from(LearningReport)
+            .join(ClassStudent, LearningReport.student_id == ClassStudent.student_id)
+            .where(
+                and_(
+                    ClassStudent.class_id == class_id,
+                    ClassStudent.enrollment_status == "active",
+                    LearningReport.created_at >= period_start,
+                    LearningReport.created_at <= period_end,
+                )
+            )
+        )
+        stats = stats_result.one()
+        avg_completion_rate = float(stats[0]) if stats[0] else 0.0
+        avg_correct_rate = float(stats[1]) if stats[1] else 0.0
+        total_study_hours = float(stats[2]) / 60.0 if stats[2] else 0.0
+
+        # 获取能力分布统计
+        ability_result = await self.db.execute(
+            select(LearningReport.ability_analysis)
+            .select_from(LearningReport)
+            .join(ClassStudent, LearningReport.student_id == ClassStudent.student_id)
+            .where(
+                and_(
+                    ClassStudent.class_id == class_id,
+                    ClassStudent.enrollment_status == "active",
+                    LearningReport.created_at >= period_start,
+                    LearningReport.created_at <= period_end,
+                )
+            )
+            .order_by(LearningReport.created_at.desc())
+            .limit(50)  # 取最近的报告
+        )
+        ability_data = ability_result.scalars().all()
+
+        # 计算班级整体能力分布
+        ability_distribution = {
+            "listening": 0.0,
+            "reading": 0.0,
+            "speaking": 0.0,
+            "writing": 0.0,
+            "grammar": 0.0,
+            "vocabulary": 0.0,
+        }
+
+        if ability_data:
+            for ability in ability_data:
+                if ability and "ability_radar" in ability:
+                    for item in ability["ability_radar"]:
+                        name = item.get("name", "").lower()
+                        value = item.get("value", 0)
+                        if "听力" in name or "listening" in name:
+                            ability_distribution["listening"] += value
+                        elif "阅读" in name or "reading" in name:
+                            ability_distribution["reading"] += value
+                        elif "口语" in name or "speaking" in name:
+                            ability_distribution["speaking"] += value
+                        elif "写作" in name or "writing" in name:
+                            ability_distribution["writing"] += value
+                        elif "语法" in name or "grammar" in name:
+                            ability_distribution["grammar"] += value
+                        elif "词汇" in name or "vocabulary" in name:
+                            ability_distribution["vocabulary"] += value
+
+            # 计算平均值
+            count = len([d for d in ability_data if d])
+            if count > 0:
+                for key in ability_distribution:
+                    ability_distribution[key] = round(ability_distribution[key] / count, 2)
+
+        # 获取薄弱知识点汇总
+        weak_points_result = await self.db.execute(
+            select(LearningReport.weak_points)
+            .select_from(LearningReport)
+            .join(ClassStudent, LearningReport.student_id == ClassStudent.student_id)
+            .where(
+                and_(
+                    ClassStudent.class_id == class_id,
+                    ClassStudent.enrollment_status == "active",
+                    LearningReport.created_at >= period_start,
+                    LearningReport.created_at <= period_end,
+                )
+            )
+        )
+        weak_points_data = weak_points_result.scalars().all()
+
+        # 汇总薄弱知识点
+        weak_points_summary = {}
+        if weak_points_data:
+            for wp in weak_points_data:
+                if wp and "knowledge_points" in wp:
+                    for kp, count in wp["knowledge_points"].items():
+                        weak_points_summary[kp] = weak_points_summary.get(kp, 0) + count
+
+            # 排序并取前10个
+            sorted_weak_points = sorted(
+                weak_points_summary.items(),
+                key=lambda x: x[1],
+                reverse=True
+            )[:10]
+
+            weak_points_summary = [{"knowledge_point": kp, "affected_students": count}
+                                 for kp, count in sorted_weak_points]
+        else:
+            weak_points_summary = []
+
+        return {
+            "class_id": str(class_id),
+            "class_name": class_info.name,
+            "total_students": total_students,
+            "active_students": active_students,
+            "overall_stats": {
+                "avg_completion_rate": round(avg_completion_rate, 2),
+                "avg_correct_rate": round(avg_correct_rate, 2),
+                "total_study_hours": round(total_study_hours, 2),
+            },
+            "ability_distribution": ability_distribution,
+            "top_weak_points": weak_points_summary,
+            "period_start": period_start.isoformat(),
+            "period_end": period_end.isoformat(),
+        }
+
 
 def get_learning_report_service(db: AsyncSession) -> LearningReportService:
     """获取学习报告服务实例"""

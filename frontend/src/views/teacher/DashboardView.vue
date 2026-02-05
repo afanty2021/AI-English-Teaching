@@ -16,6 +16,7 @@
             <el-menu-item index="/teacher">仪表板</el-menu-item>
             <el-menu-item index="/teacher/lessons">教案管理</el-menu-item>
             <el-menu-item index="/teacher/students">学生管理</el-menu-item>
+            <el-menu-item index="/teacher/reports">学生报告</el-menu-item>
             <el-menu-item index="/teacher/ai-planning">AI 备课</el-menu-item>
             <el-menu-item index="/" @click="handleLogout">退出</el-menu-item>
           </el-menu>

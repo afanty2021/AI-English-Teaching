@@ -458,3 +458,313 @@ async def delete_report(
     # 删除报告
     await db.delete(report)
     await db.commit()
+
+
+# ============================================================================
+# 教师端 API 端点
+# ============================================================================
+
+@router.get("/teacher/students", response_model=dict)
+async def get_teacher_student_reports(
+    *,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    class_id: Optional[str] = Query(None, description="班级ID筛选"),
+    limit: int = Query(20, ge=1, le=100, description="返回数量限制"),
+    offset: int = Query(0, ge=0, description="偏移量"),
+) -> Any:
+    """
+    获取教师班级学生列表及报告概览
+
+    Args:
+        db: 数据库会话
+        current_user: 当前认证用户（必须是教师）
+        class_id: 班级ID筛选（可选）
+        limit: 返回数量限制
+        offset: 偏移量
+
+    Returns:
+        dict: 学生列表和总数
+
+    Raises:
+        HTTPException 403: 权限不足
+    """
+    # 权限检查：只有教师可以查看
+    if current_user.role not in [UserRole.TEACHER, UserRole.ADMIN]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有教师可以查看学生报告"
+        )
+
+    # 检查教师档案是否存在
+    if not current_user.teacher_profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="教师档案不存在，请先完善个人信息"
+        )
+
+    # 获取服务
+    service = get_learning_report_service(db)
+    students, total = await service.get_teacher_student_reports(
+        teacher_id=current_user.teacher_profile.id,
+        class_id=uuid.UUID(class_id) if class_id else None,
+        limit=limit,
+        offset=offset,
+    )
+
+    return {
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "students": students
+    }
+
+
+@router.get("/teacher/students/{student_id}", response_model=dict)
+async def get_student_reports_for_teacher(
+    *,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    student_id: str,
+    report_type: Optional[str] = Query(None, description="报告类型筛选"),
+    limit: int = Query(20, ge=1, le=100, description="返回数量限制"),
+    offset: int = Query(0, ge=0, description="偏移量"),
+) -> Any:
+    """
+    获取指定学生的所有报告（教师视角）
+
+    Args:
+        db: 数据库会话
+        current_user: 当前认证用户（必须是教师）
+        student_id: 学生ID
+        report_type: 报告类型筛选
+        limit: 返回数量限制
+        offset: 偏移量
+
+    Returns:
+        dict: 学生报告列表
+
+    Raises:
+        HTTPException 403: 权限不足
+        HTTPException 404: 学生不存在或不属于该教师
+    """
+    # 权限检查
+    if current_user.role not in [UserRole.TEACHER, UserRole.ADMIN]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有教师可以查看学生报告"
+        )
+
+    try:
+        student_uuid = uuid.UUID(student_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="无效的学生ID格式"
+        )
+
+    # 检查教师档案
+    if not current_user.teacher_profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="教师档案不存在"
+        )
+
+    # 获取服务
+    service = get_learning_report_service(db)
+    reports, total = await service.get_student_reports_for_teacher(
+        teacher_id=current_user.teacher_profile.id,
+        student_id=student_uuid,
+        report_type=report_type,
+        limit=limit,
+        offset=offset,
+    )
+
+    return {
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+        "reports": [
+            {
+                "id": str(report.id),
+                "report_type": report.report_type,
+                "period_start": report.period_start.isoformat(),
+                "period_end": report.period_end.isoformat(),
+                "status": report.status,
+                "title": report.title,
+                "created_at": report.created_at.isoformat(),
+            }
+            for report in reports
+        ]
+    }
+
+
+@router.get("/teacher/students/{student_id}/reports/{report_id}", response_model=dict)
+async def get_student_report_detail_for_teacher(
+    *,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    student_id: str,
+    report_id: str,
+) -> Any:
+    """
+    获取学生报告详情（教师视角）
+
+    Args:
+        db: 数据库会话
+        current_user: 当前认证用户（必须是教师）
+        student_id: 学生ID
+        report_id: 报告ID
+
+    Returns:
+        dict: 报告详情
+
+    Raises:
+        HTTPException 403: 权限不足
+        HTTPException 404: 报告不存在或学生不属于该教师
+    """
+    # 权限检查
+    if current_user.role not in [UserRole.TEACHER, UserRole.ADMIN]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有教师可以查看学生报告"
+        )
+
+    try:
+        student_uuid = uuid.UUID(student_id)
+        report_uuid = uuid.UUID(report_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="无效的ID格式"
+        )
+
+    # 检查教师档案
+    if not current_user.teacher_profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="教师档案不存在"
+        )
+
+    # 获取报告
+    from app.models.learning_report import LearningReport
+
+    result = await db.execute(
+        select(LearningReport).where(LearningReport.id == report_uuid)
+    )
+    report = result.scalar_one_or_none()
+
+    if not report:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="报告不存在"
+        )
+
+    # 权限检查：验证学生是否属于该教师
+    service = get_learning_report_service(db)
+    await service.verify_student_belongs_to_teacher(
+        teacher_id=current_user.teacher_profile.id,
+        student_id=student_uuid,
+    )
+
+    return {
+        "id": str(report.id),
+        "student_id": str(report.student_id),
+        "report_type": report.report_type,
+        "period_start": report.period_start.isoformat(),
+        "period_end": report.period_end.isoformat(),
+        "status": report.status,
+        "title": report.title,
+        "description": report.description,
+        "statistics": report.statistics,
+        "ability_analysis": report.ability_analysis,
+        "weak_points": report.weak_points,
+        "recommendations": report.recommendations,
+        "ai_insights": report.ai_insights,
+        "created_at": report.created_at.isoformat(),
+        "updated_at": report.updated_at.isoformat(),
+    }
+
+
+@router.get("/teacher/class-summary", response_model=dict)
+async def get_class_summary(
+    *,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    class_id: str,
+    period_start: Optional[str] = Query(None, description="统计开始时间（ISO 8601格式）"),
+    period_end: Optional[str] = Query(None, description="统计结束时间（ISO 8601格式）"),
+) -> Any:
+    """
+    获取班级学习状况汇总
+
+    Args:
+        db: 数据库会话
+        current_user: 当前认证用户（必须是教师）
+        class_id: 班级ID
+        period_start: 统计开始时间（可选，默认30天前）
+        period_end: 统计结束时间（可选，默认当前时间）
+
+    Returns:
+        dict: 班级学习状况汇总
+
+    Raises:
+        HTTPException 403: 权限不足
+        HTTPException 404: 班级不存在或不属于该教师
+    """
+    # 权限检查
+    if current_user.role not in [UserRole.TEACHER, UserRole.ADMIN]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有教师可以查看班级学习状况"
+        )
+
+    try:
+        class_uuid = uuid.UUID(class_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="无效的班级ID格式"
+        )
+
+    # 检查教师档案
+    if not current_user.teacher_profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="教师档案不存在"
+        )
+
+    # 处理时间参数
+    from datetime import datetime
+
+    start_time = None
+    end_time = None
+
+    if period_start:
+        try:
+            start_time = datetime.fromisoformat(period_start)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="period_start 格式错误，应为 ISO 8601 格式"
+            )
+
+    if period_end:
+        try:
+            end_time = datetime.fromisoformat(period_end)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="period_end 格式错误，应为 ISO 8601 格式"
+            )
+
+    # 获取服务
+    service = get_learning_report_service(db)
+    summary = await service.generate_class_summary(
+        teacher_id=current_user.teacher_profile.id,
+        class_id=class_uuid,
+        period_start=start_time,
+        period_end=end_time,
+    )
+
+    return summary
