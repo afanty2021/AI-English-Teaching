@@ -1,0 +1,22 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:5174",
+      "localStorage": [
+        {
+          "name": "user",
+          "value": "{\"id\":\"test-user-id\",\"username\":\"test-teacher\",\"email\":\"teacher@test.com\",\"role\":\"teacher\",\"organization_id\":\"test-org-id\"}"
+        },
+        {
+          "name": "refresh_token",
+          "value": "test-refresh-token-1770272995128"
+        },
+        {
+          "name": "access_token",
+          "value": "test-token-1770272995128"
+        }
+      ]
+    }
+  ]
+}
