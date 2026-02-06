@@ -7,6 +7,21 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #1144 | 9:11 PM | ✅ | Documentation Files Identified | ~218 |
+| #1142 | 9:10 PM | ✅ | Documentation Updates In Progress | ~258 |
+| #1141 | 9:09 PM | ✅ | 组件模块文档更新完成 | ~54 |
+| #1139 | " | ✅ | Component Documentation Needs Update | ~201 |
+| #1135 | 9:05 PM | 🔵 | 组件模块文档同样为空 | ~41 |
+| #1134 | 9:04 PM | 🟣 | Speaking Practice Service Implementation Complete | ~391 |
+| #1133 | " | ✅ | Speaking Practice Service Frontend Enhancement Complete | ~240 |
+| #1131 | " | 🔵 | ConversationScoreCard组件分析 | ~143 |
+| #1066 | 8:30 PM | 🟣 | 语音控制按钮组件VoiceControlButton实现完成 | ~142 |
+| #1065 | " | 🟣 | VoiceControlButton Component Committed | ~253 |
+| #1054 | 8:25 PM | 🟣 | ConversationScoreCard Component Completed | ~122 |
+| #1053 | " | 🟣 | ConversationScoreCard Vue Component Created | ~198 |
+| #1051 | 8:24 PM | ✅ | ESLint Configuration Issue Discovered | ~243 |
+| #1049 | 8:23 PM | 🟣 | ConversationScoreCard Component Committed | ~228 |
+| #989 | 8:01 PM | ✅ | Project Documentation Updated | ~220 |
 | #951 | 5:34 PM | 🔵 | Notification System Architecture Discovered | ~323 |
 | #912 | 5:17 PM | ✅ | ShareDialog Teacher Search Updated with Real API | ~266 |
 | #632 | 11:48 AM | ✅ | PPTPreview comprehensive documentation created | ~278 |
@@ -14,3 +29,322 @@
 | #628 | " | 🟣 | All 4 PPT preview components successfully created | ~239 |
 | #625 | 11:47 AM | 🟣 | PPTPreview.vue main component created | ~381 |
 </claude-mem-context>
+
+---
+
+# components - 通用组件模块
+
+> **模块类型**: Vue 3 组件
+> **主要职责**: 可复用的通用组件
+> **技术栈**: Vue 3 + TypeScript + Element Plus
+
+---
+
+## 变更记录
+
+### 2026-02-06 21:00:00
+- ✨ **新增**: 口语练习相关组件
+  - **ConversationScoreCard.vue** - 对话评分卡片组件（253行）
+  - **VoiceControlButton.vue** - 语音控制按钮组件（151行）
+  - 完整的类型定义与事件系统
+  - 支持多种状态和配置选项
+
+---
+
+## 模块职责
+
+components 模块提供前端应用的可复用组件：
+
+1. **对话组件**: AI对话相关组件
+2. **通用UI**: 可复用的UI组件
+3. **业务组件**: 特定业务场景组件
+
+---
+
+## 组件列表
+
+### 对话相关组件
+
+| 组件 | 文件 | 功能描述 | 状态 | 行数 |
+|------|------|----------|------|------|
+| **评分卡片** | **ConversationScoreCard.vue** | **对话评分展示** | **✨ 新增** | **253** |
+| **语音控制** | **VoiceControlButton.vue** | **录音/播放控制按钮** | **✨ 新增** | **151** |
+| 对话状态 | ConversationStatus.vue | 对话状态指示器 | ✅ 已有 | - |
+| 对话消息 | ConversationMessage.vue | 对话消息展示 | ✅ 已有 | - |
+| 反馈抽屉 | ConversationFeedbackDrawer.vue | 反馈信息抽屉 | ✅ 已有 | - |
+
+---
+
+## ConversationScoreCard 组件
+
+### 功能描述
+
+对话评分卡片组件，用于展示AI对话的评分结果。
+
+**特性**:
+- 总分圆形展示（带颜色分级）
+- 分项评分进度条（流利度、词汇、语法）
+- AI反馈信息展示
+- 改进建议列表
+- 空状态处理
+
+### Props
+
+```typescript
+interface Props {
+  scores: ConversationScores | null  // 评分数据
+}
+```
+
+**ConversationScores 类型**:
+```typescript
+interface ConversationScores {
+  overall: number              // 总分（旧字段）
+  overall_score?: number       // 总分（新字段）
+  fluency_score?: number       // 流利度评分
+  grammar_score?: number       // 语法评分
+  vocabulary_score?: number    // 词汇评分
+  feedback?: string            // AI反馈
+  suggestions?: string[]       // 改进建议
+}
+```
+
+### 评分分级
+
+| 分数范围 | 等级 | 颜色 | 标签 |
+|----------|------|------|------|
+| 90-100 | excellent | 绿色 (#67C23A) | 优秀 |
+| 75-89 | good | 蓝色 (#409EFF) | 良好 |
+| 60-74 | satisfactory | 橙色 (#E6A23C) | 满意 |
+| 0-59 | needs-improvement | 红色 (#F56C6C) | 需改进 |
+
+### 使用示例
+
+```vue
+<template>
+  <ConversationScoreCard :scores="conversationScores" />
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import ConversationScoreCard from '@/components/ConversationScoreCard.vue'
+
+const conversationScores = ref({
+  overall_score: 85,
+  fluency_score: 80,
+  grammar_score: 75,
+  vocabulary_score: 88,
+  feedback: '整体表现良好，继续保持！',
+  suggestions: [
+    '注意时态一致性',
+    '可以尝试更多样化的词汇'
+  ]
+})
+</script>
+```
+
+---
+
+## VoiceControlButton 组件
+
+### 功能描述
+
+语音控制按钮组件，用于录音/播放控制。
+
+**特性**:
+- 三种类型：录音、播放、停止
+- 五种状态：空闲、收听中、处理中、播放中、已暂停
+- 动态图标切换
+- 录音波纹动画
+- 按钮脉冲动画
+- 禁用状态支持
+
+### Props
+
+```typescript
+interface Props {
+  type: 'record' | 'play' | 'stop'      // 按钮类型
+  state: 'idle' | 'listening' | 'processing' | 'playing' | 'paused'  // 状态
+  disabled?: boolean                     // 是否禁用
+  circle?: boolean                       // 是否圆形
+  size?: 'large' | 'default' | 'small'   // 尺寸
+}
+```
+
+### Events
+
+```typescript
+interface Emits {
+  click: []  // 点击事件
+}
+```
+
+### 图标映射
+
+| 类型 | 状态 | 图标 | 按钮颜色 |
+|------|------|------|----------|
+| record | idle | Microphone | primary |
+| record | listening | VideoPause | danger |
+| record | processing | Loading | warning |
+| play | idle | Bell | primary |
+| play | playing | VideoPause | danger |
+| stop | - | MuteNotification | primary |
+
+### 使用示例
+
+```vue
+<template>
+  <!-- 录音按钮 -->
+  <VoiceControlButton
+    type="record"
+    :state="voiceState"
+    @click="handleRecord"
+  />
+
+  <!-- 播放按钮 -->
+  <VoiceControlButton
+    type="play"
+    :state="playState"
+    @click="handlePlay"
+  />
+
+  <!-- 禁用状态 -->
+  <VoiceControlButton
+    type="record"
+    state="idle"
+    :disabled="true"
+  />
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import VoiceControlButton from '@/components/VoiceControlButton.vue'
+
+const voiceState = ref('idle')
+
+function handleRecord() {
+  if (voiceState.value === 'idle') {
+    voiceState.value = 'listening'
+    // 开始录音
+  } else {
+    voiceState.value = 'idle'
+    // 停止录音
+  }
+}
+</script>
+```
+
+---
+
+## 对话状态组件
+
+### ConversationStatus
+
+对话状态指示器，显示当前对话状态。
+
+**Props**:
+```typescript
+interface Props {
+  status: 'in_progress' | 'completed' | 'thinking' | 'listening'
+  messageCount: number
+  targetMessages: number
+}
+```
+
+---
+
+## 对话消息组件
+
+### ConversationMessage
+
+对话消息展示组件。
+
+**Props**:
+```typescript
+interface Props {
+  message: ConversationMessage
+  showHeader?: boolean
+  isHighlighted?: boolean
+  isStreaming?: boolean
+}
+```
+
+---
+
+## 反馈抽屉组件
+
+### ConversationFeedbackDrawer
+
+反馈信息抽屉组件，用于展示对话反馈。
+
+**Props**:
+```typescript
+interface Props {
+  visible: boolean
+  scores?: ConversationScores
+  keyWords?: Array<{ word: string; score: number; phonetic?: string }>
+  isComplete?: boolean
+}
+```
+
+**Slots**:
+- `extra` - 额外内容插槽（用于放置评分卡片）
+
+---
+
+## 测试覆盖
+
+### 单元测试
+
+- `ConversationScoreCard.spec.ts` - 评分卡片测试
+- `VoiceControlButton.spec.ts` - 语音控制按钮测试
+
+**测试覆盖内容**:
+- 组件渲染
+- Props传递
+- 事件触发
+- 状态切换
+- 边界情况处理
+
+---
+
+## 样式规范
+
+### 颜色变量
+
+```css
+--el-color-primary: #409EFF
+--el-color-success: #67C23A
+--el-color-warning: #E6A23C
+--el-color-danger: #F56C6C
+--el-color-info: #909399
+```
+
+### 尺寸规范
+
+| 尺寸 | 图标大小 | 按钮高度 |
+|------|----------|----------|
+| large | 28px | 40px |
+| default | 22px | 32px |
+| small | 16px | 24px |
+
+---
+
+## 相关文件清单
+
+| 文件 | 描述 | 行数 |
+|------|------|------|
+| `ConversationScoreCard.vue` | 对话评分卡片 | 253 |
+| `VoiceControlButton.vue` | 语音控制按钮 | 151 |
+| `ConversationStatus.vue` | 对话状态指示器 | - |
+| `ConversationMessage.vue` | 对话消息展示 | - |
+| `ConversationFeedbackDrawer.vue` | 反馈抽屉 | - |
+
+---
+
+## 参考文档
+
+- [Element Plus 按钮](https://element-plus.org/zh-CN/component/button.html)
+- [Element Plus 卡片](https://element-plus.org/zh-CN/component/card.html)
+- [Element Plus 进度条](https://element-plus.org/zh-CN/component/progress.html)
+- [Element Plus 标签](https://element-plus.org/zh-CN/component/tag.html)

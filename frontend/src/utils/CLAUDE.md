@@ -7,5 +7,127 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #1146 | 9:14 PM | ✅ | utils模块CLAUDE.md文档更新 | ~90 |
+| #1145 | 9:11 PM | ✅ | CLAUDE.md Tracks Implementation Progress | ~179 |
+| #1144 | " | ✅ | Documentation Files Identified | ~218 |
+| #1143 | 9:10 PM | 🔵 | Utils模块CLAUDE.md文档框架待填充 | ~120 |
+| #1142 | " | ✅ | Documentation Updates In Progress | ~258 |
+| #1140 | 9:09 PM | ✅ | utils目录CLAUDE.md文件行数统计 | ~98 |
+| #1138 | 9:08 PM | ✅ | Utils模块文档文件创建 | ~89 |
+| #1136 | 9:06 PM | ✅ | 再次确认utils目录CLAUDE.md文件内容 | ~49 |
+| #1134 | 9:04 PM | 🟣 | Speaking Practice Service Implementation Complete | ~391 |
+| #1133 | " | ✅ | Speaking Practice Service Frontend Enhancement Complete | ~240 |
+| #1129 | " | 🔵 | 查看utils目录的Claude项目说明 | ~76 |
+| #1067 | 8:31 PM | 🔵 | 语音识别工具模块架构分析 | ~170 |
+| #1028 | 8:18 PM | 🟣 | Speaking Practice Service Implementation Plan | ~279 |
+| #1025 | " | ⚖️ | Task 1.1 TTS工具类审查通过 | ~118 |
+| #1024 | 8:17 PM | 🟣 | 语音合成(TTS)工具类开发完成 | ~91 |
+| #1023 | " | 🔵 | 发现TTS中pause和resume方法的一致性修复 | ~87 |
+| #1021 | " | 🟣 | TTS Utility Class Completed | ~268 |
+| #1020 | " | 🟣 | TTS Utility Class and Tests Committed | ~175 |
+| #1019 | 8:16 PM | 🟣 | 语音合成(TTS)工具类完成并提交 | ~150 |
+| #1018 | " | 🔴 | TTS Resume Method Fixed for Browser State Sync | ~216 |
+| #1011 | 8:14 PM | 🟣 | TTS Utility Class with Full Control | ~201 |
+| #1008 | " | 🔴 | 修复TTS暂停状态同步问题 | ~86 |
+| #1007 | 8:13 PM | 🟣 | Text-to-Speech Utility Module Created | ~299 |
+| #1001 | 8:09 PM | 🟣 | Student Diagnosis Feature Implementation | ~332 |
+| #996 | 8:02 PM | 🔵 | Backend Complete vs Frontend Incomplete Gap | ~173 |
 | #602 | 11:44 AM | 🔵 | HTTP request utility provides download functionality | ~221 |
 </claude-mem-context>
+---
+
+# utils - 工具函数模块
+
+> **模块类型**: TypeScript 工具函数
+> **主要职责**: 通用工具函数与辅助类
+> **技术栈**: TypeScript + 浏览器API
+
+---
+
+## 变更记录
+
+### 2026-02-06 21:00:00
+- ✨ **新增**: 语音合成工具类 (`textToSpeech.ts`)
+  - 使用 Web Speech API 实现 TTS
+  - 支持语速、音调、音量调节
+  - 支持暂停/恢复/停止控制
+  - 完整的事件回调系统
+  - 浏览器兼容性检测
+
+---
+
+## 模块职责
+
+utils 模块提供前端应用的各种工具函数和辅助类：
+
+1. **HTTP请求**: 基于 Axios 的请求封装
+2. **语音识别**: Web Speech API STT 封装
+3. **语音合成**: Web Speech API TTS 封装
+4. **错误恢复**: 重试机制与状态恢复
+5. **通用工具**: 各种辅助函数
+
+---
+
+## 工具函数列表
+
+### HTTP请求工具
+
+**文件**: `request.ts`
+
+| 函数 | 描述 |
+|------|------|
+| `request` | Axios实例，自动添加token |
+| `setupInterceptors` | 请求/响应拦截器设置 |
+
+### 语音识别工具
+
+**文件**: `voiceRecognition.ts` (344行)
+
+| 类/函数 | 描述 |
+|---------|------|
+| `VoiceRecognition` | 语音识别类 |
+| `createVoiceRecognition()` | 创建语音识别实例 |
+| `isVoiceRecognitionSupported()` | 浏览器支持检测 |
+| `VoiceRecognitionStatus` | 状态枚举 |
+
+### 语音合成工具
+
+**文件**: `textToSpeech.ts` (366行) ✨
+
+| 类/函数 | 描述 |
+|---------|------|
+| `TextToSpeech` | 语音合成类 |
+| `createTextToSpeech()` | 创建语音合成实例 |
+| `isTextToSpeechSupported()` | 浏览器支持检测 |
+| `getBestEnglishVoice()` | 获取最佳英语语音 |
+| `TTSEvent` | 事件枚举 |
+| `TTSStatus` | 状态枚举 |
+
+### 错误恢复工具
+
+**文件**: `errorRecovery.ts`
+
+| 函数 | 描述 |
+|------|------|
+| `retryAsync()` | 异步重试包装器 |
+| `createConversationRecovery()` | 对话状态恢复器 |
+| `createNetworkMonitor()` | 网络状态监控器 |
+
+---
+
+## 相关文件清单
+
+| 文件 | 描述 | 行数 |
+|------|------|------|
+| `request.ts` | HTTP请求工具 | - |
+| `voiceRecognition.ts` | 语音识别(STT) | 344 |
+| `textToSpeech.ts` | 语音合成(TTS) | 366 |
+| `errorRecovery.ts` | 错误恢复工具 | - |
+
+---
+
+## 参考文档
+
+- [Web Speech API - SpeechRecognition](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition)
+- [Web Speech API - SpeechSynthesis](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis)
+- [Axios 文档](https://axios-http.com/)
