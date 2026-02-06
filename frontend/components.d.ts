@@ -12,6 +12,7 @@ declare module 'vue' {
     ChoiceQuestion: typeof import('./src/components/question/ChoiceQuestion.vue')['default']
     ConversationFeedbackDrawer: typeof import('./src/components/ConversationFeedbackDrawer.vue')['default']
     ConversationMessage: typeof import('./src/components/ConversationMessage.vue')['default']
+    ConversationScoreCard: typeof import('./src/components/ConversationScoreCard.vue')['default']
     ConversationStatus: typeof import('./src/components/ConversationStatus.vue')['default']
     ElAffix: typeof import('element-plus/es')['ElAffix']
     ElAlert: typeof import('element-plus/es')['ElAlert']

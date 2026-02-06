@@ -7,6 +7,8 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #989 | 8:01 PM | ✅ | Project Documentation Updated | ~220 |
+| #979 | " | 🟣 | Notification Preference System Implemented | ~243 |
 | #965 | 5:40 PM | 🟣 | Notification Preferences Feature Fully Implemented | ~524 |
 | #964 | 5:39 PM | ✅ | Setting Icon Import Added to HomeView | ~105 |
 | #963 | " | ✅ | Settings Link Added to HomeView Header | ~168 |

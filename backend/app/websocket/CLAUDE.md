@@ -7,6 +7,7 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #980 | 8:01 PM | 🟣 | WebSocket Real-Time Communication Infrastructure | ~122 |
 | #954 | 5:35 PM | 🔵 | WebSocket Connection Manager Architecture | ~315 |
 | #931 | 5:25 PM | 🟣 | 创建WebSocket连接管理器 | ~99 |
 </claude-mem-context>

@@ -7,6 +7,8 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #989 | 8:01 PM | ✅ | Project Documentation Updated | ~220 |
+| #979 | " | 🟣 | Notification Preference System Implemented | ~243 |
 | #965 | 5:40 PM | 🟣 | Notification Preferences Feature Fully Implemented | ~524 |
 | #960 | 5:38 PM | 🟣 | Notification Preferences Feature Backend Complete | ~376 |
 | #957 | 5:36 PM | 🟣 | Notification Preference Pydantic Schema Created | ~296 |
