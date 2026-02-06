@@ -58,6 +58,9 @@ config.global.stubs = {
   'el-drawer': true,
   'el-upload': true,
   'el-alert': true,
+  'el-card': true,
+  'el-empty': true,
+  'el-progress': true,
   'el-message': {
     error: vi.fn(),
     success: vi.fn(),
@@ -65,6 +68,16 @@ config.global.stubs = {
     info: vi.fn()
   }
 }
+
+// Mock Element Plus icons
+vi.mock('@element-plus/icons-vue', () => ({
+  TrendCharts: {
+    template: '<svg></svg>'
+  },
+  Right: {
+    template: '<svg></svg>'
+  }
+}))
 
 // Mock localStorage
 const localStorageMock = (() => {
