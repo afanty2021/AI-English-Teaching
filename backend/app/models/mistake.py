@@ -135,7 +135,8 @@ class Mistake(Base):
     # 主题分类
     topic: Mapped[Optional[str]] = mapped_column(
         String(100),
-        nullable=True
+        nullable=True,
+        index=True  # 按知识点分类查询常用
     )
 
     # 错误次数

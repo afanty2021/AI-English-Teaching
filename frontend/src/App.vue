@@ -1,7 +1,9 @@
 <template>
   <el-config-provider :locale="zhCn">
     <div id="app">
-      <router-view />
+      <ErrorBoundary>
+        <router-view />
+      </ErrorBoundary>
     </div>
   </el-config-provider>
 </template>
@@ -10,6 +12,7 @@
 import { onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+import ErrorBoundary from '@/components/ErrorBoundary.vue'
 
 const authStore = useAuthStore()
 

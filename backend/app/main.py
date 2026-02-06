@@ -7,7 +7,6 @@ from typing import Any, AsyncGenerator
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 
 from app.api.v1 import api_router
 from app.core.config import settings
@@ -55,6 +54,10 @@ app.add_middleware(
 
 # 注册路由
 app.include_router(api_router, prefix="/api/v1")
+
+# 注册全局异常处理器
+from app.core.exception_handler import setup_exception_handlers
+setup_exception_handlers(app)
 
 
 # 根路径
@@ -128,27 +131,6 @@ async def database_health_check() -> dict[str, Any]:
                 "error": str(e),
             },
         )
-
-
-# 全局异常处理
-@app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
-    """
-    全局异常处理器
-
-    捕获所有未处理的异常并返回标准化的错误响应。
-    """
-    import logging
-
-    logging.error(f"未处理的异常: {exc}", exc_info=True)
-
-    return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={
-            "detail": "服务器内部错误",
-            "error": str(exc) if settings.DEBUG else "Internal Server Error",
-        },
-    )
 
 
 if __name__ == "__main__":

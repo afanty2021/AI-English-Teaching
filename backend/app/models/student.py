@@ -74,7 +74,8 @@ class Student(Base):
     # 目标考试类型（CET4, CET6, IELTS, TOEFL, GAOKAO等）
     target_exam: Mapped[Optional[str]] = mapped_column(
         String(100),
-        nullable=True
+        nullable=True,
+        index=True  # 按目标考试筛选学生常用
     )
 
     # 目标分数

@@ -174,7 +174,8 @@ class Practice(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         server_default=func.now(),
-        nullable=False
+        nullable=False,
+        index=True  # 练习列表按时间排序常用
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
