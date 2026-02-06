@@ -7,6 +7,7 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #866 | 4:14 PM | 🟣 | 注册教案分享API路由 | ~75 |
 | #760 | 3:13 PM | ✅ | CODE_QUALITY_IMPROVEMENT_PLAN.md更新迭代1验收清单 | ~84 |
 | #742 | 3:12 PM | 🔵 | Token Blacklist Implementation Already Exists | ~246 |
 </claude-mem-context>

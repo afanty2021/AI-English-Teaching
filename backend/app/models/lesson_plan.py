@@ -147,6 +147,42 @@ class LessonPlan(Base):
         nullable=True
     )
 
+    # ==================== 分享相关字段 ====================
+
+    # 是否已分享给其他教师
+    is_shared: Mapped[bool] = mapped_column(
+        default=False,
+        nullable=False,
+        index=True
+    )
+
+    # 是否公开（所有教师可见）
+    is_public: Mapped[bool] = mapped_column(
+        default=False,
+        nullable=False
+    )
+
+    # 分享计数
+    share_count: Mapped[int] = mapped_column(
+        default=0,
+        nullable=False
+    )
+
+    # 分支来源（基于哪个教案复制）
+    forked_from: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True
+    )
+
+    # 分支计数（被复制次数）
+    fork_count: Mapped[int] = mapped_column(
+        default=0,
+        nullable=False
+    )
+
+    # ==================== 时间戳 ====================
+
     # 时间戳
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
@@ -160,11 +196,37 @@ class LessonPlan(Base):
         nullable=False
     )
 
+    # ==================== 关系 ====================
+
     # 关系 - 关联的教师
     teacher: Mapped["User"] = relationship(
         "User",
         back_populates="lesson_plans",
         foreign_keys=[teacher_id]
+    )
+
+    # 关系 - 分享记录
+    shares: Mapped[list["LessonPlanShare"]] = relationship(
+        "LessonPlanShare",
+        back_populates="lesson_plan",
+        foreign_keys="LessonPlanShare.lesson_plan_id",
+        cascade="all, delete-orphan"
+    )
+
+    # 关系 - 分支来源教案（自引用）
+    original_plan: Mapped[Optional["LessonPlan"]] = relationship(
+        "LessonPlan",
+        remote_side=[id],
+        foreign_keys=[forked_from],
+        back_populates="forked_plans"
+    )
+
+    # 关系 - 分支出的教案
+    forked_plans: Mapped[list["LessonPlan"]] = relationship(
+        "LessonPlan",
+        remote_side=[forked_from],
+        foreign_keys=[forked_from],
+        back_populates="original_plan"
     )
 
     def __repr__(self) -> str:

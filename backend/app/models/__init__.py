@@ -15,6 +15,11 @@ from app.models.content import (
     ExamType,
 )
 from app.models.lesson_plan import LessonPlan, LessonPlanTemplate
+from app.models.lesson_plan_share import (
+    LessonPlanShare,
+    SharePermission,
+    ShareStatus
+)
 from app.models.conversation import (
     Conversation,
     ConversationScenario,
@@ -63,6 +68,9 @@ __all__ = [
     "ExamType",
     "LessonPlan",
     "LessonPlanTemplate",
+    "LessonPlanShare",
+    "SharePermission",
+    "ShareStatus",
     "Conversation",
     "ConversationScenario",
     "ConversationStatus",

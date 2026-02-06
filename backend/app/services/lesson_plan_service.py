@@ -992,6 +992,203 @@ class LessonPlanService:
         await db.commit()
         return True
 
+    async def duplicate_lesson_plan(
+        self,
+        db: AsyncSession,
+        lesson_plan_id: uuid.UUID,
+        teacher_id: uuid.UUID,
+        new_title: Optional[str] = None,
+    ) -> LessonPlan:
+        """
+        复制教案
+
+        Args:
+            db: 数据库会话
+            lesson_plan_id: 原教案ID
+            teacher_id: 新教案的教师ID
+            new_title: 新标题（不设置则自动生成）
+
+        Returns:
+            LessonPlan: 复制后的新教案
+
+        Raises:
+            ValueError: 如果原教案不存在
+        """
+        original_plan = await self.get_lesson_plan(db, lesson_plan_id)
+        if not original_plan:
+            raise ValueError("原教案不存在")
+
+        # 生成新标题
+        if new_title is None:
+            new_title = f"{original_plan.title} (副本)"
+
+        # 创建新教案
+        new_plan = LessonPlan(
+            teacher_id=teacher_id,
+            title=new_title,
+            topic=original_plan.topic,
+            level=original_plan.level,
+            duration=original_plan.duration,
+            target_exam=original_plan.target_exam,
+            status="draft",
+            # 复制AI生成参数
+            ai_generation_params=original_plan.ai_generation_params,
+            # 复制教案内容
+            objectives=original_plan.objectives,
+            vocabulary=original_plan.vocabulary,
+            grammar_points=original_plan.grammar_points,
+            teaching_structure=original_plan.teaching_structure,
+            leveled_materials=original_plan.leveled_materials,
+            exercises=original_plan.exercises,
+            ppt_outline=original_plan.ppt_outline,
+            resources=original_plan.resources,
+            # 不复制教学反思
+            teaching_notes=None,
+            # 记录来源
+            forked_from=original_plan.teacher_id,
+        )
+
+        db.add(new_plan)
+
+        # 更新原教案的分支计数
+        original_plan.fork_count = (original_plan.fork_count or 0) + 1
+
+        await db.commit()
+        await db.refresh(new_plan)
+
+        return new_plan
+
+    async def create_from_template(
+        self,
+        db: AsyncSession,
+        template_id: uuid.UUID,
+        teacher_id: uuid.UUID,
+        title: str,
+        topic: str,
+        level: str,
+        duration: int = 45,
+        target_exam: Optional[str] = None,
+        additional_requirements: Optional[str] = None,
+    ) -> LessonPlan:
+        """
+        从模板创建教案
+
+        Args:
+            db: 数据库会话
+            template_id: 模板ID
+            teacher_id: 教师ID
+            title: 教案标题
+            topic: 教学主题
+            level: CEFR等级
+            duration: 课程时长
+            target_exam: 目标考试
+            additional_requirements: 额外要求
+
+        Returns:
+            LessonPlan: 创建的教案
+
+        Raises:
+            ValueError: 如果模板不存在
+        """
+        from app.models import LessonPlanTemplate
+
+        template = await db.get(LessonPlanTemplate, template_id)
+        if not template:
+            raise ValueError("模板不存在")
+
+        if not template.is_active:
+            raise ValueError("模板已停用")
+
+        # 从模板结构创建教案
+        template_structure = template.template_structure or {}
+
+        new_plan = LessonPlan(
+            teacher_id=teacher_id,
+            title=title,
+            topic=topic,
+            level=level,
+            duration=duration,
+            target_exam=target_exam or template.target_exam,
+            status="draft",
+            ai_generation_params={
+                "from_template": str(template_id),
+                "template_name": template.name,
+                "additional_requirements": additional_requirements,
+            },
+            # 从模板提取内容
+            teaching_structure=template_structure.get("structure", {}),
+            vocabulary=template_structure.get("vocabulary", {}),
+            grammar_points=template_structure.get("grammar_points", {}),
+            exercises=template_structure.get("exercises", {}),
+            resources=template_structure.get("resources", {}),
+        )
+
+        db.add(new_plan)
+
+        # 更新模板使用计数
+        template.usage_count += 1
+
+        await db.commit()
+        await db.refresh(new_plan)
+
+        return new_plan
+
+    async def get_templates(
+        self,
+        db: AsyncSession,
+        level: Optional[str] = None,
+        target_exam: Optional[str] = None,
+        is_system: Optional[bool] = None,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> tuple[list[LessonPlanTemplate], int]:
+        """
+        获取教案模板列表
+
+        Args:
+            db: 数据库会话
+            level: 等级筛选
+            target_exam: 考试类型筛选
+            is_system: 是否系统模板筛选
+            page: 页码
+            page_size: 每页大小
+
+        Returns:
+            tuple[list[LessonPlanTemplate], int]: (模板列表, 总数)
+        """
+        # 构建查询
+        query = select(LessonPlanTemplate).where(
+            LessonPlanTemplate.is_active == True
+        )
+
+        # 应用筛选
+        if level:
+            query = query.where(LessonPlanTemplate.level == level)
+        if target_exam:
+            query = query.where(LessonPlanTemplate.target_exam == target_exam)
+        if is_system is not None:
+            query = query.where(LessonPlanTemplate.is_system == is_system)
+
+        # 计算总数
+        count_result = await db.execute(
+            select(func.count()).select_from(query.subquery())
+        )
+        total = count_result.scalar()
+
+        # 排序和分页
+        query = query.order_by(
+            LessonPlanTemplate.is_system.desc(),
+            LessonPlanTemplate.usage_count.desc(),
+            LessonPlanTemplate.created_at.desc()
+        )
+        offset = (page - 1) * page_size
+        query = query.offset(offset).limit(page_size)
+
+        result = await db.execute(query)
+        templates = result.scalars().all()
+
+        return list(templates), total
+
 
 # 创建全局单例
 _lesson_plan_service: Optional[LessonPlanService] = None

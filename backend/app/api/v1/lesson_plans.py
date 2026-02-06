@@ -22,6 +22,12 @@ from app.schemas.lesson_plan import (
     LessonPlanSummary,
     UpdateLessonPlanRequest,
 )
+from app.schemas.lesson_share import (
+    CreateFromTemplateRequest,
+    DuplicateLessonPlanRequest,
+    DuplicateLessonPlanResponse,
+    TemplateListResponse,
+)
 from app.services.lesson_plan_service import get_lesson_plan_service, LessonPlanService
 
 router = APIRouter()
@@ -778,6 +784,189 @@ async def regenerate_lesson_plan(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"重新生成教案失败: {str(e)}"
+        )
+
+
+@router.post("/{lesson_plan_id}/duplicate", response_model=LessonPlanResponse, status_code=status.HTTP_201_CREATED)
+async def duplicate_lesson_plan(
+    lesson_plan_id: uuid.UUID,
+    request: DuplicateLessonPlanRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    lesson_plan_service: LessonPlanService = Depends(get_lesson_plan_service),
+) -> LessonPlanResponse:
+    """
+    复制教案
+
+    创建原教案的副本，所有内容完全复制。
+
+    Args:
+        lesson_plan_id: 原教案ID
+        request: 复制请求
+        db: 数据库会话
+        current_user: 当前用户
+        lesson_plan_service: 教案服务
+
+    Returns:
+        LessonPlanResponse: 复制后的新教案
+
+    Raises:
+        HTTPException: 如果教案不存在或无权复制
+    """
+    # 验证用户权限
+    if current_user.role != UserRole.TEACHER and not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有教师才能复制教案"
+        )
+
+    try:
+        new_plan = await lesson_plan_service.duplicate_lesson_plan(
+            db=db,
+            lesson_plan_id=lesson_plan_id,
+            teacher_id=current_user.id,
+            new_title=request.new_title,
+        )
+
+        return _convert_to_response(new_plan)
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"复制教案失败: {str(e)}"
+        )
+
+
+@router.get("/templates", response_model=TemplateListResponse)
+async def get_templates(
+    level: str | None = Query(None, description="按等级筛选"),
+    target_exam: str | None = Query(None, description="按考试类型筛选"),
+    is_system: bool | None = Query(None, description="是否仅系统模板"),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(20, ge=1, le=100, description="每页大小"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    lesson_plan_service: LessonPlanService = Depends(get_lesson_plan_service),
+) -> TemplateListResponse:
+    """
+    获取教案模板列表
+
+    支持按等级、考试类型、是否系统模板筛选，支持分页。
+
+    Args:
+        level: 等级筛选
+        target_exam: 考试类型筛选
+        is_system: 是否系统模板筛选
+        page: 页码
+        page_size: 每页大小
+        db: 数据库会话
+        current_user: 当前用户
+        lesson_plan_service: 教案服务
+
+    Returns:
+        TemplateListResponse: 模板列表
+    """
+    try:
+        templates, total = await lesson_plan_service.get_templates(
+            db=db,
+            level=level,
+            target_exam=target_exam,
+            is_system=is_system,
+            page=page,
+            page_size=page_size,
+        )
+
+        # 转换为响应格式
+        template_summaries = [
+            {
+                "id": t.id,
+                "name": t.name,
+                "description": t.description,
+                "level": t.level,
+                "target_exam": t.target_exam,
+                "is_system": t.is_system,
+                "usage_count": t.usage_count,
+                "created_at": t.created_at,
+            }
+            for t in templates
+        ]
+
+        return TemplateListResponse(
+            templates=template_summaries,
+            total=total,
+            page=page,
+            page_size=page_size,
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取模板列表失败: {str(e)}"
+        )
+
+
+@router.post("/from-template/{template_id}", response_model=LessonPlanResponse, status_code=status.HTTP_201_CREATED)
+async def create_from_template(
+    template_id: uuid.UUID,
+    request: CreateFromTemplateRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    lesson_plan_service: LessonPlanService = Depends(get_lesson_plan_service),
+) -> LessonPlanResponse:
+    """
+    从模板创建教案
+
+    基于教案模板快速创建新教案，模板提供基础结构和内容。
+
+    Args:
+        template_id: 模板ID
+        request: 创建请求
+        db: 数据库会话
+        current_user: 当前用户
+        lesson_plan_service: 教案服务
+
+    Returns:
+        LessonPlanResponse: 创建的教案
+
+    Raises:
+        HTTPException: 如果模板不存在或无权创建
+    """
+    # 验证用户权限
+    if current_user.role != UserRole.TEACHER and not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有教师才能创建教案"
+        )
+
+    try:
+        new_plan = await lesson_plan_service.create_from_template(
+            db=db,
+            template_id=template_id,
+            teacher_id=current_user.id,
+            title=request.title,
+            topic=request.topic,
+            level=request.level,
+            duration=request.duration,
+            target_exam=request.target_exam,
+            additional_requirements=request.additional_requirements,
+        )
+
+        return _convert_to_response(new_plan)
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"从模板创建教案失败: {str(e)}"
         )
 
 

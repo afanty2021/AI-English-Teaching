@@ -15,6 +15,7 @@ from app.db.base import Base
 if TYPE_CHECKING:
     from app.models.async_task import AsyncTask
     from app.models.lesson_plan import LessonPlan
+    from app.models.lesson_plan_share import LessonPlanShare
 
 
 class UserRole(str, PyEnum):
@@ -160,6 +161,24 @@ class User(Base):
         "LessonPlan",
         back_populates="teacher",
         foreign_keys="LessonPlan.teacher_id",
+        cascade="all, delete-orphan"
+    )
+
+    # ==================== 分享相关关系 ====================
+
+    # 关系 - 我给出的教案分享
+    shares_given: Mapped[list["LessonPlanShare"]] = relationship(
+        "LessonPlanShare",
+        back_populates="sharer",
+        foreign_keys="LessonPlanShare.shared_by",
+        cascade="all, delete-orphan"
+    )
+
+    # 关系 - 我收到的教案分享
+    shares_received: Mapped[list["LessonPlanShare"]] = relationship(
+        "LessonPlanShare",
+        back_populates="recipient",
+        foreign_keys="LessonPlanShare.shared_to",
         cascade="all, delete-orphan"
     )
 
