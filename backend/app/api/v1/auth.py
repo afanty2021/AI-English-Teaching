@@ -4,7 +4,7 @@
 """
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -57,20 +57,67 @@ async def register(
         )
 
 
+# 速率限制依赖
+async def check_login_rate_limit(
+    login_data: LoginRequest,
+    request: Request,
+) -> None:
+    """
+    检查登录请求是否超过速率限制
+
+    Args:
+        login_data: 登录请求数据
+        request: FastAPI请求对象
+
+    Raises:
+        HTTPException 429: 超过登录尝试次数限制
+    """
+    from app.core.rate_limiter import get_rate_limiter
+    from datetime import timedelta
+
+    limiter = get_rate_limiter()
+
+    # 使用用户名/IP作为标识符
+    identifier = login_data.username
+
+    # 检查速率限制
+    allowed, remaining, reset_seconds = await limiter.check_rate_limit(
+        identifier=identifier,
+        limit=5,  # 每分钟最多5次
+        window=timedelta(minutes=1),
+        endpoint="login"
+    )
+
+    if not allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"登录尝试过于频繁，请 {reset_seconds} 秒后重试",
+            headers={
+                "X-RateLimit-Limit": "5",
+                "X-RateLimit-Remaining": "0",
+                "X-RateLimit-Reset": str(reset_seconds),
+                "Retry-After": str(reset_seconds),
+            }
+        )
+
+
 @router.post("/login", response_model=AuthResponse)
 async def login(
     *,
     db: AsyncSession = Depends(get_db),
     login_data: LoginRequest,
+    request: Request,
 ) -> Any:
     """
     用户登录
 
     支持使用用户名或邮箱登录。
+    包含速率限制：每分钟最多5次尝试，超出后需要等待。
 
     Args:
         db: 数据库会话
         login_data: 登录请求数据
+        request: FastAPI请求对象（用于速率限制）
 
     Returns:
         AuthResponse: 包含access_token、refresh_token和用户信息
@@ -78,7 +125,11 @@ async def login(
     Raises:
         HTTPException 401: 用户名或密码错误
         HTTPException 403: 账户已被禁用
+        HTTPException 429: 超过登录尝试次数限制
     """
+    # 先检查速率限制
+    await check_login_rate_limit(login_data, request)
+
     try:
         result = await AuthService.login(db=db, login_data=login_data)
         return result
@@ -185,24 +236,38 @@ async def change_password(
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 async def logout(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
     current_user: User = Depends(get_current_user),
 ) -> None:
     """
     用户登出
 
-    客户端应删除存储的token。
-    由于使用JWT无状态认证，服务端不需要做额外处理。
-    如果需要实现token黑名单，可以使用Redis存储已注销的token。
+    将当前 Token 加入黑名单，实现服务端主动注销。
+    客户端应删除存储的 token。
 
     Args:
+        credentials: HTTP Bearer credentials
         current_user: 当前认证用户
 
     Returns:
         None
+
+    Raises:
+        HTTPException 500: 服务端错误
     """
-    # JWT无状态，客户端删除token即可
-    # 如果需要实现token撤销，可以在Redis中添加黑名单
-    pass
+    from app.core.security import get_token_jti
+    from app.core.token_blacklist import get_token_blacklist
+
+    token = credentials.credentials
+    jti = get_token_jti(token)
+
+    if jti:
+        blacklist = get_token_blacklist()
+        await blacklist.add_to_blacklist(
+            jti=jti,
+            user_id=str(current_user.id),
+            reason="logout"
+        )
 
 
 @router.get("/verify-token", response_model=UserResponse)

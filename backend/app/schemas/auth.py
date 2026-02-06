@@ -82,9 +82,33 @@ class RegisterRequest(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, v: str) -> str:
-        """验证密码强度"""
-        if len(v) < 6:
-            raise ValueError("密码长度至少 6 位")
+        """
+        验证密码强度
+
+        要求：
+        - 至少 8 位
+        - 包含大写字母
+        - 包含小写字母
+        - 包含数字
+        - 包含特殊字符
+        """
+        import re
+
+        if len(v) < 8:
+            raise ValueError("密码长度至少 8 位")
+
+        if not re.search(r"[A-Z]", v):
+            raise ValueError("密码必须包含至少一个大写字母")
+
+        if not re.search(r"[a-z]", v):
+            raise ValueError("密码必须包含至少一个小写字母")
+
+        if not re.search(r"[0-9]", v):
+            raise ValueError("密码必须包含至少一个数字")
+
+        if not re.search(r"[!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?]", v):
+            raise ValueError("密码必须包含至少一个特殊字符")
+
         return v
 
 
@@ -158,7 +182,7 @@ class ChangePasswordRequest(BaseModel):
     old_password: str = Field(..., description="旧密码")
     new_password: str = Field(
         ...,
-        min_length=6,
+        min_length=8,
         max_length=100,
         description="新密码"
     )
@@ -166,9 +190,33 @@ class ChangePasswordRequest(BaseModel):
     @field_validator("new_password")
     @classmethod
     def validate_password(cls, v: str) -> str:
-        """验证密码强度"""
-        if len(v) < 6:
-            raise ValueError("密码长度至少 6 位")
+        """
+        验证新密码强度
+
+        要求：
+        - 至少 8 位
+        - 包含大写字母
+        - 包含小写字母
+        - 包含数字
+        - 包含特殊字符
+        """
+        import re
+
+        if len(v) < 8:
+            raise ValueError("密码长度至少 8 位")
+
+        if not re.search(r"[A-Z]", v):
+            raise ValueError("密码必须包含至少一个大写字母")
+
+        if not re.search(r"[a-z]", v):
+            raise ValueError("密码必须包含至少一个小写字母")
+
+        if not re.search(r"[0-9]", v):
+            raise ValueError("密码必须包含至少一个数字")
+
+        if not re.search(r"[!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?]", v):
+            raise ValueError("密码必须包含至少一个特殊字符")
+
         return v
 
 
@@ -186,7 +234,7 @@ class PasswordResetConfirm(BaseModel):
     token: str = Field(..., description="重置令牌")
     new_password: str = Field(
         ...,
-        min_length=6,
+        min_length=8,
         max_length=100,
         description="新密码"
     )
@@ -194,7 +242,31 @@ class PasswordResetConfirm(BaseModel):
     @field_validator("new_password")
     @classmethod
     def validate_password(cls, v: str) -> str:
-        """验证密码强度"""
-        if len(v) < 6:
-            raise ValueError("密码长度至少 6 位")
+        """
+        验证新密码强度
+
+        要求：
+        - 至少 8 位
+        - 包含大写字母
+        - 包含小写字母
+        - 包含数字
+        - 包含特殊字符
+        """
+        import re
+
+        if len(v) < 8:
+            raise ValueError("密码长度至少 8 位")
+
+        if not re.search(r"[A-Z]", v):
+            raise ValueError("密码必须包含至少一个大写字母")
+
+        if not re.search(r"[a-z]", v):
+            raise ValueError("密码必须包含至少一个小写字母")
+
+        if not re.search(r"[0-9]", v):
+            raise ValueError("密码必须包含至少一个数字")
+
+        if not re.search(r"[!@#$%^&*()_+\-=\[\]{};':\"\\|,.<>\/?]", v):
+            raise ValueError("密码必须包含至少一个特殊字符")
+
         return v

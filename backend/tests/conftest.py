@@ -2,6 +2,8 @@
 测试配置和共享fixtures
 """
 import asyncio
+import os
+from pathlib import Path
 from typing import AsyncGenerator, Generator
 from uuid import uuid4
 
@@ -14,8 +16,15 @@ from app.db.base import Base
 from app.models import User, Organization, Student, Teacher, KnowledgeGraph
 from app.main import app
 
-# 测试数据库URL - 使用 Docker PostgreSQL
-TEST_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/english_teaching"
+# 确保在导入应用模块之前加载 .env 文件
+_env_path = Path(__file__).parent.parent / ".env"
+if _env_path.exists():
+    from dotenv import load_dotenv
+    load_dotenv(_env_path, override=True)
+
+# 测试数据库URL - 使用 Docker PostgreSQL (从 .env 读取)
+from app.core.config import get_settings
+TEST_DATABASE_URL = get_settings().DATABASE_URL
 
 
 # ============================================================================
@@ -367,16 +376,15 @@ async def db_engine():
     """
     创建测试数据库引擎
 
-    使用 SQLite 进行本地测试，无需 Docker
+    使用 Docker PostgreSQL 进行测试
     """
     from sqlalchemy.ext.asyncio import AsyncEngine
+    from sqlalchemy import text
 
     engine: AsyncEngine = create_async_engine(
         TEST_DATABASE_URL,
         echo=False,
-        future=True,
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool
+        future=True
     )
 
     # 创建所有表
@@ -385,9 +393,23 @@ async def db_engine():
 
     yield engine
 
-    # 清理
+    # 清理：先删除有外键依赖的表
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+        # 按照正确的顺序删除表，避免循环依赖问题
+        await conn.execute(text("DROP TABLE IF EXISTS learning_reports CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS mistakes CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS practices CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS conversation_messages CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS conversations CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS lesson_plan_contents CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS lesson_plans CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS contents CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS knowledge_graphs CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS students CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS teachers CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS class_info CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS users CASCADE"))
+        await conn.execute(text("DROP TABLE IF EXISTS organizations CASCADE"))
 
     await engine.dispose()
 

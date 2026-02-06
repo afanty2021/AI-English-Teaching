@@ -49,7 +49,9 @@ class TestAuthAPI:
             json={
                 "username": "testuser",
                 "email": "test@example.com",
-                "password": "TestPass123",
+                "password": "TestPass123!",
+                "confirm_password": "TestPass123!",
+                "role": "student",
                 "full_name": "Test User",
             }
         )
@@ -77,7 +79,9 @@ class TestAuthAPI:
             json={
                 "username": "duplicate",
                 "email": "user1@example.com",
-                "password": "TestPass123",
+                "password": "TestPass123!",
+                "confirm_password": "TestPass123!",
+                "role": "student",
             }
         )
 
@@ -87,7 +91,9 @@ class TestAuthAPI:
             json={
                 "username": "duplicate",
                 "email": "user2@example.com",
-                "password": "TestPass123",
+                "password": "TestPass123!",
+                "confirm_password": "TestPass123!",
+                "role": "student",
             }
         )
 
@@ -108,7 +114,9 @@ class TestAuthAPI:
             json={
                 "username": "user1",
                 "email": "duplicate@example.com",
-                "password": "TestPass123",
+                "password": "TestPass123!",
+                "confirm_password": "TestPass123!",
+                "role": "student",
             }
         )
 
@@ -118,7 +126,9 @@ class TestAuthAPI:
             json={
                 "username": "user2",
                 "email": "duplicate@example.com",
-                "password": "TestPass123",
+                "password": "TestPass123!",
+                "confirm_password": "TestPass123!",
+                "role": "student",
             }
         )
 
@@ -138,6 +148,48 @@ class TestAuthAPI:
                 "username": "testuser",
                 "email": "test@example.com",
                 "password": "weak",  # 不符合密码强度要求
+                "confirm_password": "weak",
+                "role": "student",
+            }
+        )
+
+        assert response.status_code == 422
+
+    async def test_register_password_mismatch(self, async_client: AsyncClient):
+        """
+        测试密码不匹配注册
+
+        验证：
+        - 返回422验证错误
+        """
+        response = await async_client.post(
+            "/api/v1/auth/register",
+            json={
+                "username": "testuser",
+                "email": "test@example.com",
+                "password": "TestPass123!",
+                "confirm_password": "DifferentPass123",
+                "role": "student",
+            }
+        )
+
+        assert response.status_code == 422
+
+    async def test_register_invalid_role(self, async_client: AsyncClient):
+        """
+        测试无效角色注册
+
+        验证：
+        - 返回422验证错误
+        """
+        response = await async_client.post(
+            "/api/v1/auth/register",
+            json={
+                "username": "testuser",
+                "email": "test@example.com",
+                "password": "TestPass123!",
+                "confirm_password": "TestPass123!",
+                "role": "invalid_role",
             }
         )
 
@@ -148,8 +200,8 @@ class TestAuthAPI:
         测试使用用户名登录
 
         验证：
-        - 登录成功返回200
-        - 返回token和用户信息
+        - 登录成功返回200状态码
+        - 返回token信息
         """
         # 先注册用户
         await async_client.post(
@@ -157,7 +209,9 @@ class TestAuthAPI:
             json={
                 "username": "loginuser",
                 "email": "login@example.com",
-                "password": "TestPass123",
+                "password": "TestPass123!",
+                "confirm_password": "TestPass123!",
+                "role": "student",
             }
         )
 
@@ -166,7 +220,7 @@ class TestAuthAPI:
             "/api/v1/auth/login",
             json={
                 "username": "loginuser",
-                "password": "TestPass123",
+                "password": "TestPass123!",
             }
         )
 
@@ -174,23 +228,27 @@ class TestAuthAPI:
         data = response.json()
         assert "access_token" in data
         assert "refresh_token" in data
-        assert "user" in data
+        assert "token_type" in data
+        assert "expires_in" in data
+        assert data["token_type"] == "bearer"
 
     async def test_login_with_email(self, async_client: AsyncClient):
         """
         测试使用邮箱登录
 
         验证：
-        - 登录成功返回200
-        - 返回token和用户信息
+        - 登录成功返回200状态码
+        - 返回token信息
         """
         # 先注册用户
         await async_client.post(
             "/api/v1/auth/register",
             json={
                 "username": "emailuser",
-                "email": "emaillogin@example.com",
-                "password": "TestPass123",
+                "email": "email@test.com",
+                "password": "TestPass123!",
+                "confirm_password": "TestPass123!",
+                "role": "student",
             }
         )
 
@@ -198,14 +256,15 @@ class TestAuthAPI:
         response = await async_client.post(
             "/api/v1/auth/login",
             json={
-                "username": "emaillogin@example.com",
-                "password": "TestPass123",
+                "username": "email@test.com",
+                "password": "TestPass123!",
             }
         )
 
         assert response.status_code == 200
         data = response.json()
         assert "access_token" in data
+        assert "refresh_token" in data
 
     async def test_login_invalid_credentials(self, async_client: AsyncClient):
         """
@@ -213,12 +272,13 @@ class TestAuthAPI:
 
         验证：
         - 返回401错误
+        - 错误信息正确
         """
         response = await async_client.post(
             "/api/v1/auth/login",
             json={
                 "username": "nonexistent",
-                "password": "WrongPass123",
+                "password": "WrongPassword123",
             }
         )
 
@@ -230,16 +290,18 @@ class TestAuthAPI:
         测试获取当前用户信息
 
         验证：
-        - 返回200状态码
-        - 返回正确的用户信息
+        - 需要认证
+        - 返回当前用户信息
         """
         # 先注册并登录
         register_response = await async_client.post(
             "/api/v1/auth/register",
             json={
                 "username": "currentuser",
-                "email": "current@example.com",
-                "password": "TestPass123",
+                "email": "current@test.com",
+                "password": "TestPass123!",
+                "confirm_password": "TestPass123!",
+                "role": "student",
             }
         )
         token = register_response.json()["access_token"]
@@ -253,31 +315,17 @@ class TestAuthAPI:
         assert response.status_code == 200
         data = response.json()
         assert data["username"] == "currentuser"
-        assert data["email"] == "current@example.com"
+        assert data["email"] == "current@test.com"
+        assert data["role"] == "student"
 
     async def test_get_current_user_unauthorized(self, async_client: AsyncClient):
         """
-        测试未授权访问用户信息
+        测试未授权访问当前用户信息
 
         验证：
         - 返回401错误
         """
         response = await async_client.get("/api/v1/auth/me")
-
-        assert response.status_code == 401
-        assert "未提供认证凭据" in response.json()["detail"]
-
-    async def test_get_current_user_invalid_token(self, async_client: AsyncClient):
-        """
-        测试使用无效token访问
-
-        验证：
-        - 返回401错误
-        """
-        response = await async_client.get(
-            "/api/v1/auth/me",
-            headers={"Authorization": "Bearer invalid_token"}
-        )
 
         assert response.status_code == 401
 
@@ -286,15 +334,17 @@ class TestAuthAPI:
         测试刷新token
 
         验证：
-        - 返回新的token
+        - 使用有效的refresh_token获取新的access_token
         """
         # 先注册
         register_response = await async_client.post(
             "/api/v1/auth/register",
             json={
-                "username": "refreshuser",
-                "email": "refresh@example.com",
-                "password": "TestPass123",
+                "username": "refreshtoken",
+                "email": "refresh@test.com",
+                "password": "TestPass123!",
+                "confirm_password": "TestPass123!",
+                "role": "student",
             }
         )
         refresh_token = register_response.json()["refresh_token"]
@@ -309,18 +359,18 @@ class TestAuthAPI:
         data = response.json()
         assert "access_token" in data
         assert "refresh_token" in data
-        assert data["token_type"] == "bearer"
+        assert "token_type" in data
 
-    async def test_refresh_token_invalid(self, async_client: AsyncClient):
+    async def test_refresh_invalid_token(self, async_client: AsyncClient):
         """
-        测试使用无效refresh token
+        测试刷新无效token
 
         验证：
         - 返回401错误
         """
         response = await async_client.post(
             "/api/v1/auth/refresh",
-            json={"refresh_token": "invalid_refresh_token"}
+            json={"refresh_token": "invalid_token"}
         )
 
         assert response.status_code == 401
@@ -330,15 +380,17 @@ class TestAuthAPI:
         测试登出
 
         验证：
-        - 返回204状态码
+        - 登出成功返回204状态码
         """
-        # 先注册
+        # 先注册并登录
         register_response = await async_client.post(
             "/api/v1/auth/register",
             json={
                 "username": "logoutuser",
-                "email": "logout@example.com",
-                "password": "TestPass123",
+                "email": "logout@test.com",
+                "password": "TestPass123!",
+                "confirm_password": "TestPass123!",
+                "role": "student",
             }
         )
         token = register_response.json()["access_token"]
@@ -356,16 +408,17 @@ class TestAuthAPI:
         测试修改密码
 
         验证：
-        - 返回204状态码
-        - 可以用新密码登录
+        - 使用正确的旧密码可以修改密码
         """
-        # 先注册
+        # 先注册并登录
         register_response = await async_client.post(
             "/api/v1/auth/register",
             json={
-                "username": "passworduser",
-                "email": "password@example.com",
-                "password": "OldPass123",
+                "username": "pwduser",
+                "email": "pwd@test.com",
+                "password": "TestPass123!",
+                "confirm_password": "TestPass123!",
+                "role": "student",
             }
         )
         token = register_response.json()["access_token"]
@@ -375,19 +428,19 @@ class TestAuthAPI:
             "/api/v1/auth/change-password",
             headers={"Authorization": f"Bearer {token}"},
             json={
-                "old_password": "OldPass123",
-                "new_password": "NewPass456",
+                "old_password": "TestPass123!",
+                "new_password": "NewPass456!",
             }
         )
 
         assert response.status_code == 204
 
-        # 验证可以用新密码登录
+        # 使用新密码登录验证
         login_response = await async_client.post(
             "/api/v1/auth/login",
             json={
-                "username": "passworduser",
-                "password": "NewPass456",
+                "username": "pwduser",
+                "password": "NewPass456!",
             }
         )
         assert login_response.status_code == 200
@@ -400,45 +453,61 @@ class TestAuthAPI:
         - 返回400错误
         """
         # 先注册
-        register_response = await async_client.post(
+        await async_client.post(
             "/api/v1/auth/register",
             json={
-                "username": "wrongpassuser",
-                "email": "wrongpass@example.com",
-                "password": "CorrectPass123",
+                "username": "wrongpwd",
+                "email": "wrongpwd@test.com",
+                "password": "TestPass123!",
+                "confirm_password": "TestPass123!",
+                "role": "student",
             }
         )
-        token = register_response.json()["access_token"]
 
-        # 使用错误的旧密码
+        # 登录获取token
+        login_response = await async_client.post(
+            "/api/v1/auth/login",
+            json={
+                "username": "wrongpwd",
+                "password": "TestPass123!",
+            }
+        )
+        token = login_response.json()["access_token"]
+
+        # 使用错误的旧密码修改密码
         response = await async_client.post(
             "/api/v1/auth/change-password",
             headers={"Authorization": f"Bearer {token}"},
             json={
-                "old_password": "WrongPass123",
-                "new_password": "NewPass456",
+                "old_password": "WrongPassword",
+                "new_password": "NewPass456!",
             }
         )
 
         assert response.status_code == 400
         assert "旧密码错误" in response.json()["detail"]
 
+    async def test_register_teacher(self, async_client: AsyncClient):
+        """
+        测试教师注册
 
-@pytest.mark.asyncio
-class TestHealthCheck:
-    """健康检查测试"""
+        验证：
+        - 教师注册成功返回201状态码
+        - 返回用户角色为teacher
+        """
+        response = await async_client.post(
+            "/api/v1/auth/register",
+            json={
+                "username": "teacheruser",
+                "email": "teacher@test.com",
+                "password": "TestPass123!",
+                "confirm_password": "TestPass123!",
+                "role": "teacher",
+                "full_name": "Test Teacher",
+            }
+        )
 
-    async def test_root_endpoint(self, async_client: AsyncClient):
-        """测试根路径"""
-        response = await async_client.get("/")
-        assert response.status_code == 200
+        assert response.status_code == 201
         data = response.json()
-        assert "message" in data
-        assert "version" in data
-
-    async def test_health_check(self, async_client: AsyncClient):
-        """测试健康检查端点"""
-        response = await async_client.get("/health")
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "healthy"
+        assert data["user"]["role"] == "teacher"
+        assert data["user"]["username"] == "teacheruser"

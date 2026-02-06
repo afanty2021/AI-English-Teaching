@@ -9,13 +9,95 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import verify_token
+from app.core.security import verify_token, get_token_jti, get_token_version, decode_token
+from app.core.token_blacklist import get_token_blacklist
 from app.models import User, UserRole
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 # HTTP Bearer 安全方案
 security = HTTPBearer(auto_error=False)
+
+
+async def check_token_not_revoked(
+    token: str,
+    user_id: str
+) -> tuple[bool, str]:
+    """
+    检查 Token 是否已被撤销
+
+    Args:
+        token: JWT token 字符串
+        user_id: 用户 ID
+
+    Returns:
+        tuple: (是否有效, 错误信息)
+    """
+    try:
+        blacklist = get_token_blacklist()
+
+        # 检查 JTI 是否在黑名单中
+        jti = get_token_jti(token)
+        if jti and await blacklist.is_revoked(jti):
+            return False, "Token 已被撤销"
+
+        # 检查 Token 版本（用于密码修改后的撤销）
+        token_version = get_token_version(token)
+        if token_version:
+            is_valid = await blacklist.check_token_version(user_id, token_version)
+            if not is_valid:
+                return False, "Token 版本已过期，请重新登录"
+
+        return True, ""
+    except Exception:
+        # 如果 Redis 不可用，降级处理（允许请求通过）
+        return True, ""
+
+
+async def validate_token(
+    credentials: Optional[HTTPAuthorizationCredentials],
+    token_type: str = "access"
+) -> str:
+    """
+    验证 Token 并返回用户 ID
+
+    Args:
+        credentials: HTTP Bearer credentials
+        token_type: 期望的 token 类型
+
+    Returns:
+        str: 用户 ID
+
+    Raises:
+        HTTPException: Token 无效
+    """
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="未提供认证凭据",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    token = credentials.credentials
+    user_id = verify_token(token, token_type=token_type)
+
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的认证凭据",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # 检查 Token 是否被撤销
+    is_valid, error_msg = await check_token_not_revoked(token, user_id)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=error_msg,
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return user_id
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
@@ -61,10 +143,9 @@ async def get_current_user_optional(
     if credentials is None:
         return None
 
-    token = credentials.credentials
-    user_id = verify_token(token, token_type="access")
-
-    if user_id is None:
+    try:
+        user_id = await validate_token(credentials)
+    except HTTPException:
         return None
 
     try:
@@ -125,22 +206,7 @@ async def get_current_user(
         async def protected_endpoint(user: User = Depends(get_current_user)):
             return {"message": f"Hello {user.username}"}
     """
-    if credentials is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="未提供认证凭据",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    token = credentials.credentials
-    user_id = verify_token(token, token_type="access")
-
-    if user_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="无效的认证凭据",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    user_id = await validate_token(credentials)
 
     try:
         user_uuid = uuid.UUID(user_id)
@@ -284,22 +350,7 @@ async def get_current_student(
     Raises:
         HTTPException: 如果用户不是学生
     """
-    if credentials is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="未提供认证凭据",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    token = credentials.credentials
-    user_id = verify_token(token, token_type="access")
-
-    if user_id is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="无效的认证凭据",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    user_id = await validate_token(credentials)
 
     try:
         user_uuid = uuid.UUID(user_id)

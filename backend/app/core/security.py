@@ -9,7 +9,7 @@ from typing import Any, Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
-from app.core.config import settings
+from app.core.config import get_settings
 
 # 密码哈希上下文 - 使用argon2算法（兼容Python 3.14）
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
@@ -45,7 +45,8 @@ def get_password_hash(password: str) -> str:
 def create_access_token(
     subject: str | uuid.UUID,
     expires_delta: Optional[timedelta] = None,
-    additional_claims: Optional[dict[str, Any]] = None
+    additional_claims: Optional[dict[str, Any]] = None,
+    token_version: Optional[str] = None
 ) -> str:
     """
     创建JWT access token
@@ -54,6 +55,7 @@ def create_access_token(
         subject: token主体，通常是用户ID
         expires_delta: 过期时间增量，默认使用配置中的ACCESS_TOKEN_EXPIRE_MINUTES
         additional_claims: 额外的声明信息
+        token_version: Token 版本号，用于撤销检查
 
     Returns:
         str: 编码后的JWT token
@@ -61,29 +63,34 @@ def create_access_token(
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.utcnow() + timedelta(minutes=get_settings().ACCESS_TOKEN_EXPIRE_MINUTES)
 
     to_encode = {
         "sub": str(subject),
         "exp": expire,
         "iat": datetime.utcnow(),
-        "type": "access"
+        "type": "access",
+        "jti": str(uuid.uuid4()),  # Token 唯一标识
     }
+
+    if token_version:
+        to_encode["version"] = token_version
 
     if additional_claims:
         to_encode.update(additional_claims)
 
     encoded_jwt = jwt.encode(
         to_encode,
-        settings.JWT_SECRET_KEY,
-        algorithm=settings.ALGORITHM
+        get_settings().JWT_SECRET_KEY,
+        algorithm=get_settings().ALGORITHM
     )
     return encoded_jwt
 
 
 def create_refresh_token(
     subject: str | uuid.UUID,
-    expires_delta: Optional[timedelta] = None
+    expires_delta: Optional[timedelta] = None,
+    token_version: Optional[str] = None
 ) -> str:
     """
     创建JWT refresh token
@@ -91,6 +98,7 @@ def create_refresh_token(
     Args:
         subject: token主体，通常是用户ID
         expires_delta: 过期时间增量，默认使用配置中的REFRESH_TOKEN_EXPIRE_DAYS
+        token_version: Token 版本号，用于撤销检查
 
     Returns:
         str: 编码后的JWT refresh token
@@ -98,19 +106,23 @@ def create_refresh_token(
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+        expire = datetime.utcnow() + timedelta(days=get_settings().REFRESH_TOKEN_EXPIRE_DAYS)
 
     to_encode = {
         "sub": str(subject),
         "exp": expire,
         "iat": datetime.utcnow(),
-        "type": "refresh"
+        "type": "refresh",
+        "jti": str(uuid.uuid4()),
     }
+
+    if token_version:
+        to_encode["version"] = token_version
 
     encoded_jwt = jwt.encode(
         to_encode,
-        settings.JWT_SECRET_KEY,
-        algorithm=settings.ALGORITHM
+        get_settings().JWT_SECRET_KEY,
+        algorithm=get_settings().ALGORITHM
     )
     return encoded_jwt
 
@@ -128,8 +140,8 @@ def decode_token(token: str) -> dict[str, Any] | None:
     try:
         payload = jwt.decode(
             token,
-            settings.JWT_SECRET_KEY,
-            algorithms=[settings.ALGORITHM]
+            get_settings().JWT_SECRET_KEY,
+            algorithms=[get_settings().ALGORITHM]
         )
         return payload
     except JWTError:
@@ -186,13 +198,14 @@ def create_password_reset_token(
         "sub": str(subject),
         "exp": expire,
         "iat": datetime.utcnow(),
-        "type": "password_reset"
+        "type": "password_reset",
+        "jti": str(uuid.uuid4()),
     }
 
     encoded_jwt = jwt.encode(
         to_encode,
-        settings.JWT_SECRET_KEY,
-        algorithm=settings.ALGORITHM
+        get_settings().JWT_SECRET_KEY,
+        algorithm=get_settings().ALGORITHM
     )
     return encoded_jwt
 
@@ -208,3 +221,35 @@ def verify_password_reset_token(token: str) -> Optional[str]:
         Optional[str]: 用户ID，验证失败返回None
     """
     return verify_token(token, token_type="password_reset")
+
+
+def get_token_jti(token: str) -> Optional[str]:
+    """
+    从 token 中获取 JTI (JWT ID)
+
+    Args:
+        token: JWT token字符串
+
+    Returns:
+        str: JTI，如果不存在返回 None
+    """
+    payload = decode_token(token)
+    if payload:
+        return payload.get("jti")
+    return None
+
+
+def get_token_version(token: str) -> Optional[str]:
+    """
+    从 token 中获取版本号
+
+    Args:
+        token: JWT token字符串
+
+    Returns:
+        str: 版本号，如果不存在返回 None
+    """
+    payload = decode_token(token)
+    if payload:
+        return payload.get("version")
+    return None
