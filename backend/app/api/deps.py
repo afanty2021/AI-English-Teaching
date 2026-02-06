@@ -417,3 +417,59 @@ async def get_current_organization_admin(
             detail="需要组织管理员权限"
         )
     return current_user
+
+
+async def get_current_user_ws(
+    token: str,
+    db: AsyncSession,
+) -> User:
+    """
+    WebSocket连接的认证函数
+
+    通过token字符串验证用户身份（用于WebSocket连接）
+
+    Args:
+        token: JWT token字符串
+        db: 数据库会话
+
+    Returns:
+        User对象
+
+    Raises:
+        HTTPException: 如果token无效
+    """
+    try:
+        user_id = verify_token(token, token_type="access")
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的认证凭据"
+        )
+
+    try:
+        user_uuid = uuid.UUID(user_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的用户ID"
+        )
+
+    # 查询用户
+    result = await db.execute(
+        select(User).where(User.id == user_uuid)
+    )
+    user = result.scalar_one_or_none()
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="用户不存在"
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="账户已被禁用"
+        )
+
+    return user

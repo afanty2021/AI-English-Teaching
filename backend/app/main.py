@@ -55,6 +55,10 @@ app.add_middleware(
 # 注册路由
 app.include_router(api_router, prefix="/api/v1")
 
+# 注册WebSocket路由
+from app.websocket.router import router as ws_router
+app.include_router(ws_router, prefix="/api/v1", tags=["WebSocket"])
+
 # 注册全局异常处理器
 from app.core.exception_handler import setup_exception_handlers
 setup_exception_handlers(app)
