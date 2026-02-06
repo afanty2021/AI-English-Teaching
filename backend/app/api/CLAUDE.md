@@ -7,5 +7,5 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
-| #885 | 4:40 PM | ✅ | Share Dialog State Added to LessonsView | ~208 |
+| #933 | 5:26 PM | 🔵 | API依赖注入模块分析 | ~67 |
 </claude-mem-context>

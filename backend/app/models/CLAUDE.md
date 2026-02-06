@@ -7,6 +7,11 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #969 | 6:00 PM | 🔄 | Share Statistics History Model Also Updated to SQLAlchemy 2.0 | ~222 |
+| #968 | " | 🔄 | Notification Preference Model Updated to SQLAlchemy 2.0 Style | ~279 |
+| #965 | 5:40 PM | 🟣 | Notification Preferences Feature Fully Implemented | ~524 |
+| #960 | 5:38 PM | 🟣 | Notification Preferences Feature Backend Complete | ~376 |
+| #946 | 5:33 PM | 🔵 | Existing Notification Preference Model Found | ~334 |
 | #849 | 4:10 PM | 🟣 | 创建教案分享模型 | ~89 |
 | #843 | 4:05 PM | 🔵 | LessonsView.vue组件结构分析 | ~109 |
 </claude-mem-context>

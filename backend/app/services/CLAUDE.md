@@ -7,6 +7,12 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #965 | 5:40 PM | 🟣 | Notification Preferences Feature Fully Implemented | ~524 |
+| #960 | 5:38 PM | 🟣 | Notification Preferences Feature Backend Complete | ~376 |
+| #958 | 5:36 PM | 🟣 | Notification Preference Service Implemented | ~281 |
+| #952 | 5:34 PM | 🔵 | Backend Service and Frontend API Integration Mapped | ~334 |
+| #910 | 5:16 PM | 🟣 | 教案分享服务添加统计和通知功能 | ~110 |
+| #908 | " | 🔵 | lesson_plan_share_service.py实现分析 | ~99 |
 | #733 | 3:10 PM | 🟣 | 迭代3性能与质量优化全部完成 | ~19 |
 | #732 | 3:09 PM | 🟣 | 迭代3性能与质量优化全部完成 | ~18 |
 | #731 | " | 🟣 | 迭代3性能与质量优化全部完成 | ~18 |

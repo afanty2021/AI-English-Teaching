@@ -7,6 +7,8 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #951 | 5:34 PM | 🔵 | Notification System Architecture Discovered | ~323 |
+| #912 | 5:17 PM | ✅ | ShareDialog Teacher Search Updated with Real API | ~266 |
 | #632 | 11:48 AM | ✅ | PPTPreview comprehensive documentation created | ~278 |
 | #629 | " | 🟣 | PPTPreview.example.vue documentation created | ~339 |
 | #628 | " | 🟣 | All 4 PPT preview components successfully created | ~239 |

@@ -7,6 +7,9 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #965 | 5:40 PM | 🟣 | Notification Preferences Feature Fully Implemented | ~524 |
+| #960 | 5:38 PM | 🟣 | Notification Preferences Feature Backend Complete | ~376 |
+| #957 | 5:36 PM | 🟣 | Notification Preference Pydantic Schema Created | ~296 |
 | #857 | 4:11 PM | 🟣 | 创建教案分享API Schema | ~194 |
 | #744 | 3:12 PM | 🔵 | Password Validation Exists in Auth Schemas | ~216 |
 </claude-mem-context>

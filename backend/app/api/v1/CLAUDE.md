@@ -7,6 +7,11 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #965 | 5:40 PM | 🟣 | Notification Preferences Feature Fully Implemented | ~524 |
+| #960 | 5:38 PM | 🟣 | Notification Preferences Feature Backend Complete | ~376 |
+| #959 | 5:37 PM | 🟣 | Notification Preferences API Endpoints Created | ~273 |
+| #947 | 5:33 PM | 🔵 | Pending Notifications API Endpoint Found | ~190 |
+| #941 | 5:29 PM | 🟣 | 用户搜索API添加热门搜索功能 | ~78 |
 | #866 | 4:14 PM | 🟣 | 注册教案分享API路由 | ~75 |
 | #760 | 3:13 PM | ✅ | CODE_QUALITY_IMPROVEMENT_PLAN.md更新迭代1验收清单 | ~84 |
 | #742 | 3:12 PM | 🔵 | Token Blacklist Implementation Already Exists | ~246 |

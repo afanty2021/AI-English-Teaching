@@ -8,6 +8,5 @@
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
 | #965 | 5:40 PM | 🟣 | Notification Preferences Feature Fully Implemented | ~524 |
-| #962 | 5:38 PM | 🟣 | Notification Settings Route Integrated | ~156 |
-| #592 | 11:43 AM | 🔵 | Router architecture and access control patterns analyzed | ~232 |
+| #960 | 5:38 PM | 🟣 | Notification Preferences Feature Backend Complete | ~376 |
 </claude-mem-context>

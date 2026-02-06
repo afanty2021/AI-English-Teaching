@@ -7,5 +7,7 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #965 | 5:40 PM | 🟣 | Notification Preferences Feature Fully Implemented | ~524 |
+| #960 | 5:38 PM | 🟣 | Notification Preferences Feature Backend Complete | ~376 |
 | #606 | 11:44 AM | 🔵 | Lesson API already contains export functionality | ~259 |
 </claude-mem-context>
