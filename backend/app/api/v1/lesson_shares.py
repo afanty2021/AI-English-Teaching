@@ -298,3 +298,77 @@ async def cancel_share(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"取消分享失败: {str(e)}"
         )
+
+
+@router.get("/shared/statistics/overview")
+async def get_share_statistics(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    share_service: LessonPlanShareService = Depends(get_lesson_plan_share_service),
+):
+    """
+    获取分享统计概览
+
+    返回当前用户的分享统计数据：
+    - 待接受的分享数量
+    - 总分享次数（我分享的）
+    - 总接受次数（分享给我的）
+    - 总拒绝次数
+    - 接受率
+
+    Args:
+        db: 数据库会话
+        current_user: 当前用户
+        share_service: 分享服务
+
+    Returns:
+        分享统计数据
+    """
+    try:
+        stats = await share_service.get_share_statistics(
+            db=db,
+            user_id=current_user.id,
+        )
+        return stats
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取统计失败: {str(e)}"
+        )
+
+
+@router.get("/notifications/pending")
+async def get_pending_notifications(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    share_service: LessonPlanShareService = Depends(get_lesson_plan_share_service),
+):
+    """
+    获取待处理的通知
+
+    返回当前用户的待处理分享通知（待接受的分享）。
+
+    Args:
+        db: 数据库会话
+        current_user: 当前用户
+        share_service: 分享服务
+
+    Returns:
+        待处理通知列表
+    """
+    try:
+        notifications = await share_service.get_pending_notifications(
+            db=db,
+            user_id=current_user.id,
+        )
+        return {
+            "notifications": notifications,
+            "count": len(notifications)
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取通知失败: {str(e)}"
+        )

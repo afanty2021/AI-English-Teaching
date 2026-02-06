@@ -4,16 +4,47 @@
       <el-header>
         <div class="header-content">
           <h1>分享的教案</h1>
-          <div class="header-tabs">
-            <el-radio-group v-model="activeTab" @change="handleTabChange">
-              <el-radio-button value="received">分享给我的</el-radio-button>
-              <el-radio-button value="given">我分享的</el-radio-button>
-            </el-radio-group>
+          <div class="header-actions">
+            <ShareNotificationBell />
+            <div class="header-tabs">
+              <el-radio-group v-model="activeTab" @change="handleTabChange">
+                <el-radio-button value="received">分享给我的</el-radio-button>
+                <el-radio-button value="given">我分享的</el-radio-button>
+              </el-radio-group>
+            </div>
           </div>
         </div>
       </el-header>
 
       <el-main>
+        <!-- 统计卡片 -->
+        <div class="statistics-bar">
+          <el-card class="stat-card">
+            <div class="stat-item">
+              <div class="stat-value">{{ statistics.pending_count }}</div>
+              <div class="stat-label">待接受</div>
+            </div>
+          </el-card>
+          <el-card class="stat-card">
+            <div class="stat-item">
+              <div class="stat-value">{{ statistics.total_shared_by_me }}</div>
+              <div class="stat-label">我分享的</div>
+            </div>
+          </el-card>
+          <el-card class="stat-card">
+            <div class="stat-item">
+              <div class="stat-value">{{ statistics.accepted_count }}</div>
+              <div class="stat-label">已接受</div>
+            </div>
+          </el-card>
+          <el-card class="stat-card">
+            <div class="stat-item">
+              <div class="stat-value">{{ statistics.acceptance_rate }}%</div>
+              <div class="stat-label">接受率</div>
+            </div>
+          </el-card>
+        </div>
+
         <!-- 筛选栏 -->
         <div class="filter-bar">
           <el-select v-model="filterStatus" placeholder="状态筛选" clearable style="width: 120px" @change="loadShares">
@@ -168,8 +199,10 @@ import {
   cancelShare
 } from '@/api/lessonShare'
 import { getLessonPlan } from '@/api/lesson'
+import { getShareStatistics } from '@/api/user'
 import { SHARE_STATUSES } from '@/api/lessonShare'
 import type { LessonPlanShare } from '@/api/lessonShare'
+import ShareNotificationBell from '@/components/ShareNotificationBell.vue'
 
 const router = useRouter()
 
@@ -185,6 +218,16 @@ const total = ref(0)
 // 操作状态
 const accepting = ref<string | null>(null)
 const rejecting = ref<string | null>(null)
+
+// 统计数据
+const statistics = ref({
+  pending_count: 0,
+  total_shared_by_me: 0,
+  total_shared_to_me: 0,
+  accepted_count: 0,
+  rejected_count: 0,
+  acceptance_rate: 0
+})
 
 // 加载分享列表
 const loadShares = async () => {
@@ -221,6 +264,7 @@ const handleAccept = async (share: LessonPlanShare) => {
     await acceptShare(share.id)
     ElMessage.success('已接受分享')
     await loadShares()
+    await loadStatistics()
   } catch (error: any) {
     console.error('接受分享失败:', error)
     ElMessage.error(error.response?.data?.detail || '接受分享失败')
@@ -236,6 +280,7 @@ const handleReject = async (share: LessonPlanShare) => {
     await rejectShare(share.id)
     ElMessage.success('已拒绝分享')
     await loadShares()
+    await loadStatistics()
   } catch (error: any) {
     console.error('拒绝分享失败:', error)
     ElMessage.error(error.response?.data?.detail || '拒绝分享失败')
@@ -350,7 +395,18 @@ const getExpiresText = (expiresAt: string) => {
 // 初始化
 onMounted(() => {
   loadShares()
+  loadStatistics()
 })
+
+// 加载统计数据
+const loadStatistics = async () => {
+  try {
+    const stats = await getShareStatistics()
+    statistics.value = stats
+  } catch (error) {
+    console.error('加载统计数据失败:', error)
+  }
+}
 
 // 暴露常量给模板
 const SHARE_STATUSES = SHARE_STATUSES
@@ -374,6 +430,12 @@ const SHARE_STATUSES = SHARE_STATUSES
   font-weight: 600;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
 .header-tabs {
   display: flex;
   gap: 16px;
@@ -381,6 +443,37 @@ const SHARE_STATUSES = SHARE_STATUSES
 
 .filter-bar {
   margin-bottom: 16px;
+}
+
+.statistics-bar {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.stat-card {
+  flex: 1;
+  padding: 16px;
+}
+
+.stat-card :deep(.el-card__body) {
+  padding: 0;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 600;
+  color: #409eff;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #909399;
 }
 
 .shares-list {

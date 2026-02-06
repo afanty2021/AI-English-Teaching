@@ -353,6 +353,157 @@ class LessonPlanShareService:
 
         return list(shares), total
 
+    async def get_share_statistics(
+        self,
+        db: AsyncSession,
+        user_id: uuid.UUID,
+    ) -> dict:
+        """
+        获取用户的分享统计数据
+
+        Args:
+            db: 数据库会话
+            user_id: 用户ID
+
+        Returns:
+            dict: 统计数据，包含：
+                - pending_count: 待接受的分享数量
+                - total_shared_by_me: 我分享的总次数
+                - total_shared_to_me: 分享给我的总次数
+                - accepted_count: 已接受的数量
+                - rejected_count: 已拒绝的数量
+                - acceptance_rate: 接受率
+        """
+        # 待接受的分享数量
+        pending_result = await db.execute(
+            select(func.count()).where(
+                and_(
+                    LessonPlanShare.shared_to == user_id,
+                    LessonPlanShare.status == ShareStatus.PENDING.value,
+                    or_(
+                        LessonPlanShare.expires_at.is_(None),
+                        LessonPlanShare.expires_at > datetime.utcnow()
+                    )
+                )
+            )
+        )
+        pending_count = pending_result.scalar() or 0
+
+        # 我分享的总次数
+        shared_by_me_result = await db.execute(
+            select(func.count()).where(
+                LessonPlanShare.shared_by == user_id
+            )
+        )
+        total_shared_by_me = shared_by_me_result.scalar() or 0
+
+        # 分享给我的总次数
+        shared_to_me_result = await db.execute(
+            select(func.count()).where(
+                LessonPlanShare.shared_to == user_id
+            )
+        )
+        total_shared_to_me = shared_to_me_result.scalar() or 0
+
+        # 已接受的数量
+        accepted_result = await db.execute(
+            select(func.count()).where(
+                and_(
+                    LessonPlanShare.shared_to == user_id,
+                    LessonPlanShare.status == ShareStatus.ACCEPTED.value
+                )
+            )
+        )
+        accepted_count = accepted_result.scalar() or 0
+
+        # 已拒绝的数量
+        rejected_result = await db.execute(
+            select(func.count()).where(
+                and_(
+                    LessonPlanShare.shared_to == user_id,
+                    LessonPlanShare.status == ShareStatus.REJECTED.value
+                )
+            )
+        )
+        rejected_count = rejected_result.scalar() or 0
+
+        # 计算接受率
+        total_responses = accepted_count + rejected_count
+        acceptance_rate = round((accepted_count / total_responses * 100) if total_responses > 0 else 0, 2)
+
+        return {
+            "pending_count": pending_count,
+            "total_shared_by_me": total_shared_by_me,
+            "total_shared_to_me": total_shared_to_me,
+            "accepted_count": accepted_count,
+            "rejected_count": rejected_count,
+            "acceptance_rate": acceptance_rate,
+        }
+
+    async def get_pending_notifications(
+        self,
+        db: AsyncSession,
+        user_id: uuid.UUID,
+        limit: int = 10,
+    ) -> list[dict]:
+        """
+        获取用户的待处理通知
+
+        Args:
+            db: 数据库会话
+            user_id: 用户ID
+            limit: 返回数量限制
+
+        Returns:
+            list[dict]: 待处理通知列表
+        """
+        # 查询待接受的分享
+        query = select(LessonPlanShare).where(
+            and_(
+                LessonPlanShare.shared_to == user_id,
+                LessonPlanShare.status == ShareStatus.PENDING.value,
+                or_(
+                    LessonPlanShare.expires_at.is_(None),
+                    LessonPlanShare.expires_at > datetime.utcnow()
+                )
+            )
+        )
+
+        # 预加载关联数据
+        query = query.options(
+            selectinload(LessonPlanShare.lesson_plan),
+            selectinload(LessonPlanShare.sharer)
+        )
+
+        # 排序并限制数量
+        query = query.order_by(LessonPlanShare.created_at.desc())
+        query = query.limit(limit)
+
+        result = await db.execute(query)
+        shares = result.scalars().all()
+
+        # 构建通知数据
+        notifications = []
+        for share in shares:
+            notifications.append({
+                "id": str(share.id),
+                "type": "lesson_share",
+                "title": f"{share.sharer.full_name or share.sharer.username} 分享了教案",
+                "content": share.message or f"分享了《{share.lesson_plan.title}》",
+                "lesson_plan_id": str(share.lesson_plan_id),
+                "lesson_plan_title": share.lesson_plan.title,
+                "permission": share.permission,
+                "sharer": {
+                    "id": str(share.sharer.id),
+                    "username": share.sharer.username,
+                    "full_name": share.sharer.full_name,
+                },
+                "created_at": share.created_at.isoformat() if share.created_at else None,
+                "expires_at": share.expires_at.isoformat() if share.expires_at else None,
+            })
+
+        return notifications
+
     async def check_share_access(
         self,
         db: AsyncSession,

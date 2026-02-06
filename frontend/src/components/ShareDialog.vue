@@ -133,22 +133,19 @@ const searchTeachers = async (query: string) => {
 
   searchLoading.value = true
   try {
-    // TODO: 调用实际的教师搜索API
-    // 目前使用模拟数据
-    await new Promise(resolve => setTimeout(resolve, 300))
+    // 调用真实的教师搜索API
+    const { searchUsers } = await import('@/api/user')
+    const response = await searchUsers({
+      q: query,
+      role: 'teacher',
+      limit: 10
+    })
 
-    // 模拟搜索结果
-    const mockTeachers = [
-      { id: '1', name: '张老师', email: 'zhang@example.com' },
-      { id: '2', name: '李老师', email: 'li@example.com' },
-      { id: '3', name: '王老师', email: 'wang@example.com' }
-    ].filter(t => t.name.includes(query) || t.email.includes(query))
-
-    teacherOptions.value = mockTeachers.map(t => ({
+    teacherOptions.value = response.users.map(t => ({
       id: t.id,
-      name: t.name,
+      name: t.full_name || t.username,
       email: t.email,
-      label: `${t.name} (${t.email})`
+      label: `${t.full_name || t.username} (${t.email})`
     }))
   } catch (error) {
     console.error('搜索教师失败:', error)
