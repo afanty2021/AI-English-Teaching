@@ -73,14 +73,42 @@
 
       <!-- 消息列表 -->
       <div ref="messagesContainer" class="messages-container">
-        <ConversationMessageComponent
+        <div
           v-for="message in messages"
           :key="message.id"
-          :message="message"
-          :show-header="true"
-          :is-highlighted="highlightedMessageId === message.id"
-          :is-streaming="streamingMessage?.id === message.id"
-        />
+          :class="[
+            'message-wrapper',
+            {
+              'highlighted': highlightedMessageId === message.id,
+              'streaming': streamingMessage?.id === message.id,
+              'is-playing': isMessagePlaying(message.id),
+              'is-paused': isMessagePaused(message.id)
+            }
+          ]"
+        >
+          <ConversationMessageComponent
+            :message="message"
+            :show-header="true"
+            :is-highlighted="highlightedMessageId === message.id"
+            :is-streaming="streamingMessage?.id === message.id"
+          />
+
+          <!-- AI消息播放按钮 -->
+          <div
+            v-if="message.role === 'assistant' && message.type === 'text'"
+            class="message-actions"
+          >
+            <el-button
+              :icon="isMessagePlaying(message.id) ? VideoPause : Promotion"
+              :type="isMessagePlaying(message.id) ? 'warning' : 'primary'"
+              size="small"
+              text
+              @click="toggleMessagePlayback(message)"
+            >
+              {{ isMessagePlaying(message.id) ? '暂停' : isMessagePaused(message.id) ? '继续' : '播放' }}
+            </el-button>
+          </div>
+        </div>
 
         <!-- AI 思考中占位符 -->
         <div v-if="isAIThinking" class="thinking-indicator">
@@ -164,11 +192,19 @@
       :is-complete="isComplete"
       @continue="handleContinue"
       @view-report="handleViewReport"
-    />
+    >
+      <!-- 评分卡片 -->
+      <template #extra>
+        <ConversationScoreCard
+          v-if="conversationScores"
+          :scores="conversationScores"
+        />
+      </template>
+    </ConversationFeedbackDrawer>
 
     <!-- 设置对话框 -->
     <el-dialog v-model="showSettings" title="对话设置" width="500px">
-      <el-form label-width="100px">
+      <el-form label-width="120px">
         <el-form-item label="难度级别">
           <el-select v-model="level" placeholder="选择难度">
             <el-option label="A1 - 入门" value="A1" />
@@ -181,8 +217,13 @@
         <el-form-item label="目标消息数">
           <el-input-number v-model="targetMessages" :min="5" :max="20" />
         </el-form-item>
-        <el-form-item label="自动发音">
+        <el-form-item label="AI自动发音">
+          <el-switch v-model="autoPlayResponse" />
+          <span class="form-item-tip">AI回复时自动朗读</span>
+        </el-form-item>
+        <el-form-item label="自动朗读开场白">
           <el-switch v-model="autoPronunciation" />
+          <span class="form-item-tip">开始对话时自动播放AI问候</span>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -211,11 +252,14 @@ import {
   Briefcase,
   Football,
   Picture,
-  ChatDotRound
+  ChatDotRound,
+  VideoPause
 } from '@element-plus/icons-vue'
 import ConversationMessageComponent from '@/components/ConversationMessage.vue'
 import ConversationStatusComponent from '@/components/ConversationStatus.vue'
 import ConversationFeedbackDrawer from '@/components/ConversationFeedbackDrawer.vue'
+import ConversationScoreCard from '@/components/ConversationScoreCard.vue'
+import VoiceControlButton from '@/components/VoiceControlButton.vue'
 import {
   createConversation,
   sendMessage as sendApiMessage,
@@ -237,6 +281,11 @@ import {
   type VoiceRecognition,
   VoiceRecognitionStatus
 } from '@/utils/voiceRecognition'
+import {
+  createTextToSpeech,
+  type TextToSpeech,
+  TTSStatus
+} from '@/utils/textToSpeech'
 import {
   retryAsync,
   createConversationRecovery,
@@ -339,6 +388,12 @@ const streamCleanup = ref<(() => void) | null>(null)
 const voiceRecognition = ref<VoiceRecognition | null>(null)
 const voiceRecognitionStatus = ref<VoiceRecognitionStatus>(VoiceRecognitionStatus.Idle)
 const interimTranscript = ref('')
+
+// 语音合成
+const textToSpeech = ref<TextToSpeech | null>(null)
+const ttsStatus = ref<TTSStatus>(TTSStatus.Idle)
+const autoPlayResponse = ref<boolean>(true)
+const currentPlayingMessageId = ref<string>('')
 
 // 错误恢复
 const conversationRecovery = createConversationRecovery()
@@ -510,6 +565,11 @@ const sendMessage = async () => {
         setTimeout(() => {
           highlightedMessageId.value = ''
         }, 2000)
+
+        // TTS 播放完整回复
+        if (autoPlayResponse.value && autoPronunciation.value) {
+          playAIResponse(fullMessage, aiMessageId)
+        }
       },
       onError: (error: Error) => {
         console.error('Stream error:', error)
@@ -697,6 +757,83 @@ const stopVoiceRecognition = () => {
   interimTranscript.value = ''
 }
 
+// 初始化语音合成
+const initTextToSpeech = () => {
+  textToSpeech.value = createTextToSpeech({
+    language: 'en-US',
+    rate: 1.0,
+    pitch: 1.0,
+    volume: 1.0
+  })
+
+  textToSpeech.value.on({
+    onStatusChange: (status: TTSStatus) => {
+      ttsStatus.value = status
+      if (status === TTSStatus.Idle) {
+        currentPlayingMessageId.value = ''
+      }
+    },
+    onError: (error: Error) => {
+      console.error('TTS error:', error)
+      ElMessage.error('语音播放失败')
+    }
+  })
+}
+
+// 播放AI回复
+const playAIResponse = async (text: string, messageId?: string) => {
+  if (!textToSpeech.value || !text || !autoPlayResponse.value) return
+
+  try {
+    // 停止当前播放
+    stopPlayback()
+
+    if (messageId) {
+      currentPlayingMessageId.value = messageId
+    }
+
+    await textToSpeech.value.speak(text)
+  } catch (error) {
+    console.error('Failed to play AI response:', error)
+    currentPlayingMessageId.value = ''
+  }
+}
+
+// 停止播放
+const stopPlayback = () => {
+  if (textToSpeech.value?.isSpeaking() || textToSpeech.value?.isPaused()) {
+    textToSpeech.value.stop()
+  }
+  currentPlayingMessageId.value = ''
+}
+
+// 切换消息的语音播放
+const toggleMessagePlayback = (message: ConversationMessage) => {
+  if (message.role !== MessageRole.ASSISTANT || !message.content) return
+
+  if (currentPlayingMessageId.value === message.id && ttsStatus.value === TTSStatus.Speaking) {
+    // 当前正在播放，暂停
+    if (textToSpeech.value?.isPaused()) {
+      textToSpeech.value.resume()
+    } else {
+      textToSpeech.value.pause()
+    }
+  } else {
+    // 播放新消息
+    playAIResponse(message.content, message.id)
+  }
+}
+
+// 检查消息是否正在播放
+const isMessagePlaying = (messageId: string): boolean => {
+  return currentPlayingMessageId.value === messageId && ttsStatus.value === TTSStatus.Speaking
+}
+
+// 检查消息是否已暂停
+const isMessagePaused = (messageId: string): boolean => {
+  return currentPlayingMessageId.value === messageId && ttsStatus.value === TTSStatus.Paused
+}
+
 // 滚动到底部
 const scrollToBottom = async () => {
   await nextTick()
@@ -780,6 +917,9 @@ onMounted(() => {
     console.warn('Voice recognition is not supported in this browser')
   }
 
+  // 初始化语音合成
+  initTextToSpeech()
+
   // 监听网络状态变化
   networkMonitor.onStatusChange((online) => {
     if (online) {
@@ -797,6 +937,12 @@ onUnmounted(() => {
   if (voiceRecognition.value) {
     voiceRecognition.value.destroy()
     voiceRecognition.value = null
+  }
+  // 清理语音合成
+  if (textToSpeech.value) {
+    textToSpeech.value.stop()
+    textToSpeech.value.destroy()
+    textToSpeech.value = null
   }
   // 清理流式连接
   if (streamCleanup.value) {
@@ -1101,5 +1247,48 @@ onUnmounted(() => {
   .input-area {
     padding: 12px 16px;
   }
+}
+
+/* 消息包装器 */
+.message-wrapper {
+  position: relative;
+}
+
+.message-wrapper.highlighted {
+  animation: highlight-pulse 2s ease-out;
+}
+
+@keyframes highlight-pulse {
+  0% {
+    background: var(--el-color-primary-light-9);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+.message-wrapper.is-playing {
+  background: var(--el-color-success-light-9);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.message-wrapper.is-paused {
+  background: var(--el-color-warning-light-9);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.message-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+  padding: 0 16px;
+}
+
+.form-item-tip {
+  margin-left: 8px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
 }
 </style>
