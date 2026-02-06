@@ -7,6 +7,19 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #1189 | 9:54 PM | 🔄 | 优化textToSpeech Mock实现以支持spyOn | ~129 |
+| #1188 | " | 🔴 | Integration Test Failures Identified | ~244 |
+| #1187 | 9:53 PM | ✅ | TextToSpeech Module Mock Added to Integration Tests | ~240 |
+| #1186 | " | 🔴 | 集成测试VoiceRecognitionStatus类型导出修复 | ~60 |
+| #1184 | 9:52 PM | 🔄 | 集成测试配置简化 - 移除冗余图标Mock | ~56 |
+| #1182 | 9:51 PM | 🔴 | Integration Test Icon Mock Strategy Changed | ~325 |
+| #1180 | 9:50 PM | 🔴 | Untitled | ~53 |
+| #1179 | 9:47 PM | 🔴 | 集成测试图标Mock修复 | ~231 |
+| #1178 | " | ✅ | Element Plus Icons Mock Improved | ~91 |
+| #1176 | 9:46 PM | ✅ | VoiceControlButton Component Mock Added | ~205 |
+| #1173 | " | 🔵 | Integration Tests Running with Vue Warnings | ~253 |
+| #1172 | 9:45 PM | 🔵 | Integration Test Mock Configuration Discovered | ~280 |
+| #1171 | " | ✅ | Integration Test Documents Complete Conversation Flow | ~176 |
 | #1133 | 9:04 PM | ✅ | Speaking Practice Service Frontend Enhancement Complete | ~240 |
 | #1128 | 9:03 PM | ⚖️ | Speaking Practice Service Progress Summary | ~317 |
 | #1127 | 9:02 PM | ✅ | Integration Tests Committed for Conversation Flow | ~163 |
@@ -16,4 +29,20 @@
 | #1121 | " | ✅ | Integration Test File with Comprehensive Mocks | ~206 |
 | #1120 | " | 🟣 | 完整对话流程集成测试创建 | ~131 |
 | #1117 | 8:53 PM | 🟣 | Comprehensive Conversation Flow Integration Tests Created | ~311 |
+
+### Feb 7, 2026
+
+| ID | Time | T | Title | Read |
+|----|------|---|-------|------|
+| #1268 | 12:34 AM | ✅ | Git Commit - Test Fixes | ~232 |
+| #1267 | 12:33 AM | ✅ | Git Changes Summary | ~275 |
+| #1264 | 12:31 AM | 🔵 | Test Coverage Results - Core Speaking Service Files | ~304 |
+| #1263 | 12:29 AM | 🔴 | All 23 Integration Tests Now Passing | ~252 |
+| #1255 | 12:27 AM | 🔴 | Keyboard Enter Test Fixed | ~224 |
+| #1247 | 12:25 AM | 🔴 | Integration Test Results - 21/23 Passing | ~301 |
+| #1241 | 12:24 AM | 🔵 | Test Script Configuration Verified | ~255 |
+| #1234 | " | 🔴 | 测试文件语法错误 | ~80 |
+| #1222 | 12:21 AM | ✅ | 集成测试执行 | ~44 |
+| #1212 | 12:18 AM | 🔵 | VoiceRecognitionStatus类型导出问题 | ~82 |
+| #1210 | " | 🔵 | 对话流程集成测试文件分析 | ~196 |
 </claude-mem-context>

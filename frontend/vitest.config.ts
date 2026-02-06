@@ -18,9 +18,10 @@ export default defineConfig({
       reporter: ['text', 'html', 'lcov'],
       exclude: [
         'node_modules/',
-        'tests/',
-        '**/*.spec.ts',
-        '**/*.test.ts',
+        'tests/setup.ts',
+        'tests/**/*.spec.ts',
+        'tests/**/*.test.ts',
+        '**/*.d.ts',
       ]
     }
   },

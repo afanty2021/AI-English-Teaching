@@ -69,15 +69,25 @@ config.global.stubs = {
   }
 }
 
-// Mock Element Plus icons
-vi.mock('@element-plus/icons-vue', () => ({
-  TrendCharts: {
-    template: '<svg></svg>'
-  },
-  Right: {
-    template: '<svg></svg>'
-  }
-}))
+// Mock Element Plus icons - 提供所有需要的图标占位符
+vi.mock('@element-plus/icons-vue', () => {
+  const icons = [
+    'Right', 'ArrowLeft', 'Setting', 'Microphone', 'Promotion',
+    'CircleCheck', 'Loading', 'Coffee', 'Food', 'ShoppingBag',
+    'Location', 'Briefcase', 'Football', 'Picture', 'ChatDotRound',
+    'VideoPause', 'TrendCharts', 'Bell', 'MuteNotification'
+  ]
+
+  const mockIcons: Record<string, any> = {}
+  icons.forEach(name => {
+    mockIcons[name] = {
+      name,
+      template: '<span class="mock-icon"></span>'
+    }
+  })
+
+  return mockIcons
+})
 
 // Mock localStorage
 const localStorageMock = (() => {

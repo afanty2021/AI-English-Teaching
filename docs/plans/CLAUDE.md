@@ -7,6 +7,7 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #1170 | 9:40 PM | 🔵 | 口语练习服务验收标准状态 | ~101 |
 | #1134 | 9:04 PM | 🟣 | Speaking Practice Service Implementation Complete | ~391 |
 | #1132 | " | 🔴 | Integration Tests Failing - Icon Mock Incomplete | ~311 |
 | #1114 | 8:51 PM | ✅ | Speaking Practice Service Implementation Plan Completed | ~206 |
@@ -22,4 +23,12 @@
 | #1003 | 8:09 PM | ✅ | TTS Unit Tests Written with TDD Approach | ~170 |
 | #1000 | " | ⚖️ | Speaking Practice Service Enhancement Plan Finalized | ~434 |
 | #995 | 8:02 PM | ⚖️ | Speaking Practice Service Implementation Plan Created | ~173 |
+
+### Feb 7, 2026
+
+| ID | Time | T | Title | Read |
+|----|------|---|-------|------|
+| #1267 | 12:33 AM | ✅ | Git Changes Summary | ~275 |
+| #1200 | 12:16 AM | 🔵 | 口语练习服务实施计划 | ~145 |
+| #1196 | " | 🔵 | MVP实施计划状态概览 | ~134 |
 </claude-mem-context>

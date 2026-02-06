@@ -9,7 +9,7 @@ import type {
   ContentCompletionRequest,
   FeedbackRequest,
   RecommendationHistory
-}
+} from '@/types/recommendation'
 
 /**
  * 获取每日推荐
