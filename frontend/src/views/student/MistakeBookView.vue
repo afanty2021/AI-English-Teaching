@@ -66,6 +66,69 @@
       </el-col>
     </el-row>
 
+    <!-- 智能复习提醒卡片 -->
+    <el-row :gutter="20" class="mb-6" v-if="todayReviewData">
+      <el-col :span="24">
+        <el-card shadow="hover" class="review-reminder-card">
+          <template #header>
+            <div class="review-header">
+              <div class="review-title">
+                <el-icon class="mr-2"><Clock /></el-icon>
+                <span>今日智能复习提醒</span>
+              </div>
+              <el-tag :type="todayReviewData.overdue_count > 0 ? 'danger' : 'success'" size="small">
+                {{ todayReviewData.overdue_count }}道已过期
+              </el-tag>
+            </div>
+          </template>
+          <el-row :gutter="16">
+            <el-col :xs="8" :sm="4" class="text-center">
+              <div class="review-count overdue">
+                <div class="count-value">{{ todayReviewData.overdue_count }}</div>
+                <div class="count-label">已过期</div>
+              </div>
+            </el-col>
+            <el-col :xs="8" :sm="4" class="text-center">
+              <div class="review-count urgent">
+                <div class="count-value">{{ todayReviewData.urgent_count }}</div>
+                <div class="count-label">即将过期</div>
+              </div>
+            </el-col>
+            <el-col :xs="8" :sm="4" class="text-center">
+              <div class="review-count today">
+                <div class="count-value">{{ todayReviewData.today_count }}</div>
+                <div class="count-label">今日复习</div>
+              </div>
+            </el-col>
+            <el-col :xs="12" :sm="6">
+              <el-progress
+                type="circle"
+                :percentage="Math.round((todayReviewData.today_count / Math.max(todayReviewData.total_count, 1)) * 100)"
+                :width="80"
+              >
+                <div class="progress-text">
+                  <div class="progress-value">{{ todayReviewData.today_count }}</div>
+                  <div class="progress-label">今日任务</div>
+                </div>
+              </el-progress>
+            </el-col>
+            <el-col :xs="12" :sm="6" class="flex items-center">
+              <div class="review-actions">
+                <el-button type="primary" @click="showSmartReview = true">
+                  <el-icon><MagicStick /></el-icon>
+                  开始复习
+                </el-button>
+                <el-button @click="showReviewCalendar = true">
+                  <el-icon><Calendar /></el-icon>
+                  复习日历
+                </el-button>
+              </div>
+            </el-col>
+          </el-row>
+        </el-card>
+      </el-col>
+    </el-row>
+
     <!-- 筛选和操作栏 -->
     <el-card class="mb-4">
       <el-row :gutter="16" align="middle">
@@ -589,6 +652,157 @@
       </div>
     </el-dialog>
 
+    <!-- 智能复习对话框 -->
+    <el-dialog
+      v-model="showSmartReview"
+      title="智能复习提醒"
+      width="900px"
+    >
+      <div v-if="todayReviewData">
+        <el-tabs v-model="smartReviewActiveTab">
+          <!-- 紧急复习 -->
+          <el-tab-pane label="🔴 紧急复习" name="overdue">
+            <div v-if="todayReviewData.review_list.filter((r: any) => r.review_type === 'overdue').length === 0" class="text-center text-gray py-8">
+              <el-icon :size="48" class="mb-4"><CircleCheck /></el-icon>
+              <div>暂无紧急复习任务，继续保持！</div>
+            </div>
+            <div v-else>
+              <el-empty
+                v-if="todayReviewData.review_list.filter((r: any) => r.review_type === 'overdue').length === 0"
+                description="暂无紧急复习"
+              />
+              <div v-else>
+                <div v-for="item in todayReviewData.review_list.filter((r: any) => r.review_type === 'overdue')" :key="item.id" class="smart-review-item">
+                  <el-card shadow="hover" :class="{ 'overdue-item': item.is_overdue }">
+                    <div class="review-item-header">
+                      <el-tag type="danger" size="small">
+                        过期{{ item.overdue_hours }}小时
+                      </el-tag>
+                      <el-tag size="small">{{ getTypeText(item.mistake_type) }}</el-tag>
+                      <el-tag v-if="item.topic" type="info" size="small">{{ item.topic }}</el-tag>
+                    </div>
+                    <div class="review-item-content">{{ item.question_preview }}</div>
+                    <div class="review-item-footer">
+                      <span class="priority">
+                        <el-icon><Top /></el-icon>
+                        优先级: {{ Math.round(item.priority_score) }}分
+                      </span>
+                      <el-button type="primary" size="small" @click="handleStartReview(item)">
+                        开始复习
+                      </el-button>
+                    </div>
+                  </el-card>
+                </div>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <!-- 即将过期 -->
+          <el-tab-pane label="🟡 即将过期" name="urgent">
+            <div v-if="todayReviewData.review_list.filter((r: any) => r.review_type === 'urgent').length === 0" class="text-center text-gray py-8">
+              <el-icon :size="48" class="mb-4"><CircleCheck /></el-icon>
+              <div>暂无即将过期的复习任务！</div>
+            </div>
+            <div v-else>
+              <div v-for="item in todayReviewData.review_list.filter((r: any) => r.review_type === 'urgent')" :key="item.id" class="smart-review-item">
+                <el-card shadow="hover">
+                  <div class="review-item-header">
+                    <el-tag type="warning" size="small">即将过期</el-tag>
+                    <el-tag size="small">{{ getTypeText(item.mistake_type) }}</el-tag>
+                  </div>
+                  <div class="review-item-content">{{ item.question_preview }}</div>
+                  <div class="review-item-footer">
+                    <span class="priority">
+                      <el-icon><Top /></el-icon>
+                      优先级: {{ Math.round(item.priority_score) }}分
+                    </span>
+                    <el-button type="primary" size="small" @click="handleStartReview(item)">
+                      开始复习
+                    </el-button>
+                  </div>
+                </el-card>
+              </div>
+            </div>
+          </el-tab-pane>
+
+          <!-- 推荐复习 -->
+          <el-tab-pane label="📚 推荐复习" name="recommend">
+            <div v-if="recommendData.recommendations.length === 0" class="text-center text-gray py-8">
+              <el-empty description="暂无推荐复习内容" />
+            </div>
+            <div v-else>
+              <div v-for="item in recommendData.recommendations" :key="item.id" class="smart-review-item">
+                <el-card shadow="hover">
+                  <div class="review-item-header">
+                    <el-progress
+                      :percentage="Math.round(item.priority_score)"
+                      :stroke-width="3"
+                      :show-text="false"
+                      style="width: 60px;"
+                    />
+                    <el-tag size="small">{{ getTypeText(item.mistake_type) }}</el-tag>
+                  </div>
+                  <div class="review-item-content">{{ item.question_preview }}</div>
+                  <div class="review-item-footer">
+                    <span class="priority">
+                      <el-icon><Clock /></el-icon>
+                      下次复习: {{ item.next_review_at }}
+                    </span>
+                    <el-button type="success" size="small" @click="handleStartReview(item)">
+                      立即复习
+                    </el-button>
+                  </div>
+                </el-card>
+              </div>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
+      </div>
+    </el-dialog>
+
+    <!-- 复习日历对话框 -->
+    <el-dialog
+      v-model="showReviewCalendar"
+      title="复习日历"
+      width="900px"
+    >
+      <div v-if="reviewCalendarData">
+        <div class="calendar-header mb-4">
+          <el-button-group>
+            <el-button @click="changeCalendarMonth(-1)">
+              <el-icon><ArrowLeft /></el-icon>
+            </el-button>
+            <el-button>{{ calendarMonth }}</el-button>
+            <el-button @click="changeCalendarMonth(1)">
+              <el-icon><ArrowRight /></el-icon>
+            </el-button>
+          </el-button-group>
+        </div>
+
+        <div class="calendar-grid">
+          <div class="calendar-weekday">
+            <div v-for="day in ['日', '一', '二', '三', '四', '五', '六']" :key="day">{{ day }}</div>
+          </div>
+          <div class="calendar-days">
+            <div
+              v-for="(day, index) in calendarDays"
+              :key="index"
+              :class="['calendar-day', {
+                'other-month': !day.currentMonth,
+                'today': day.isToday,
+                'has-tasks': day.tasks.length > 0
+              }]"
+            >
+              <div class="day-number">{{ day.date }}</div>
+              <div class="day-tasks" v-if="day.tasks.length > 0">
+                <el-tag type="warning" size="mini">{{ day.tasks.length }}题</el-tag>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
+
     <!-- 收集错题对话框 -->
     <el-dialog
       v-model="showCollectDialog"
@@ -637,13 +851,20 @@ import {
   MagicStick,
   ArrowDown,
   Tickets,
-  Memo
+  Memo,
+  ArrowLeft,
+  ArrowRight,
+  Top
 } from '@element-plus/icons-vue'
 import mistakeApi, {
   type Mistake,
   type MistakeStatistics,
   type ReviewPlan,
   type RetryMistakeRequest,
+  type TodayReviewResponse,
+  type RecommendReviewResponse,
+  type ReviewCalendarResponse,
+  type ReviewItem,
   MistakeStatus,
   MistakeType
 } from '@/api/mistake'
@@ -696,6 +917,21 @@ const statistics = ref<MistakeStatistics>({
   frequent_mistakes_count: 0
 })
 const reviewPlan = ref<ReviewPlan | null>(null)
+
+// 智能复习数据
+const todayReviewData = ref<TodayReviewResponse | null>(null)
+const recommendData = ref<RecommendReviewResponse>({
+  student_id: '',
+  recommended_count: 0,
+  recommendations: []
+})
+const reviewCalendarData = ref<ReviewCalendarResponse | null>(null)
+
+// 智能复习对话框状态
+const showSmartReview = ref(false)
+const showReviewCalendar = ref(false)
+const smartReviewActiveTab = ref('overdue')
+const calendarMonth = ref('')
 
 // AI分析状态
 const analyzingMistakeId = ref<string | null>(null)
@@ -778,6 +1014,72 @@ const loadReviewPlan = async () => {
   } catch (error) {
     console.error('加载复习计划失败:', error)
   }
+}
+
+// 加载今日复习清单
+const loadTodayReview = async () => {
+  try {
+    const data = await mistakeApi.getTodayReview(20)
+    todayReviewData.value = data
+  } catch (error) {
+    console.error('加载今日复习清单失败:', error)
+  }
+}
+
+// 加载推荐复习
+const loadRecommendReview = async () => {
+  try {
+    const data = await mistakeApi.getRecommendReview(10)
+    recommendData.value = data
+  } catch (error) {
+    console.error('加载推荐复习失败:', error)
+  }
+}
+
+// 加载复习日历
+const loadReviewCalendar = async () => {
+  try {
+    const data = await mistakeApi.getReviewCalendar(30)
+    reviewCalendarData.value = data
+  } catch (error) {
+    console.error('加载复习日历失败:', error)
+  }
+}
+
+// 开始复习
+const handleStartReview = (item: ReviewItem) => {
+  // 查找对应的错题并打开重做对话框
+  currentMistake.value = mistakes.value.find(m => m.id === item.id) as Mistake & { ai_analysis?: any } | undefined
+  if (currentMistake.value) {
+    showSmartReview.value = false
+    retryForm.user_answer = ''
+    showRetryDialog.value = true
+  } else {
+    ElMessage.warning('未找到对应的错题')
+  }
+}
+
+// 日历相关
+const calendarDays = ref<Array<{
+  date: number
+  currentMonth: boolean
+  isToday: boolean
+  tasks: any[]
+}>>([])
+
+const changeCalendarMonth = async (delta: number) => {
+  // 简化的月份切换，实际可能需要更复杂的逻辑
+  await loadReviewCalendar()
+}
+
+const initCalendarDays = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth()
+  calendarMonth.value = `${year}年${month + 1}月`
+
+  // 简化的日历初始化
+  calendarDays.value = []
 }
 
 // 查看详情
@@ -1129,7 +1431,10 @@ onMounted(async () => {
   await Promise.all([
     loadMistakes(),
     loadStatistics(),
-    loadReviewPlan()
+    loadReviewPlan(),
+    loadTodayReview(),
+    loadRecommendReview(),
+    loadReviewCalendar()
   ])
 })
 </script>
@@ -1478,6 +1783,205 @@ onMounted(async () => {
 
 .plan-value {
   color: #303133;
+}
+
+/* 智能复习提醒卡片 */
+.review-reminder-card {
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.review-reminder-card :deep(.el-card__header) {
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.review-reminder-card :deep(.el-card__body) {
+  color: white;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.review-title {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.review-count {
+  padding: 16px 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  margin-bottom: 8px;
+}
+
+.review-count.overdue {
+  background: rgba(245, 108, 108, 0.3);
+}
+
+.review-count.urgent {
+  background: rgba(230, 162, 60, 0.3);
+}
+
+.review-count.today {
+  background: rgba(103, 194, 58, 0.3);
+}
+
+.count-value {
+  font-size: 32px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.count-label {
+  font-size: 12px;
+  text-align: center;
+  opacity: 0.9;
+}
+
+.progress-text {
+  text-align: center;
+}
+
+.progress-value {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.progress-label {
+  font-size: 12px;
+}
+
+.review-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.review-actions .el-button {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.review-actions .el-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* 智能复习项目 */
+.smart-review-item {
+  margin-bottom: 12px;
+}
+
+.smart-review-item .el-card {
+  border-radius: 8px;
+}
+
+.smart-review-item .overdue-item {
+  border-left: 4px solid #f56c6c;
+}
+
+.review-item-header {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.review-item-content {
+  color: #303133;
+  line-height: 1.5;
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.review-item-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.review-item-footer .priority {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #909399;
+  font-size: 13px;
+}
+
+/* 复习日历 */
+.calendar-grid {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.calendar-weekday {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #f5f7fa;
+  padding: 8px 0;
+}
+
+.calendar-weekday div {
+  text-align: center;
+  font-weight: 600;
+  color: #606266;
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-day {
+  min-height: 80px;
+  border: 1px solid #ebeef5;
+  padding: 4px;
+  background: white;
+}
+
+.calendar-day.other-month {
+  background: #fafafa;
+  color: #c0c4cc;
+}
+
+.calendar-day.today {
+  background: #ecf5ff;
+}
+
+.calendar-day.has-tasks {
+  background: #fff7e6;
+}
+
+.day-number {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.today .day-number {
+  background: #409eff;
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.day-tasks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
 }
 
 /* 响应式 */

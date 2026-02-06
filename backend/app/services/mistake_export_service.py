@@ -14,13 +14,13 @@ from app.models.mistake import Mistake, MistakeStatus, MistakeType
 from app.models.student import Student
 from app.models.user import User
 
-# 导入 PDF 渲染服务
+# 导入 Word 渲染服务
 try:
-    from app.services.pdf_renderer_service import PdfRendererService
-    PDF_SUPPORT = True
+    from app.services.word_renderer_service import get_word_renderer_service
+    WORD_SUPPORT = True
 except ImportError:
-    PDF_SUPPORT = False
-    PdfRendererService = None
+    WORD_SUPPORT = False
+    get_word_renderer_service = None
 
 
 class MistakeExportService:
@@ -54,15 +54,15 @@ class MistakeExportService:
         self.template_env.filters['get_status_name'] = self._get_status_name
         self.template_env.filters['get_type_name'] = self._get_type_name
 
-        # 初始化 PDF 渲染器
-        self.pdf_renderer = None
-        if PDF_SUPPORT:
+        # 初始化 Word 渲染器
+        self.word_renderer = None
+        if WORD_SUPPORT and get_word_renderer_service:
             try:
-                self.pdf_renderer = PdfRendererService(self.template_env)
+                self.word_renderer = get_word_renderer_service()
             except Exception as e:
                 import logging
                 logging.getLogger(__name__).warning(
-                    f"Failed to initialize PDF renderer: {e}. PDF export will be disabled."
+                    f"Failed to initialize Word renderer: {e}. Word export will be disabled."
                 )
 
     async def prepare_export_data(
@@ -231,18 +231,39 @@ class MistakeExportService:
 
         Returns:
             (文件名, Word字节数据)
+
+        Raises:
+            RuntimeError: Word 渲染服务不可用
         """
+        # 检查 Word 渲染器是否可用
+        if self.word_renderer is None:
+            raise RuntimeError(
+                "Word export is not available. Please install required dependencies: "
+                "python-docx"
+            )
+
+        # 获取学生信息用于标题
+        student_info = await self._get_student_info(student_id)
+        student_name = student_info.get('name', '学生')
+
         # 先生成Markdown
         filename_md, markdown_content = await self.export_as_markdown(
             student_id, filters, single_mistake_id
         )
 
+        # 生成标题
+        if single_mistake_id:
+            title = f"{student_name} - 错题详情"
+        else:
+            title = f"{student_name}的错题本"
+
         # Markdown转Word
         filename = filename_md.replace('.md', '.docx')
-
-        # TODO: 实现Markdown到Word的转换
-        # 可以使用 python-docx + pypandoc
-        docx_bytes = markdown_content.encode('utf-8')
+        docx_bytes = self.word_renderer.markdown_to_docx_bytes(
+            markdown_content=markdown_content,
+            title=title,
+            author=student_name,
+        )
 
         return filename, docx_bytes
 

@@ -15,6 +15,7 @@ from app.models.mistake import MistakeStatus, MistakeType
 from app.services.mistake_service import get_mistake_service
 from app.services.mistake_analysis_service import get_mistake_analysis_service
 from app.services.mistake_export_service import get_mistake_export_service
+from app.services.mistake_review_service import get_mistake_review_service
 
 router = APIRouter()
 
@@ -1203,3 +1204,185 @@ async def export_single_mistake(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"导出失败: {str(e)}"
         )
+
+
+# ==================== 智能复习提醒 API ====================
+
+@router.get("/review/today", response_model=dict)
+async def get_today_review_list(
+    *,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    limit: int = Query(20, ge=1, le=50, description="返回数量限制"),
+) -> Any:
+    """
+    获取今日复习清单
+
+    基于艾宾浩斯遗忘曲线，返回今日需要复习的错题列表。
+
+    Returns:
+        dict: 今日复习清单，包含：
+            - date: 日期
+            - total_count: 待复习总数
+            - today_count: 今日需复习数
+            - overdue_count: 已过期数
+            - urgent_count: 即将过期数
+            - review_list: 复习列表
+    """
+    # 权限检查
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有学生可以查看复习清单"
+        )
+
+    if not current_user.student_profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="学生档案不存在，请先完善个人信息"
+        )
+
+    student_id = current_user.student_profile.id
+    review_service = get_mistake_review_service(db)
+    result = await review_service.get_today_review_list(student_id, limit=limit)
+
+    return result
+
+
+@router.get("/review/urgent", response_model=dict)
+async def get_urgent_review(
+    *,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    limit: int = Query(10, ge=1, le=30, description="返回数量限制"),
+) -> Any:
+    """
+    获取紧急复习项
+
+    返回即将遗忘的错题（超过最佳复习时间或24小时内需要复习的）。
+
+    Returns:
+        dict: 紧急复习列表，包含即将遗忘的错题
+    """
+    # 权限检查
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有学生可以查看紧急复习"
+        )
+
+    if not current_user.student_profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="学生档案不存在，请先完善个人信息"
+        )
+
+    student_id = current_user.student_profile.id
+    review_service = get_mistake_review_service(db)
+    result = await review_service.get_urgent_review(student_id, limit=limit)
+
+    return result
+
+
+@router.get("/review/stats", response_model=dict)
+async def get_review_statistics(
+    *,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """
+    获取复习统计
+
+    返回学习统计数据，包括掌握率、复习次数、连续天数等。
+
+    Returns:
+        dict: 复习统计数据
+    """
+    # 权限检查
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有学生可以查看复习统计"
+        )
+
+    if not current_user.student_profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="学生档案不存在，请先完善个人信息"
+        )
+
+    student_id = current_user.student_profile.id
+    review_service = get_mistake_review_service(db)
+    result = await review_service.get_review_statistics(student_id)
+
+    return result
+
+
+@router.get("/review/recommend", response_model=dict)
+async def recommend_review(
+    *,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    limit: int = Query(10, ge=1, le=30, description="返回数量限制"),
+) -> Any:
+    """
+    推荐复习题目
+
+    基于优先级分数智能推荐最需要复习的错题。
+
+    Returns:
+        dict: 推荐复习列表，按优先级排序
+    """
+    # 权限检查
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有学生可以获取复习推荐"
+        )
+
+    if not current_user.student_profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="学生档案不存在，请先完善个人信息"
+        )
+
+    student_id = current_user.student_profile.id
+    review_service = get_mistake_review_service(db)
+    result = await review_service.get_recommended_review(student_id, limit=limit)
+
+    return result
+
+
+@router.get("/review/calendar", response_model=dict)
+async def get_review_calendar(
+    *,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    days: int = Query(30, ge=7, le=90, description="天数"),
+) -> Any:
+    """
+    获取复习日历
+
+    返回未来N天的复习计划安排。
+
+    Returns:
+        dict: 复习日历，按日期分组
+    """
+    # 权限检查
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="只有学生可以查看复习日历"
+        )
+
+    if not current_user.student_profile:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="学生档案不存在，请先完善个人信息"
+        )
+
+    student_id = current_user.student_profile.id
+    review_service = get_mistake_review_service(db)
+    result = await review_service.get_review_calendar(student_id, days=days)
+
+    return result

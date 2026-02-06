@@ -170,6 +170,84 @@ export interface RetryMistakeResponse {
 }
 
 /**
+ * 复习项（智能复习）
+ */
+export interface ReviewItem {
+  id: string
+  question_preview: string
+  mistake_type: string
+  topic?: string
+  mistake_count: number
+  review_count: number
+  status: string
+  review_type: 'overdue' | 'urgent' | 'new' | 'normal' | 'scheduled'
+  next_review_at: string
+  is_overdue: boolean
+  overdue_hours: number
+  priority_score: number
+}
+
+/**
+ * 今日复习清单响应
+ */
+export interface TodayReviewResponse {
+  student_id: string
+  date: string
+  total_count: number
+  today_count: number
+  overdue_count: number
+  urgent_count: number
+  review_list: ReviewItem[]
+}
+
+/**
+ * 紧急复习响应
+ */
+export interface UrgentReviewResponse {
+  student_id: string
+  total_urgent: number
+  urgent_list: ReviewItem[]
+}
+
+/**
+ * 复习统计响应
+ */
+export interface ReviewStatisticsResponse {
+  student_id: string
+  total_mistakes: number
+  mastered_count: number
+  pending_count: number
+  reviewing_count: number
+  review_count: number
+  mastery_rate: number
+  today_reviewed: number
+  streak_days: number
+  overdue_count: number
+}
+
+/**
+ * 推荐复习响应
+ */
+export interface RecommendReviewResponse {
+  student_id: string
+  recommended_count: number
+  recommendations: (ReviewItem & {
+    priority_score: number
+    next_review_at: string
+  })[]
+}
+
+/**
+ * 复习日历响应
+ */
+export interface ReviewCalendarResponse {
+  student_id: string
+  start_date: string
+  end_date: string
+  calendar: Record<string, ReviewItem[]>
+}
+
+/**
  * 错题本 API
  */
 export const mistakeApi = {
@@ -417,6 +495,43 @@ export const mistakeApi = {
     link.click()
     document.body.removeChild(link)
     window.URL.revokeObjectURL(downloadUrl)
+  },
+
+  // ==================== 智能复习提醒 API ====================
+
+  /**
+   * 获取今日复习清单
+   */
+  async getTodayReview(limit = 20): Promise<TodayReviewResponse> {
+    return api.get('/mistakes/review/today', { params: { limit } })
+  },
+
+  /**
+   * 获取紧急复习项
+   */
+  async getUrgentReview(limit = 10): Promise<UrgentReviewResponse> {
+    return api.get('/mistakes/review/urgent', { params: { limit } })
+  },
+
+  /**
+   * 获取复习统计
+   */
+  async getReviewStats(): Promise<ReviewStatisticsResponse> {
+    return api.get('/mistakes/review/stats')
+  },
+
+  /**
+   * 获取推荐复习题目
+   */
+  async getRecommendReview(limit = 10): Promise<RecommendReviewResponse> {
+    return api.get('/mistakes/review/recommend', { params: { limit } })
+  },
+
+  /**
+   * 获取复习日历
+   */
+  async getReviewCalendar(days = 30): Promise<ReviewCalendarResponse> {
+    return api.get('/mistakes/review/calendar', { params: { days } })
   }
 }
 
