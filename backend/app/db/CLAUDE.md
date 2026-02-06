@@ -7,5 +7,5 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
-| #602 | 11:44 AM | 🔵 | HTTP request utility provides download functionality | ~221 |
+| #790 | 3:24 PM | 🔵 | backend/app/db/CLAUDE.md文档 | ~51 |
 </claude-mem-context>

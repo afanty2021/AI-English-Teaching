@@ -7,5 +7,6 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
-| #602 | 11:44 AM | 🔵 | HTTP request utility provides download functionality | ~221 |
+| #604 | 11:44 AM | 🔄 | Extracted backend path to pytest fixture in CLI tests | ~237 |
+| #591 | 11:43 AM | 🔴 | Fixed incorrect import in test file | ~203 |
 </claude-mem-context>
