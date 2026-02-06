@@ -4,13 +4,17 @@
 import uuid
 from datetime import datetime
 from enum import Enum as PyEnum
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import JSON, Boolean, DateTime, Enum, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.async_task import AsyncTask
+    from app.models.lesson_plan import LessonPlan
 
 
 class UserRole(str, PyEnum):
@@ -156,6 +160,14 @@ class User(Base):
         "LessonPlan",
         back_populates="teacher",
         foreign_keys="LessonPlan.teacher_id",
+        cascade="all, delete-orphan"
+    )
+
+    # 关系 - 异步任务
+    async_tasks: Mapped[list["AsyncTask"]] = relationship(
+        "AsyncTask",
+        back_populates="user",
+        foreign_keys="AsyncTask.user_id",
         cascade="all, delete-orphan"
     )
 

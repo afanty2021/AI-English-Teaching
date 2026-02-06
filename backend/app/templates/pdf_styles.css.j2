@@ -1,6 +1,7 @@
 {#
-  PDF 样式模板 - AI英语教学系统错题本
+  PDF 样式模板 - AI英语教学系统
   使用 CSS Paged Media 标准，配合 weasyprint 渲染 PDF
+  支持错题本、学习报告等多种导出格式
 #}
 
 /* ================================
@@ -12,7 +13,7 @@
 
     /* 页眉 */
     @top-center {
-        content: "{{ title or 'AI英语教学系统 - 错题本' }}";
+        content: "{{ title or 'AI英语教学系统' }}";
         font-size: 9pt;
         color: #666;
         padding-bottom: 0.5em;
@@ -35,6 +36,15 @@
         @top-center {
             content: none;
         }
+    }
+
+    /* 左页边距（装订线） */
+    @left {
+        margin-left: 2cm;
+    }
+
+    @right {
+        margin-right: 2cm;
     }
 }
 
@@ -92,6 +102,7 @@ h3 {
     font-size: 14pt;
     margin-top: 1.2em;
     margin-bottom: 0.6em;
+    color: #2c3e50;
 }
 
 h4 {
@@ -112,6 +123,211 @@ h5, h6 {
 p {
     margin: 0.6em 0;
     text-align: justify;
+}
+
+/* ================================
+   学习报告专用样式
+   ================================ */
+
+/* 报告封面 */
+.report-cover {
+    text-align: center;
+    padding: 2cm 0;
+    page-break-after: always;
+}
+
+.report-cover .cover-title {
+    font-size: 28pt;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 1cm;
+}
+
+.report-cover .cover-subtitle {
+    font-size: 16pt;
+    color: #7f8c8d;
+    margin-bottom: 2cm;
+}
+
+.report-cover .student-info {
+    margin-top: 2cm;
+    padding: 1cm;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    display: inline-block;
+    text-align: left;
+}
+
+.report-cover .student-name {
+    font-size: 20pt;
+    font-weight: 600;
+    color: #3498db;
+    margin-bottom: 0.5em;
+}
+
+.report-cover .report-period {
+    font-size: 14pt;
+    color: #666;
+}
+
+/* 报告统计卡片 */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1em;
+    margin: 1em 0;
+}
+
+.stat-card {
+    background-color: #f8f9fa;
+    padding: 1em;
+    border-radius: 8px;
+    text-align: center;
+    page-break-inside: avoid;
+}
+
+.stat-card .stat-value {
+    font-size: 24pt;
+    font-weight: 700;
+    color: #3498db;
+}
+
+.stat-card .stat-label {
+    font-size: 10pt;
+    color: #7f8c8d;
+    margin-top: 0.3em;
+}
+
+/* 统计卡片颜色变体 */
+.stat-card.success .stat-value { color: #27ae60; }
+.stat-card.warning .stat-value { color: #f39c12; }
+.stat-card.danger .stat-value { color: #e74c3c; }
+
+/* ================================
+   图表样式
+   ================================ */
+
+/* 学习趋势图表 */
+.chart-trend {
+    page-break-inside: avoid;
+    margin: 1.5em 0;
+}
+
+.chart-trend canvas,
+.chart-trend img {
+    max-width: 100%;
+    height: auto;
+}
+
+.chart-trend .chart-legend {
+    display: flex;
+    justify-content: center;
+    gap: 1.5em;
+    margin-top: 0.5em;
+    font-size: 10pt;
+    color: #666;
+}
+
+.chart-trend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+}
+
+.chart-trend .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+/* 雷达图 */
+.chart-radar {
+    page-break-inside: avoid;
+    margin: 1.5em auto;
+    max-width: 450px;
+}
+
+.chart-radar canvas,
+.chart-radar img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* 热力图 */
+.chart-heatmap {
+    width: 100%;
+    margin: 1em 0;
+    page-break-inside: avoid;
+}
+
+.heatmap-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+}
+
+.heatmap-table th,
+.heatmap-table td {
+    border: 1px solid #ddd;
+    padding: 6px 10px;
+    text-align: center;
+}
+
+.heatmap-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+/* 热力图单元格颜色 */
+.heatmap-cell {
+    padding: 8px;
+    color: #fff;
+    font-weight: 500;
+}
+
+.heatmap-cell.level-1 { background-color: #fdeea6; color: #333; }  /* 0-20% */
+.heatmap-cell.level-2 { background-color: #fdc965; color: #333; }  /* 20-40% */
+.heatmap-cell.level-3 { background-color: #fca45b; color: #fff; }  /* 40-60% */
+.heatmap-cell.level-4 { background-color: #f5813d; color: #fff; }  /* 60-80% */
+.heatmap-cell.level-5 { background-color: #27ae60; color: #fff; }  /* 80-100% */
+
+/* 能力对比图表 */
+.chart-comparison {
+    page-break-inside: avoid;
+    margin: 1em 0;
+}
+
+.comparison-bar {
+    display: flex;
+    align-items: center;
+    margin: 0.5em 0;
+}
+
+.comparison-bar .label {
+    width: 80px;
+    font-size: 10pt;
+    color: #666;
+}
+
+.comparison-bar .bar-container {
+    flex: 1;
+    height: 20px;
+    background-color: #ecf0f1;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.comparison-bar .bar-fill {
+    height: 100%;
+    border-radius: 10px;
+}
+
+.comparison-bar .bar-value {
+    width: 50px;
+    text-align: right;
+    font-size: 10pt;
+    font-weight: 600;
+    color: #333;
 }
 
 /* ================================
@@ -159,13 +375,25 @@ tr:nth-child(even) {
     background-color: #fafbfc;
 }
 
-tr:hover {
-    background-color: #f0f7fb;
-}
-
 /* 表格中的特殊标记 */
 table .emoji {
     font-size: 1.1em;
+}
+
+/* 建议优先级标签 */
+.priority-high {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.priority-medium {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.priority-low {
+    background-color: #dcfce7;
+    color: #16a34a;
 }
 
 /* ================================
@@ -182,6 +410,21 @@ blockquote {
 
 blockquote p:last-child {
     margin-bottom: 0;
+}
+
+/* AI 洞察区块 */
+.ai-insight {
+    background-color: #e8f4fd;
+    border-left-color: #2980b9;
+    padding: 1em 1.2em;
+}
+
+.ai-insight::before {
+    content: "💡 AI 洞察";
+    display: block;
+    font-weight: 600;
+    color: #2980b9;
+    margin-bottom: 0.5em;
 }
 
 /* ================================
@@ -390,6 +633,73 @@ li {
 }
 
 /* ================================
+   学习建议样式
+   ================================ */
+.recommendation-card {
+    margin: 1em 0;
+    padding: 1em;
+    border-radius: 8px;
+    page-break-inside: avoid;
+}
+
+.recommendation-card.high {
+    background-color: #fef2f2;
+    border-left: 4px solid #ef4444;
+}
+
+.recommendation-card.medium {
+    background-color: #fffbeb;
+    border-left: 4px solid #f59e0b;
+}
+
+.recommendation-card.low {
+    background-color: #f0fdf4;
+    border-left: 4px solid #22c55e;
+}
+
+.recommendation-card h5 {
+    margin-top: 0;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.recommendation-card .priority-badge {
+    font-size: 0.8em;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* ================================
+   薄弱点分析样式
+   ================================ */
+.weak-point-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8em 1em;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    margin: 0.5em 0;
+    page-break-inside: avoid;
+}
+
+.weak-point-item .point-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.weak-point-item .point-count {
+    background-color: #fee2e2;
+    color: #dc2626;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.9em;
+}
+
+/* ================================
    页脚信息
    ================================ */
 .footer-note {
@@ -400,6 +710,46 @@ li {
     color: #95a5a6;
     font-size: 9pt;
     page-break-inside: avoid;
+}
+
+.footer-note .generation-time {
+    font-size: 8pt;
+    color: #bdc3c7;
+}
+
+/* ================================
+   进度指示器样式
+   ================================ */
+.progress-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 1em;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin: 1em 0;
+    page-break-inside: avoid;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 8px;
+    background-color: #ecf0f1;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #3498db;
+    border-radius: 4px;
+}
+
+.progress-text {
+    min-width: 60px;
+    text-align: right;
+    font-weight: 600;
+    color: #3498db;
 }
 
 /* ================================
@@ -413,6 +763,10 @@ li {
     h1 { font-size: 20pt; }
     h2 { font-size: 16pt; }
     h3 { font-size: 13pt; }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 /* ================================
@@ -425,3 +779,15 @@ li {
 .mt-2 { margin-top: 1em; }
 .mb-1 { margin-bottom: 0.5em; }
 .mb-2 { margin-bottom: 1em; }
+.ml-1 { margin-left: 0.5em; }
+.mr-1 { margin-right: 0.5em; }
+.p-1 { padding: 0.5em; }
+.p-2 { padding: 1em; }
+.flex { display: flex; }
+.flex-wrap { flex-wrap: wrap; }
+.justify-between { justify-content: space-between; }
+.items-center { align-items: center; }
+.gap-1 { gap: 0.5em; }
+.gap-2 { gap: 1em; }
+.w-full { width: 100%; }
+.hidden { display: none; }

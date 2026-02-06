@@ -26,11 +26,11 @@
           </div>
         </div>
         <div class="header-actions">
-          <el-button @click="exportReport('pdf')" :loading="exporting">
+          <el-button @click="handleExport('pdf')" :loading="exporting">
             <el-icon><Download /></el-icon>
             导出 PDF
           </el-button>
-          <el-button @click="exportReport('image')" :loading="exporting">
+          <el-button @click="handleExport('image')" :loading="exporting">
             <el-icon><Picture /></el-icon>
             导出图片
           </el-button>
@@ -41,246 +41,217 @@
         </div>
       </div>
 
-      <!-- 学习统计卡片 -->
-      <el-card class="stats-section" shadow="never">
-        <template #header>
-          <h3>学习概况</h3>
-        </template>
-        <el-row :gutter="20" v-if="report.statistics">
-          <el-col :span="6">
-            <div class="stat-card">
-              <div class="stat-icon" style="background: #ecf5ff">
-                <el-icon color="#409eff"><Document /></el-icon>
-              </div>
-              <div class="stat-content">
-                <div class="stat-value">{{ report.statistics.total_practices }}</div>
-                <div class="stat-label">练习次数</div>
-              </div>
-            </div>
-          </el-col>
-          <el-col :span="6">
-            <div class="stat-card">
-              <div class="stat-icon" style="background: #f0f9ff">
-                <el-icon color="#67c23a"><CircleCheck /></el-icon>
-              </div>
-              <div class="stat-content">
-                <div class="stat-value">{{ report.statistics.completion_rate }}%</div>
-                <div class="stat-label">完成率</div>
-              </div>
-            </div>
-          </el-col>
-          <el-col :span="6">
-            <div class="stat-card">
-              <div class="stat-icon" style="background: #fef0f0">
-                <el-icon color="#f56c6c"><TrendCharts /></el-icon>
-              </div>
-              <div class="stat-content">
-                <div class="stat-value">{{ report.statistics.avg_correct_rate }}%</div>
-                <div class="stat-label">平均正确率</div>
-              </div>
-            </div>
-          </el-col>
-          <el-col :span="6">
-            <div class="stat-card">
-              <div class="stat-icon" style="background: #fdf6ec">
-                <el-icon color="#e6a23c"><Clock /></el-icon>
-              </div>
-              <div class="stat-content">
-                <div class="stat-value">{{ report.statistics.total_duration_hours?.toFixed(1) || 0 }}</div>
-                <div class="stat-label">学习小时</div>
-              </div>
-            </div>
-          </el-col>
-        </el-row>
+      <!-- Tab 导航 -->
+      <div class="tab-navigation">
+        <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+          <el-tab-pane label="概览" name="overview">
+            <template #label>
+              <el-icon><DataAnalysis /></el-icon>
+              <span>概览</span>
+            </template>
+          </el-tab-pane>
+          <el-tab-pane label="学习趋势" name="trends">
+            <template #label>
+              <el-icon><TrendCharts /></el-icon>
+              <span>学习趋势</span>
+            </template>
+          </el-tab-pane>
+          <el-tab-pane label="能力分析" name="abilities">
+            <template #label>
+              <el-icon><Odometer /></el-icon>
+              <span>能力分析</span>
+            </template>
+          </el-tab-pane>
+          <el-tab-pane label="知识点" name="knowledge">
+            <template #label>
+              <el-icon><Grid /></el-icon>
+              <span>知识点</span>
+            </template>
+          </el-tab-pane>
+          <el-tab-pane label="建议" name="recommendations">
+            <template #label>
+              <el-icon><ChatLineRound /></el-icon>
+              <span>学习建议</span>
+            </template>
+          </el-tab-pane>
+        </el-tabs>
+      </div>
 
-        <!-- 错题状态分布 -->
-        <el-divider />
-        <div v-if="report.statistics?.mistake_by_status" class="mistake-status">
-          <h4>错题状态分布</h4>
-          <div class="status-tags">
-            <el-tag
-              v-for="(count, status) in report.statistics.mistake_by_status"
-              :key="status"
-              :type="getStatusType(status)"
-              size="large"
-            >
-              {{ getStatusName(status) }}: {{ count }} 道
-            </el-tag>
-          </div>
-        </div>
-      </el-card>
-
-      <!-- 能力分析 -->
-      <el-card class="ability-section" shadow="never" v-if="report.ability_analysis">
-        <template #header>
-          <h3>能力分析</h3>
-        </template>
-
-        <el-row :gutter="20">
-          <!-- 能力雷达图 -->
-          <el-col :span="12">
-            <div class="radar-container">
-              <div ref="radarChartRef" class="radar-chart"></div>
-              <div v-if="!radarChartLoaded" class="chart-placeholder">
-                <el-icon size="48"><Loading /></el-icon>
-                <p>图表加载中...</p>
-              </div>
-            </div>
-          </el-col>
-
-          <!-- 能力评估 -->
-          <el-col :span="12">
-            <div class="ability-assessment">
-              <div v-if="report.ability_analysis.strongest_area" class="assessment-item best">
-                <div class="assessment-icon">
-                  <el-icon color="#67c23a" :size="32"><Trophy /></el-icon>
-                </div>
-                <div class="assessment-content">
-                  <div class="assessment-label">最强项</div>
-                  <div class="assessment-value">
-                    {{ report.ability_analysis.strongest_area.name }}
-                    <span class="level">(水平: {{ report.ability_analysis.strongest_area.level?.toFixed(0) }})</span>
+      <!-- Tab 内容 -->
+      <div class="tab-content">
+        <!-- 概览 Tab -->
+        <div v-show="activeTab === 'overview'" class="tab-pane overview-tab">
+          <!-- 学习统计卡片 -->
+          <el-card class="stats-section" shadow="never">
+            <template #header>
+              <h3>学习概况</h3>
+            </template>
+            <el-row :gutter="20" v-if="report.statistics">
+              <el-col :xs="12" :sm="6" v-for="stat in overviewStats" :key="stat.label">
+                <div class="stat-card">
+                  <div class="stat-icon" :style="{ background: stat.bgColor }">
+                    <el-icon :color="stat.color" v-html="stat.icon" />
+                  </div>
+                  <div class="stat-content">
+                    <div class="stat-value">{{ stat.value }}</div>
+                    <div class="stat-label">{{ stat.label }}</div>
                   </div>
                 </div>
-              </div>
+              </el-col>
+            </el-row>
+          </el-card>
 
-              <div v-if="report.ability_analysis.weakest_area" class="assessment-item weak">
-                <div class="assessment-icon">
-                  <el-icon color="#f56c6c" :size="32"><Warning /></el-icon>
-                </div>
-                <div class="assessment-content">
-                  <div class="assessment-label">待提升</div>
-                  <div class="assessment-value">
-                    {{ report.ability_analysis.weakest_area.name }}
-                    <span class="level">(水平: {{ report.ability_analysis.weakest_area.level?.toFixed(0) }})</span>
-                  </div>
-                </div>
+          <!-- 能力雷达图（简化版） -->
+          <el-card class="ability-preview-section" shadow="never" v-if="report.ability_analysis">
+            <template #header>
+              <div class="section-header">
+                <h3>能力分布</h3>
+                <el-button text type="primary" @click="activeTab = 'abilities'">
+                  查看详情 <el-icon><ArrowRight /></el-icon>
+                </el-button>
               </div>
-
-              <!-- 能力列表 -->
-              <div class="ability-list">
-                <h4>各项能力详情</h4>
-                <div
-                  v-for="item in report.ability_analysis.ability_radar"
-                  :key="item.name"
-                  class="ability-item"
-                >
-                  <div class="ability-name">{{ item.name }}</div>
-                  <el-progress
-                    :percentage="item.value"
-                    :color="getAbilityColor(item.value)"
-                    :show-text="true"
-                  />
-                </div>
-              </div>
+            </template>
+            <div class="radar-mini-container">
+              <div ref="radarMiniRef" class="radar-mini-chart"></div>
             </div>
-          </el-col>
-        </el-row>
-      </el-card>
+          </el-card>
 
-      <!-- 薄弱环节分析 -->
-      <el-card class="weak-points-section" shadow="never" v-if="report.weak_points">
-        <template #header>
-          <h3>薄弱环节分析</h3>
-        </template>
-
-        <!-- 需要重点关注的知识点 -->
-        <div v-if="report.weak_points.top_weak_points?.length" class="top-weak-points">
-          <h4>需要重点关注的知识点</h4>
-          <el-table :data="report.weak_points.top_weak_points.slice(0, 10)" stripe>
-            <el-table-column type="index" label="排名" width="80" />
-            <el-table-column prop="point" label="知识点" />
-            <el-table-column prop="count" label="出错次数" width="120" align="center">
-              <template #default="{ row }">
-                <el-tag type="danger">{{ row.count }}</el-tag>
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
-
-        <!-- 按主题分类 -->
-        <el-divider />
-        <div v-if="report.weak_points.by_topic" class="by-topic">
-          <h4>按主题分类</h4>
-          <div class="topic-list">
-            <div
-              v-for="(count, topic) in Object.entries(report.weak_points.by_topic).sort((a, b) => b[1] - a[1])"
-              :key="topic"
-              class="topic-item"
-            >
-              <span class="topic-name">{{ topic }}</span>
-              <el-tag size="small">{{ count }} 个错题</el-tag>
-            </div>
-          </div>
-        </div>
-      </el-card>
-
-      <!-- 学习建议 -->
-      <el-card class="recommendations-section" shadow="never" v-if="report.recommendations">
-        <template #header>
-          <div class="section-header">
-            <h3>学习建议</h3>
-            <el-tag type="info">共 {{ report.recommendations.total_count }} 条</el-tag>
-          </div>
-        </template>
-
-        <div class="recommendations-list">
-          <div
-            v-for="(rec, index) in report.recommendations.recommendations"
-            :key="index"
-            class="recommendation-item"
-            :class="`priority-${rec.priority}`"
-          >
-            <div class="recommendation-header">
-              <el-tag :type="getPriorityType(rec.priority)" size="small">
-                {{ getPriorityName(rec.priority) }}
+          <!-- 薄弱点预览 -->
+          <el-card class="weak-preview-section" shadow="never" v-if="report.weak_points?.top_weak_points?.length">
+            <template #header>
+              <div class="section-header">
+                <h3>薄弱知识点</h3>
+                <el-button text type="primary" @click="activeTab = 'knowledge'">
+                  查看详情 <el-icon><ArrowRight /></el-icon>
+                </el-button>
+              </div>
+            </template>
+            <div class="weak-points-preview">
+              <el-tag
+                v-for="(item, idx) in report.weak_points.top_weak_points.slice(0, 6)"
+                :key="idx"
+                type="danger"
+                size="large"
+                effect="plain"
+              >
+                {{ item.point }} ({{ item.count }}次)
               </el-tag>
-              <el-tag type="info" size="small">{{ rec.category }}</el-tag>
             </div>
-            <h4 class="recommendation-title">{{ rec.title }}</h4>
-            <p class="recommendation-description">{{ rec.description }}</p>
-          </div>
+          </el-card>
         </div>
 
-        <!-- 优先级统计 -->
-        <el-divider />
-        <div class="priority-stats">
-          <span>建议分布：</span>
-          <el-tag type="danger">高优先级: {{ report.recommendations.priority_count.high }}</el-tag>
-          <el-tag type="warning">中优先级: {{ report.recommendations.priority_count.medium }}</el-tag>
-          <el-tag type="success">低优先级: {{ report.recommendations.priority_count.low }}</el-tag>
+        <!-- 学习趋势 Tab -->
+        <div v-show="activeTab === 'trends'" class="tab-pane trends-tab">
+          <LearningTrendChart
+            :student-id="report.student_id"
+            :report-id="report.id"
+            height="450"
+            @trend-click="handleTrendClick"
+            @period-change="handlePeriodChange"
+          />
         </div>
-      </el-card>
 
-      <!-- AI 学习洞察 -->
-      <el-card class="ai-insights-section" shadow="never" v-if="report.ai_insights">
-        <template #header>
-          <div class="section-header">
-            <h3>
-              <el-icon><MagicStick /></el-icon>
-              AI 学习洞察
-            </h3>
-          </div>
-        </template>
-        <div class="ai-insights-content">
-          {{ report.ai_insights }}
+        <!-- 能力分析 Tab -->
+        <div v-show="activeTab === 'abilities'" class="tab-pane abilities-tab">
+          <AbilityRadarChart
+            :student-id="report.student_id"
+            :report-id="report.id"
+            :show-details="true"
+            height="500"
+            @ability-click="handleAbilityClick"
+            @content-click="handleContentClick"
+          />
         </div>
-      </el-card>
+
+        <!-- 知识点 Tab -->
+        <div v-show="activeTab === 'knowledge'" class="tab-pane knowledge-tab">
+          <KnowledgeHeatmap
+            :student-id="report.student_id"
+            :report-id="report.id"
+            @cell-click="handleCellClick"
+          />
+        </div>
+
+        <!-- 学习建议 Tab -->
+        <div v-show="activeTab === 'recommendations'" class="tab-pane recommendations-tab">
+          <!-- AI 洞察 -->
+          <el-card class="ai-insights-section" shadow="never" v-if="report.ai_insights">
+            <template #header>
+              <h3>
+                <el-icon><MagicStick /></el-icon>
+                AI 学习洞察
+              </h3>
+            </template>
+            <div class="ai-insights-content">
+              {{ report.ai_insights }}
+            </div>
+          </el-card>
+
+          <!-- 学习建议列表 -->
+          <el-card class="recommendations-section" shadow="never" v-if="report.recommendations">
+            <template #header>
+              <div class="section-header">
+                <h3>学习建议</h3>
+                <el-tag type="info">共 {{ report.recommendations.total_count }} 条</el-tag>
+              </div>
+            </template>
+
+            <div class="recommendations-list">
+              <div
+                v-for="(rec, index) in report.recommendations.recommendations"
+                :key="index"
+                class="recommendation-item"
+                :class="`priority-${rec.priority}`"
+              >
+                <div class="recommendation-header">
+                  <el-tag :type="getPriorityType(rec.priority)" size="small">
+                    {{ getPriorityName(rec.priority) }}
+                  </el-tag>
+                  <el-tag type="info" size="small">{{ rec.category }}</el-tag>
+                </div>
+                <h4 class="recommendation-title">{{ rec.title }}</h4>
+                <p class="recommendation-description">{{ rec.description }}</p>
+              </div>
+            </div>
+
+            <!-- 优先级统计 -->
+            <el-divider />
+            <div class="priority-stats">
+              <span>建议分布：</span>
+              <el-tag type="danger">高优先级: {{ report.recommendations.priority_count.high }}</el-tag>
+              <el-tag type="warning">中优先级: {{ report.recommendations.priority_count.medium }}</el-tag>
+              <el-tag type="success">低优先级: {{ report.recommendations.priority_count.low }}</el-tag>
+            </div>
+          </el-card>
+        </div>
+      </div>
     </div>
 
     <!-- 错误状态 -->
     <el-empty v-else description="报告不存在或已被删除" />
+
+    <!-- 导出进度组件 -->
+    <ExportProgress
+      v-if="showExportProgress"
+      ref="exportProgressRef"
+      :task-id="currentTaskId"
+      :show-backdrop="true"
+      :show-close="true"
+      @close="handleExportProgressClose"
+      @download="handleExportDownload"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, shallowRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import * as echarts from 'echarts'
 import type { EChartsOption } from 'echarts'
 import {
   ArrowLeft,
+  ArrowRight,
   Calendar,
   Download,
   Picture,
@@ -289,12 +260,17 @@ import {
   CircleCheck,
   TrendCharts,
   Clock,
-  Trophy,
-  Warning,
   MagicStick,
-  Loading
+  DataAnalysis,
+  Odometer,
+  Grid,
+  ChatLineRound
 } from '@element-plus/icons-vue'
-import reportApi, { type LearningReport } from '@/api/report'
+import reportApi from '@/api/report'
+import LearningTrendChart from './components/charts/LearningTrendChart.vue'
+import AbilityRadarChart from './components/charts/AbilityRadarChart.vue'
+import KnowledgeHeatmap from './components/charts/KnowledgeHeatmap.vue'
+import ExportProgress from './components/report/ExportProgress.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -302,10 +278,52 @@ const router = useRouter()
 // 状态
 const loading = ref(true)
 const exporting = ref(false)
-const report = ref<LearningReport | null>(null)
-const radarChartLoaded = ref(false)
-const radarChartRef = ref<HTMLElement>()
-let radarChart: echarts.ECharts | null = null
+const report = ref<any>(null)
+const activeTab = ref('overview')
+const radarMiniRef = ref<HTMLElement>()
+const radarMiniChart = shallowRef<echarts.ECharts | null>(null)
+
+// 导出进度相关
+const showExportProgress = ref(false)
+const currentTaskId = ref('')
+const exportProgressRef = ref()
+
+// 计算概览统计数据
+const overviewStats = computed(() => {
+  if (!report.value?.statistics) return []
+
+  const stats = report.value.statistics
+  return [
+    {
+      label: '练习次数',
+      value: stats.total_practices || 0,
+      icon: '<Document />',
+      color: '#409eff',
+      bgColor: '#ecf5ff'
+    },
+    {
+      label: '完成率',
+      value: (stats.completion_rate || 0) + '%',
+      icon: '<CircleCheck />',
+      color: '#67c23a',
+      bgColor: '#f0f9eb'
+    },
+    {
+      label: '平均正确率',
+      value: (stats.avg_correct_rate || 0) + '%',
+      icon: '<TrendCharts />',
+      color: '#f56c6c',
+      bgColor: '#fef0f0'
+    },
+    {
+      label: '学习时长',
+      value: (stats.total_duration_hours?.toFixed(1) || 0) + 'h',
+      icon: '<Clock />',
+      color: '#e6a23c',
+      bgColor: '#fdf6ec'
+    }
+  ]
+})
 
 // 方法
 const loadReport = async () => {
@@ -321,10 +339,10 @@ const loadReport = async () => {
     const data = await reportApi.getReportDetail(reportId)
     report.value = data
 
-    // 渲染图表
+    // 渲染简化的雷达图
     await nextTick()
     if (data.ability_analysis?.ability_radar) {
-      renderRadarChart(data.ability_analysis.ability_radar)
+      renderRadarMini(data.ability_analysis.ability_radar)
     }
   } catch (error: any) {
     ElMessage.error('加载报告失败')
@@ -334,11 +352,12 @@ const loadReport = async () => {
   }
 }
 
-const renderRadarChart = (radarData: Array<{ name: string; value: number; confidence: number }>) => {
-  if (!radarChartRef.value) return
+// 渲染简化版雷达图
+const renderRadarMini = (radarData: Array<{ name: string; value: number; confidence: number }>) => {
+  if (!radarMiniRef.value) return
 
   try {
-    radarChart = echarts.init(radarChartRef.value)
+    radarMiniChart.value = echarts.init(radarMiniRef.value)
 
     const option: EChartsOption = {
       tooltip: {
@@ -349,13 +368,14 @@ const renderRadarChart = (radarData: Array<{ name: string; value: number; confid
           name: item.name,
           max: 100
         })),
-        radius: '65%',
+        radius: '60%',
         axisName: {
-          color: '#666'
+          color: '#666',
+          fontSize: 11
         },
         splitArea: {
           areaStyle: {
-            color: ['#f5f7fa', '#ffffff']
+            color: ['rgba(64, 158, 255, 0.02)', 'rgba(64, 158, 255, 0.05)']
           }
         }
       },
@@ -382,53 +402,128 @@ const renderRadarChart = (radarData: Array<{ name: string; value: number; confid
       ]
     }
 
-    radarChart.setOption(option)
-    radarChartLoaded.value = true
-
-    // 响应式调整
-    window.addEventListener('resize', handleResize)
+    radarMiniChart.value.setOption(option)
   } catch (error) {
     console.error('雷达图渲染失败:', error)
-    radarChartLoaded.value = false
   }
 }
 
-const handleResize = () => {
-  if (radarChart) {
-    radarChart.resize()
-  }
-}
-
-const exportReport = async (format: 'pdf' | 'image') => {
+// 处理导出
+const handleExport = async (format: 'pdf' | 'image') => {
   if (!report.value) return
 
   exporting.value = true
   try {
+    // 检测是否需要异步模式（大报告）
+    const isLargeReport = shouldUseAsyncMode()
+
+    if (isLargeReport) {
+      // 使用异步导出
+      const response = await fetch('/api/v1/reports/export', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify({
+          report_id: report.value.id,
+          export_format: format,
+          report_type: 'full',
+          async_mode: true
+        })
+      })
+
+      const result = await response.json()
+      if (result.code === 0) {
+        currentTaskId.value = result.data.taskId
+        showExportProgress.value = true
+        exporting.value = false
+        return
+      }
+    }
+
+    // 同步导出（小报告）
     const blob = await reportApi.exportReport(report.value.id, format)
-
-    // 创建下载链接
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-
-    const title = report.value.title || '学习报告'
-    const date = new Date(report.value.period_end).toISOString().split('T')[0]
-    link.download = `${title}_${date}.${format === 'pdf' ? 'pdf' : 'png'}`
-
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-
+    downloadBlob(blob, format)
     ElMessage.success(`导出${format === 'pdf' ? 'PDF' : '图片'}成功`)
   } catch (error: any) {
-    ElMessage.error('导出失败')
-    console.error(error)
+    console.error('导出失败:', error)
+    ElMessage.error('导出失败，请稍后重试')
   } finally {
     exporting.value = false
   }
 }
 
+// 判断是否使用异步模式
+const shouldUseAsyncMode = (): boolean => {
+  // 超过30天的报告使用异步模式
+  if (!report.value) return false
+  const start = new Date(report.value.period_start)
+  const end = new Date(report.value.period_end)
+  const days = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+  return days > 30
+}
+
+// 下载文件
+const downloadBlob = (blob: Blob, format: string) => {
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+
+  const title = report.value?.title || '学习报告'
+  const date = new Date(report.value?.period_end).toISOString().split('T')[0]
+  link.download = `${title}_${date}.${format === 'pdf' ? 'pdf' : 'png'}`
+
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  window.URL.revokeObjectURL(url)
+}
+
+// 处理导出进度关闭
+const handleExportProgressClose = () => {
+  showExportProgress.value = false
+}
+
+// 处理导出下载
+const handleExportDownload = (url: string) => {
+  window.open(url, '_blank')
+}
+
+// Tab 切换
+const handleTabChange = (tab: string) => {
+  // 触发图表resize
+  nextTick(() => {
+    window.dispatchEvent(new Event('resize'))
+  })
+}
+
+// 趋势点击
+const handleTrendClick = (data: { date: string; metrics: Record<string, number> }) => {
+  console.log('趋势数据点击:', data)
+}
+
+// 时间范围变化
+const handlePeriodChange = (period: string) => {
+  console.log('时间范围变化:', period)
+}
+
+// 能力点击
+const handleAbilityClick = (ability: any) => {
+  console.log('能力点击:', ability)
+}
+
+// 内容点击
+const handleContentClick = (content: any) => {
+  ElMessage.info(`跳转到: ${content.title}`)
+}
+
+// 知识点单元格点击
+const handleCellClick = (data: { topic: any; ability: any }) => {
+  console.log('知识点单元格点击:', data)
+}
+
+// 确认删除
 const confirmDelete = async () => {
   if (!report.value) return
 
@@ -451,6 +546,7 @@ const confirmDelete = async () => {
   }
 }
 
+// 返回列表
 const goBack = () => {
   router.push('/student/reports')
 }
@@ -482,32 +578,6 @@ const formatDateRange = (startStr: string, endStr: string) => {
   return `${startFormatted} - ${endFormatted}`
 }
 
-const getStatusName = (status: string) => {
-  const names: Record<string, string> = {
-    pending: '待复习',
-    reviewing: '复习中',
-    mastered: '已掌握',
-    ignored: '已忽略'
-  }
-  return names[status] || status
-}
-
-const getStatusType = (status: string) => {
-  const types: Record<string, any> = {
-    pending: 'warning',
-    reviewing: 'primary',
-    mastered: 'success',
-    ignored: 'info'
-  }
-  return types[status] || 'info'
-}
-
-const getAbilityColor = (value: number) => {
-  if (value >= 80) return '#67c23a'
-  if (value >= 60) return '#e6a23c'
-  return '#f56c6c'
-}
-
 const getPriorityType = (priority: string) => {
   const types: Record<string, any> = {
     high: 'danger',
@@ -526,21 +596,24 @@ const getPriorityName = (priority: string) => {
   return names[priority] || priority
 }
 
+// 窗口大小变化处理
+const handleResize = () => {
+  radarMiniChart.value?.resize()
+}
+
 // 生命周期
 onMounted(() => {
   loadReport()
+  window.addEventListener('resize', handleResize)
 })
 
 onUnmounted(() => {
-  if (radarChart) {
-    radarChart.dispose()
-    radarChart = null
-  }
   window.removeEventListener('resize', handleResize)
+  radarMiniChart.value?.dispose()
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .report-detail-view {
   padding: 20px;
   max-width: 1400px;
@@ -593,6 +666,48 @@ onUnmounted(() => {
   gap: 12px;
 }
 
+/* Tab 导航 */
+.tab-navigation {
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px 16px;
+  margin-bottom: 16px;
+
+  :deep(.el-tabs__nav-wrap::after) {
+    display: none;
+  }
+
+  :deep(.el-tabs__item) {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+
+    .el-icon {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.tab-content {
+  min-height: 400px;
+}
+
+.tab-pane {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* 统计卡片 */
 .stats-section {
   margin-bottom: 20px;
@@ -606,193 +721,72 @@ onUnmounted(() => {
   background: #f5f7fa;
   border-radius: 8px;
   transition: all 0.3s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .stat-icon {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 24px;
+  }
+
+  .stat-content {
+    flex: 1;
+  }
+
+  .stat-value {
+    font-size: 28px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .stat-label {
+    font-size: 14px;
+    color: #666;
+    margin-top: 4px;
+  }
 }
 
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.stat-icon {
-  width: 56px;
-  height: 56px;
+/* 章节头部 */
+.section-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  border-radius: 12px;
+
+  h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
 }
 
-.stat-content {
-  flex: 1;
+/* 能力预览 */
+.radar-mini-container {
+  height: 280px;
 }
 
-.stat-value {
-  font-size: 28px;
-  font-weight: 600;
-  color: #333;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #666;
-  margin-top: 4px;
-}
-
-.mistake-status {
-  margin-top: 16px;
-}
-
-.mistake-status h4 {
-  margin: 0 0 12px;
-  font-size: 16px;
-}
-
-.status-tags {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-/* 能力分析 */
-.ability-section {
-  margin-bottom: 20px;
-}
-
-.radar-container {
-  position: relative;
-  height: 360px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.radar-chart {
+.radar-mini-chart {
   width: 100%;
   height: 100%;
 }
 
-.chart-placeholder {
-  position: absolute;
+/* 薄弱点预览 */
+.weak-points-preview {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  color: #999;
-}
-
-.ability-assessment {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.assessment-item {
-  display: flex;
-  gap: 16px;
-  padding: 16px;
-  border-radius: 8px;
-  background: #f5f7fa;
-}
-
-.assessment-item.best {
-  background: #f0f9ff;
-  border: 1px solid #d1ecf1;
-}
-
-.assessment-item.weak {
-  background: #fef0f0;
-  border: 1px solid #f5c6c6;
-}
-
-.assessment-content {
-  flex: 1;
-}
-
-.assessment-label {
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 4px;
-}
-
-.assessment-value {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.level {
-  font-size: 14px;
-  font-weight: 400;
-  color: #666;
-  margin-left: 8px;
-}
-
-.ability-list h4 {
-  margin: 0 0 16px;
-  font-size: 16px;
-}
-
-.ability-item {
-  margin-bottom: 12px;
-}
-
-.ability-name {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 8px;
-}
-
-/* 薄弱环节 */
-.weak-points-section {
-  margin-bottom: 20px;
-}
-
-.top-weak-points h4 {
-  margin: 0 0 16px;
-  font-size: 16px;
-}
-
-.by-topic {
-  margin-top: 20px;
-}
-
-.by-topic h4 {
-  margin: 0 0 16px;
-  font-size: 16px;
-}
-
-.topic-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.topic-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px;
-  background: #f5f7fa;
-  border-radius: 6px;
-}
-
-.topic-name {
-  font-weight: 500;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 /* 学习建议 */
 .recommendations-section {
   margin-bottom: 20px;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.section-header h3 {
-  margin: 0;
 }
 
 .recommendations-list {
@@ -806,21 +800,21 @@ onUnmounted(() => {
   border-radius: 8px;
   border-left: 4px solid;
   background: #f5f7fa;
-}
 
-.recommendation-item.priority-high {
-  border-left-color: #f56c6c;
-  background: #fef0f0;
-}
+  &.priority-high {
+    border-left-color: #f56c6c;
+    background: #fef0f0;
+  }
 
-.recommendation-item.priority-medium {
-  border-left-color: #e6a23c;
-  background: #fdf6ec;
-}
+  &.priority-medium {
+    border-left-color: #e6a23c;
+    background: #fdf6ec;
+  }
 
-.recommendation-item.priority-low {
-  border-left-color: #67c23a;
-  background: #f0f9ff;
+  &.priority-low {
+    border-left-color: #67c23a;
+    background: #f0f9eb;
+  }
 }
 
 .recommendation-header {
@@ -852,12 +846,15 @@ onUnmounted(() => {
 /* AI 洞察 */
 .ai-insights-section {
   margin-bottom: 20px;
-}
 
-.ai-insights-section h3 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
 }
 
 .ai-insights-content {
@@ -876,10 +873,20 @@ onUnmounted(() => {
 
   .header-actions {
     width: 100%;
+    flex-wrap: wrap;
+
+    .el-button {
+      flex: 1;
+      min-width: 80px;
+    }
   }
 
-  .header-actions .el-button {
-    flex: 1;
+  .tab-navigation {
+    overflow-x: auto;
+
+    :deep(.el-tabs__item) {
+      padding: 0 12px;
+    }
   }
 
   .stat-card {

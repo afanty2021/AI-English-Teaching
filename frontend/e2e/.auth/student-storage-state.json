@@ -1,0 +1,22 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:5174",
+      "localStorage": [
+        {
+          "name": "user",
+          "value": "{\"id\":\"test-student-id\",\"username\":\"test_student\",\"email\":\"student@test.com\",\"role\":\"student\",\"organization_id\":\"test-org-id\",\"target_exam\":\"CET4\",\"current_cefr_level\":\"B1\"}"
+        },
+        {
+          "name": "refresh_token",
+          "value": "test-student-refresh-1770335984450"
+        },
+        {
+          "name": "access_token",
+          "value": "test-student-token-1770335984450"
+        }
+      ]
+    }
+  ]
+}

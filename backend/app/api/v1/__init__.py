@@ -17,6 +17,7 @@ from app.api.v1 import (
     question_banks,
     questions,
     practice_sessions,
+    reports_enhanced,
 )
 
 api_router = APIRouter()
@@ -32,6 +33,7 @@ api_router.include_router(students.router, prefix="/students", tags=["学生管�
 api_router.include_router(practices.router, prefix="/practices", tags=["练习记录"])
 api_router.include_router(mistakes.router, prefix="/mistakes", tags=["错题本"])
 api_router.include_router(learning_reports.router, prefix="/reports", tags=["学习报告"])
+api_router.include_router(reports_enhanced.router, prefix="", tags=["增强报告"])
 api_router.include_router(question_banks.router, prefix="/question-banks", tags=["题库管理"])
 api_router.include_router(questions.router, prefix="/questions", tags=["题目管理"])
 api_router.include_router(practice_sessions.router, prefix="/practice-sessions", tags=["练习会话"])
