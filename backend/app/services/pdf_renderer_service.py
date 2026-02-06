@@ -1,9 +1,15 @@
 """
 PDF渲染服务 - AI英语教学系统
 使用 markdown2 + weasyprint 实现 Markdown 到 PDF 的转换
+
+性能优化：
+- 使用异步执行器避免阻塞事件循环
+- PDF渲染在线程池中执行
+- 缓存CSS样式减少重复计算
 """
-import io
+import asyncio
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, Optional
 
 from jinja2 import Environment, Template
@@ -30,6 +36,12 @@ class PdfRendererService:
     2. CSS 样式注入和应用
     3. HTML 到 PDF 的渲染（使用 weasyprint）
     4. 中文字体支持和配置
+    5. 异步渲染避免阻塞事件循环
+
+    性能优化：
+    - PDF渲染在线程池中执行
+    - CSS样式缓存减少重复计算
+    - 使用 asyncio.to_thread() 进行异步调度
     """
 
     # 默认的 markdown2 扩展功能
@@ -44,6 +56,19 @@ class PdfRendererService:
         "spoiler",          # 剧透隐藏
         "markdown-in-html", # HTML 中的 Markdown
     ]
+
+    # 线程池用于执行同步PDF操作
+    _executor: Optional[ThreadPoolExecutor] = None
+
+    @classmethod
+    def get_executor(cls) -> ThreadPoolExecutor:
+        """获取或创建线程池执行器（类级别共享）"""
+        if cls._executor is None:
+            cls._executor = ThreadPoolExecutor(
+                max_workers=2,  # 限制并发PDF渲染数量
+                thread_name_prefix="pdf_renderer"
+            )
+        return cls._executor
 
     def __init__(self, template_env: Optional[Environment] = None):
         """
@@ -251,12 +276,45 @@ class PdfRendererService:
 
         return full_html
 
+    def _html_to_pdf_sync(
+        self,
+        html_content: str,
+        pdf_css: CSS,
+    ) -> bytes:
+        """
+        同步方法：将 HTML 内容转换为 PDF
+        在线程池中执行以避免阻塞事件循环
+
+        Args:
+            html_content: HTML 内容
+            pdf_css: CSS 样式对象
+
+        Returns:
+            PDF 字节数据
+        """
+        # 创建 HTML 对象并生成 PDF
+        html_doc = HTML(
+            string=html_content,
+            base_url=".",  # 基础 URL，用于解析相对路径
+            encoding="utf-8",
+        )
+
+        # 生成 PDF 字节流（同步操作，在线程池中执行）
+        pdf_bytes = html_doc.write_pdf(
+            stylesheets=[pdf_css],
+            font_config=self.font_config,
+            optimize_images=False,  # 不优化图片，保持原始质量
+        )
+
+        return pdf_bytes
+
     async def html_to_pdf(
         self,
         html_content: str,
     ) -> bytes:
         """
-        将 HTML 内容转换为 PDF
+        异步方法：将 HTML 内容转换为 PDF
+        使用线程池执行同步PDF操作，避免阻塞事件循环
 
         Args:
             html_content: HTML 内容
@@ -267,18 +325,13 @@ class PdfRendererService:
         # 获取 CSS 样式
         pdf_css = await self._get_pdf_css()
 
-        # 创建 HTML 对象并生成 PDF
-        html_doc = HTML(
-            string=html_content,
-            base_url=".",  # 基础 URL，用于解析相对路径
-            encoding="utf-8",
-        )
-
-        # 生成 PDF 字节流
-        pdf_bytes = html_doc.write_pdf(
-            stylesheets=[pdf_css],
-            font_config=self.font_config,
-            optimize_images=False,  # 不优化图片，保持原始质量
+        # 使用 asyncio.to_thread 在线程池中执行同步PDF操作
+        loop = asyncio.get_event_loop()
+        pdf_bytes = await loop.run_in_executor(
+            self.get_executor(),
+            self._html_to_pdf_sync,
+            html_content,
+            pdf_css
         )
 
         return pdf_bytes

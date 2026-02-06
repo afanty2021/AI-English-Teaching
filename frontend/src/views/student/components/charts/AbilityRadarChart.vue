@@ -11,8 +11,10 @@
 
     <!-- 图表和详情布局 -->
     <div class="chart-content">
-      <!-- 雷达图 -->
-      <div ref="chartRef" class="radar-container"></div>
+      <!-- 雷达图 - 添加错误边界 -->
+      <ErrorBoundary>
+        <div ref="chartRef" class="radar-container"></div>
+      </ErrorBoundary>
 
       <!-- 能力详情面板 -->
       <div v-if="showDetails && selectedAbility" class="ability-details">
@@ -111,6 +113,7 @@ import * as echarts from 'echarts'
 import { Loading, Close } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import type { AbilityRadarData, ContentRecommendation } from '@/types/report'
+import ErrorBoundary from '@/components/ErrorBoundary.vue'
 
 // Props
 interface Props {

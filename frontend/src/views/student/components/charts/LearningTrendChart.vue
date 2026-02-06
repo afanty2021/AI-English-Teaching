@@ -310,25 +310,18 @@ function handleMetricsChange() {
 
 // 导出图片
 async function exportImage(): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    if (!chartInstance) {
-      reject(new Error('图表未初始化'))
-      return
-    }
+  if (!chartInstance) {
+    throw new Error('图表未初始化')
+  }
 
-    try {
-      const url = chartInstance.getDataURL({
-        type: 'png',
-        pixelRatio: 2,
-        backgroundColor: '#fff'
-      })
-      const response = await fetch(url)
-      const blob = await response.blob()
-      resolve(blob)
-    } catch (error) {
-      reject(error)
-    }
+  const url = chartInstance.getDataURL({
+    type: 'png',
+    pixelRatio: 2,
+    backgroundColor: '#fff'
   })
+
+  const response = await fetch(url)
+  return await response.blob()
 }
 
 // 暴露方法

@@ -1,13 +1,16 @@
 /**
  * 应用入口文件
  * 初始化 Vue 应用、插件和全局配置
+ *
+ * 按需导入优化：使用 unplugin-vue-components 和 unplugin-auto-import
+ * 自动导入 Element Plus 组件和 API，无需手动导入
+ * 仅保留样式和图标的全局注册
  */
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
 import App from './App.vue'
 import router from './router'
@@ -21,11 +24,11 @@ const pinia = createPinia()
 // 注册插件
 app.use(pinia)
 app.use(router)
-app.use(ElementPlus, {
-  locale: zhCn
-})
 
-// 注册所有 Element Plus 图标
+// 配置 Element Plus 中文语言包
+app.config.globalProperties.$ELEMENT = { locale: zhCn }
+
+// 注册所有 Element Plus 图标（图标需要全局注册）
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
