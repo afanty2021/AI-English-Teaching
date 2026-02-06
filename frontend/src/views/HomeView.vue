@@ -5,6 +5,10 @@
         <div class="header-content">
           <h1>AI英语教学系统</h1>
           <div class="user-info">
+            <el-button link @click="$router.push('/settings')">
+              <el-icon><Setting /></el-icon>
+              通知设置
+            </el-button>
             <span>{{ authStore.user?.full_name || authStore.user?.username }}</span>
             <el-button @click="handleLogout" type="danger" size="small">退出登录</el-button>
           </div>
@@ -60,6 +64,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
+import { Setting } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()

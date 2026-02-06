@@ -187,6 +187,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, requiresTeacher: true, title: '模板库' }
   },
   {
+    path: '/settings',
+    name: 'Settings',
+    component: () => import('@/views/NotificationSettingsView.vue'),
+    meta: { requiresAuth: true, title: '通知设置' }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/NotFoundView.vue'),
