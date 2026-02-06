@@ -98,7 +98,58 @@ class LessonPlanShareService:
         await db.commit()
         await db.refresh(share)
 
+        # 发送WebSocket通知给接收者
+        await self._send_share_notification(db, share, lesson_plan)
+
         return share
+
+    async def _send_share_notification(
+        self,
+        db: AsyncSession,
+        share: LessonPlanShare,
+        lesson_plan: LessonPlan,
+    ) -> None:
+        """
+        通过WebSocket发送分享通知
+
+        Args:
+            db: 数据库会话
+            share: 分享记录
+            lesson_plan: 教案对象
+        """
+        try:
+            # 导入WebSocket管理器（避免循环导入）
+            from app.websocket.manager import manager
+
+            # 获取分享者信息
+            sharer = await db.get(User, share.shared_by)
+
+            # 构建通知消息
+            notification = {
+                "type": "lesson_share",
+                "action": "created",
+                "data": {
+                    "share_id": str(share.id),
+                    "lesson_plan_id": str(share.lesson_plan_id),
+                    "lesson_plan_title": lesson_plan.title,
+                    "permission": share.permission,
+                    "message": share.message,
+                    "sharer": {
+                        "id": str(share.shared_by),
+                        "username": sharer.username if sharer else None,
+                        "full_name": sharer.full_name if sharer else None,
+                    },
+                    "created_at": share.created_at.isoformat() if share.created_at else None,
+                    "expires_at": share.expires_at.isoformat() if share.expires_at else None,
+                }
+            }
+
+            # 发送给接收者
+            await manager.broadcast_to_user(notification, share.shared_to)
+
+        except Exception as e:
+            # WebSocket通知失败不影响分享功能
+            print(f"Failed to send WebSocket notification: {e}")
 
     async def accept_share(
         self,
