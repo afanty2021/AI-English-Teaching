@@ -54,6 +54,7 @@
                     <el-dropdown-menu>
                       <el-dropdown-item command="edit" :icon="Edit">编辑</el-dropdown-item>
                       <el-dropdown-item command="duplicate" :icon="CopyDocument">复制</el-dropdown-item>
+                      <el-dropdown-item command="share" :icon="Share">分享</el-dropdown-item>
                       <el-dropdown-item command="export" :icon="Download">导出</el-dropdown-item>
                       <el-dropdown-item divided command="delete" :icon="Delete">删除</el-dropdown-item>
                     </el-dropdown-menu>
@@ -107,8 +108,8 @@
         <!-- 操作栏 -->
         <div class="detail-actions">
           <el-button :icon="Edit" @click="editLesson">编辑</el-button>
-          <!-- TODO: duplicate feature not implemented yet -->
-          <!-- <el-button :icon="CopyDocument" @click="duplicateLesson">复制</el-button> -->
+          <el-button :icon="CopyDocument" @click="duplicateLesson">复制</el-button>
+          <el-button :icon="Share" @click="openShareDialog">分享</el-button>
           <el-dropdown @command="handleExport" style="display: inline-block">
             <el-button :icon="Download">
               导出 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
@@ -465,6 +466,13 @@
         <el-button type="primary" @click="doExport" :loading="exporting">导出</el-button>
       </template>
     </el-dialog>
+
+    <!-- 分享对话框 -->
+    <ShareDialog
+      v-model="showShareDialog"
+      :lesson-plan-id="currentLesson?.id || ''"
+      @success="handleShareSuccess"
+    />
   </div>
 </template>
 
@@ -488,12 +496,9 @@ import {
   DocumentCopy,
   Operation,
   InfoFilled,
-  // Bold, // Not available in @element-plus/icons-vue
-  // Italic, // Not available in @element-plus/icons-vue
-  // Underline, // Not available in @element-plus/icons-vue
+  Share,
   List,
   Menu,
-  // RemoveFormat, // Not available in @element-plus/icons-vue (use Remove or RemoveFilled instead)
   Remove,
   Picture,
   VideoCamera
@@ -503,13 +508,14 @@ import {
   getLessonPlans,
   getLessonPlan,
   deleteLessonPlan,
-  // duplicateLessonPlan, // TODO: not implemented in API
   updateLessonContent,
   exportLessonPlan,
   getExportUrl,
   exportToMarkdown as apiExportToMarkdown
 } from '@/api/lesson'
+import { duplicateLessonPlan } from '@/api/lessonShare'
 import PPTPreview from '@/components/PPTPreview.vue'
+import ShareDialog from '@/components/ShareDialog.vue'
 import type { PPTSlide } from '@/types/lesson'
 
 // 类型定义
@@ -572,6 +578,7 @@ const exporting = ref(false)
 const saving = ref(false)
 const editorRef = ref<HTMLElement>()
 const editorContent = ref('')
+const showShareDialog = ref(false)
 
 // 计算属性
 const filteredLessons = computed(() => {
@@ -756,26 +763,37 @@ const editLesson = () => {
   }
 }
 
-// TODO: duplicateLessonPlan not implemented in API yet
-// const duplicateLesson = async () => {
-//   if (!currentLesson.value) return
-//
-//   try {
-//     await ElMessageBox.confirm('确定要复制此教案吗？', '确认', {
-//       type: 'warning'
-//     })
-//
-//     await duplicateLessonPlan(currentLesson.value.id)
-//     ElMessage.success('教案复制成功')
-//     showDetailDrawer.value = false
-//     await loadLessons()
-//   } catch (error) {
-//     if (error !== 'cancel') {
-//       console.error('复制教案失败:', error)
-//       ElMessage.error('复制教案失败')
-//     }
-//   }
-// }
+const duplicateLesson = async () => {
+  if (!currentLesson.value) return
+
+  try {
+    await ElMessageBox.confirm('确定要复制此教案吗？', '确认', {
+      type: 'warning'
+    })
+
+    const response = await duplicateLessonPlan(currentLesson.value.id, {
+      new_title: `${currentLesson.value.title} (副本)`
+    })
+
+    ElMessage.success('教案复制成功')
+    showDetailDrawer.value = false
+    await loadLessons()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('复制教案失败:', error)
+      ElMessage.error('复制教案失败')
+    }
+  }
+}
+
+const openShareDialog = () => {
+  if (!currentLesson.value) return
+  showShareDialog.value = true
+}
+
+const handleShareSuccess = () => {
+  ElMessage.success('教案已分享')
+}
 
 const deleteLesson = async () => {
   if (!currentLesson.value) return
@@ -808,8 +826,13 @@ const handleAction = (command: string, lesson: LessonPlan) => {
       break
     case 'duplicate':
       currentLesson.value = lesson
-      // duplicateLesson() // TODO: not implemented in API
-      ElMessage.info('复制功能暂未实现')
+      viewLesson(lesson.id)
+      setTimeout(() => duplicateLesson(), 500)
+      break
+    case 'share':
+      currentLesson.value = lesson
+      viewLesson(lesson.id)
+      setTimeout(() => openShareDialog(), 500)
       break
     case 'export':
       currentLesson.value = lesson

@@ -39,7 +39,10 @@
                 <el-button type="primary" size="large" @click="$router.push('/teacher/lessons')">
                   教案管理
                 </el-button>
-                <el-button type="success" size="large" @click="$router.push('/teacher/students')">
+                <el-button type="success" size="large" @click="$router.push('/teacher/shared-lessons')">
+                  分享的教案
+                </el-button>
+                <el-button type="warning" size="large" @click="$router.push('/teacher/students')">
                   学生管理
                 </el-button>
                 <el-button type="info" size="large" @click="$router.push('/teacher/ai-planning')">

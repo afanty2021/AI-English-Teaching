@@ -109,6 +109,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, requiresTeacher: true, title: '教案管理' }
   },
   {
+    path: '/teacher/shared-lessons',
+    name: 'SharedLessons',
+    component: () => import('@/views/teacher/SharedLessonsView.vue'),
+    meta: { requiresAuth: true, requiresTeacher: true, title: '分享的教案' }
+  },
+  {
     path: '/teacher/students',
     name: 'TeacherStudents',
     component: () => import('@/views/teacher/StudentsView.vue'),
