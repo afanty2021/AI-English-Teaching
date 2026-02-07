@@ -1,7 +1,15 @@
 /**
  * 音频增强工具类
- * 支持语音活动检测(VAD)、噪音抑制、音量检测等功能
+ * 支持语音活动检测(VAD)、噪音抑制、音量检测、音频预处理等功能
  */
+
+// 导入音频预处理器相关类型和类
+import {
+  AudioPreprocessor,
+  createAudioPreprocessor,
+  PreprocessorPresets,
+  type AudioPreprocessorConfig
+} from './audioPreprocessor'
 
 export interface VoiceActivityResult {
   hasVoice: boolean
@@ -27,18 +35,29 @@ export interface AudioEnhancementOptions {
 
 /**
  * 语音活动检测器
+ *
+ * 优化说明：
+ * - 使用平滑检测队列减少误判
+ * - 检测间隔 30ms，队列大小 2，总延迟约 60ms
+ * - 支持多数表决逻辑，只要有 1 个样本为正就判定为有语音
+ * - 正确处理资源清理
  */
 export class VoiceActivityDetector {
   private analyser: AnalyserNode
   private audioContext: AudioContext
-  private dataArray: Uint8Array
+  private dataArray: Uint8Array<ArrayBuffer>
   private bufferLength: number
+  private cleanup: (() => void) | null = null
+
+  // VAD 优化配置
+  private readonly DETECTION_QUEUE_SIZE = 2  // 检测队列大小
+  private readonly CHECK_INTERVAL = 30       // 检测间隔 30ms
 
   constructor(audioContext?: AudioContext) {
     this.audioContext = audioContext || new AudioContext()
     this.analyser = this.audioContext.createAnalyser()
     this.bufferLength = this.analyser.frequencyBinCount
-    this.dataArray = new Uint8Array(this.bufferLength)
+    this.dataArray = new Uint8Array(this.bufferLength) as Uint8Array<ArrayBuffer>
 
     // 配置分析器参数
     this.analyser.fftSize = 512
@@ -46,7 +65,7 @@ export class VoiceActivityDetector {
   }
 
   /**
-   * 检测语音活动
+   * 检测语音活动（优化版：使用平滑检测队列）
    * @param stream 音频流
    * @param threshold VAD阈值 (0-1)
    * @returns 语音活动检测结果
@@ -56,52 +75,86 @@ export class VoiceActivityDetector {
       const source = this.audioContext.createMediaStreamSource(stream)
       source.connect(this.analyser)
 
-      // 获取频域数据
-      this.analyser.getByteFrequencyData(this.dataArray as Uint8Array<ArrayBuffer>)
+      const results: boolean[] = []
+      const confidenceResults: number[] = []
+      const volumeResults: number[] = []
+      let samples = 0
 
-      // 计算平均音量
-      const average = this.dataArray.reduce((sum, value) => sum + value, 0) / this.dataArray.length
-      const normalizedVolume = average / 255
+      const intervalId = setInterval(() => {
+        this.analyser.getByteFrequencyData(this.dataArray)
+        const result = this.analyzeWithSmoothing(this.dataArray, threshold)
+        results.push(result.hasVoice)
+        confidenceResults.push(result.confidence)
+        volumeResults.push(result.volume)
+        samples++
 
-      // 计算频域能量
-      const lowFreqEnergy = this.getLowFrequencyEnergy()
-      const highFreqEnergy = this.getHighFrequencyEnergy()
+        if (samples >= this.DETECTION_QUEUE_SIZE) {
+          clearInterval(intervalId)
 
-      // 语音特征判断
-      const hasVoice = normalizedVolume > threshold && lowFreqEnergy > highFreqEnergy * 0.3
+          // 多数表决：只要有 1 个样本为正就判定为有语音
+          const hasVoice = results.some(r => r)
 
-      // 计算置信度
-      const confidence = Math.min(normalizedVolume / threshold, 1.0)
+          resolve({
+            hasVoice,
+            confidence: result.confidence,
+            volume: result.volume
+          })
+        }
+      }, this.CHECK_INTERVAL)
 
-      resolve({
-        hasVoice,
-        confidence,
-        volume: normalizedVolume
-      })
+      // 设置清理函数
+      this.cleanup = () => {
+        clearInterval(intervalId)
+        try {
+          source.disconnect()
+        } catch (e) {
+          // 忽略断开连接错误
+        }
+      }
     })
   }
 
   /**
-   * 获取低频能量 (语音主要在低频)
+   * 使用平滑算法分析语音活动
+   * @param dataArray 频域数据
+   * @param threshold VAD阈值
+   * @returns 语音活动分析结果
    */
-  private getLowFrequencyEnergy(): number {
-    const lowFreqCount = Math.floor(this.bufferLength * 0.3) // 30%低频
+  private analyzeWithSmoothing(dataArray: Uint8Array<ArrayBuffer>, threshold: number): VoiceActivityResult {
+    const average = dataArray.reduce((sum, v) => sum + v, 0) / dataArray.length
+    const lowFreq = this.getLowFrequencyEnergyFromData(dataArray)
+    const highFreq = this.getHighFrequencyEnergyFromData(dataArray)
+
+    // 使用现有的判断条件
+    const hasVoice = average > (threshold * 255) && lowFreq > highFreq * 0.3
+
+    const normalizedVolume = average / 255
+    const confidence = Math.min(normalizedVolume / threshold, 1.0)
+
+    return { hasVoice, confidence, volume: normalizedVolume }
+  }
+
+  /**
+   * 获取低频能量 (语音主要在低频) - 从指定数据计算
+   */
+  private getLowFrequencyEnergyFromData(dataArray: Uint8Array<ArrayBuffer>): number {
+    const lowFreqCount = Math.floor(dataArray.length * 0.3) // 30%低频
     let energy = 0
     for (let i = 0; i < lowFreqCount; i++) {
-      energy += (this.dataArray[i] || 0) * (this.dataArray[i] || 0)
+      energy += (dataArray[i] || 0) * (dataArray[i] || 0)
     }
     return energy / lowFreqCount
   }
 
   /**
-   * 获取高频能量 (噪音主要在高頻)
+   * 获取高频能量 (噪音主要在高頻) - 从指定数据计算
    */
-  private getHighFrequencyEnergy(): number {
-    const highFreqStart = Math.floor(this.bufferLength * 0.7) // 70%高频
+  private getHighFrequencyEnergyFromData(dataArray: Uint8Array<ArrayBuffer>): number {
+    const highFreqStart = Math.floor(dataArray.length * 0.7) // 70%高频
     let energy = 0
     let count = 0
-    for (let i = highFreqStart; i < this.bufferLength; i++) {
-      energy += (this.dataArray[i] || 0) * (this.dataArray[i] || 0)
+    for (let i = highFreqStart; i < dataArray.length; i++) {
+      energy += (dataArray[i] || 0) * (dataArray[i] || 0)
       count++
     }
     return energy / count
@@ -140,9 +193,16 @@ export class VoiceActivityDetector {
    * 销毁检测器
    */
   destroy(): void {
+    // 执行清理函数
+    this.cleanup?.()
+    this.cleanup = null
+
+    // 关闭音频上下文
     try {
       this.analyser.disconnect()
-      this.audioContext.close()
+      if (this.audioContext && this.audioContext.state !== 'closed') {
+        this.audioContext.close()
+      }
     } catch (e) {
       // 忽略关闭错误
     }
@@ -326,20 +386,42 @@ export class VolumeDetector {
 }
 
 /**
+ * 音频增强配置接口（扩展版）
+ */
+export interface AudioEnhancementOptionsExtended {
+  /** 是否启用语音活动检测 */
+  enableVAD?: boolean
+  /** 是否启用噪音抑制 */
+  enableNoiseReduction?: boolean
+  /** 是否启用音量检测 */
+  enableVolumeDetection?: boolean
+  /** VAD阈值 */
+  vadThreshold?: number
+  /** 噪音抑制配置 */
+  noiseReductionConfig?: NoiseReductionConfig
+  /** 是否启用音频预处理 */
+  enablePreprocessing?: boolean
+  /** 音频预处理配置 */
+  preprocessorConfig?: Partial<AudioPreprocessorConfig>
+}
+
+/**
  * 音频增强主类
  */
 export class AudioEnhancer {
   private voiceDetector: VoiceActivityDetector
   private noiseSuppressor: NoiseSuppressor
   private volumeDetector: VolumeDetector
-  private options: AudioEnhancementOptions
+  private preprocessor: AudioPreprocessor | null = null
+  private options: AudioEnhancementOptionsExtended
 
-  constructor(options: AudioEnhancementOptions) {
+  constructor(options: AudioEnhancementOptionsExtended = {}) {
     // Merge provided options with defaults
-    const defaults: AudioEnhancementOptions = {
+    const defaults: AudioEnhancementOptionsExtended = {
       enableVAD: true,
       enableNoiseReduction: true,
       enableVolumeDetection: true,
+      enablePreprocessing: true,
       vadThreshold: 0.3,
       noiseReductionConfig: {
         threshold: -50,
@@ -347,13 +429,19 @@ export class AudioEnhancer {
         ratio: 12,
         attack: 0.003,
         release: 0.25
-      }
+      },
+      preprocessorConfig: {}
     }
     this.options = { ...defaults, ...options }
 
     this.voiceDetector = new VoiceActivityDetector()
     this.noiseSuppressor = new NoiseSuppressor()
     this.volumeDetector = new VolumeDetector()
+
+    // 初始化预处理器
+    if (this.options.enablePreprocessing) {
+      this.preprocessor = createAudioPreprocessor(this.options.preprocessorConfig)
+    }
   }
 
   /**
@@ -361,10 +449,20 @@ export class AudioEnhancer {
    * @param stream 输入音频流
    * @returns 增强后的音频流
    */
-  enhance(stream: MediaStream): MediaStream {
+  async enhance(stream: MediaStream): Promise<MediaStream> {
     let enhancedStream = stream
 
-    // 应用噪音抑制
+    // 1. 应用音频预处理（如果启用）
+    if (this.options.enablePreprocessing && this.preprocessor) {
+      const preprocessResult = await this.preprocessor.process(stream)
+      if (preprocessResult.success) {
+        enhancedStream = preprocessResult.stream
+      } else {
+        console.warn('音频预处理失败，使用原始流:', preprocessResult.error)
+      }
+    }
+
+    // 2. 应用噪音抑制
     if (this.options.enableNoiseReduction) {
       enhancedStream = this.noiseSuppressor.suppress(enhancedStream, this.options.noiseReductionConfig)
     }
@@ -436,14 +534,14 @@ export class AudioEnhancer {
    * 更新配置
    * @param newOptions 新配置
    */
-  updateOptions(newOptions: Partial<AudioEnhancementOptions>): void {
+  updateOptions(newOptions: Partial<AudioEnhancementOptionsExtended>): void {
     this.options = { ...this.options, ...newOptions }
   }
 
   /**
    * 获取当前配置
    */
-  getOptions(): AudioEnhancementOptions {
+  getOptions(): AudioEnhancementOptionsExtended {
     return { ...this.options }
   }
 
@@ -454,6 +552,30 @@ export class AudioEnhancer {
     this.voiceDetector.destroy()
     this.noiseSuppressor.destroy()
     this.volumeDetector.destroy()
+
+    // 清理预处理器
+    if (this.preprocessor) {
+      this.preprocessor.destroy()
+      this.preprocessor = null
+    }
+  }
+
+  /**
+   * 获取预处理器实例
+   */
+  getPreprocessor(): AudioPreprocessor | null {
+    return this.preprocessor
+  }
+
+  /**
+   * 更新预处理配置
+   */
+  updatePreprocessorConfig(config: Partial<AudioPreprocessorConfig>): void {
+    if (this.preprocessor) {
+      this.preprocessor.updateConfig(config)
+    } else {
+      console.warn('预处理器未初始化')
+    }
   }
 }
 
@@ -461,14 +583,19 @@ export class AudioEnhancer {
  * 便利函数
  */
 export const audioEnhancer = {
-  create: (options?: AudioEnhancementOptions) => new AudioEnhancer(options || {
-    enableVAD: true,
-    enableNoiseReduction: true,
-    enableVolumeDetection: true
-  }),
+  create: (options?: AudioEnhancementOptionsExtended) =>
+    new AudioEnhancer(options ?? {
+      enableVAD: true,
+      enableNoiseReduction: true,
+      enableVolumeDetection: true,
+      enablePreprocessing: true
+    }),
   VoiceActivityDetector,
   NoiseSuppressor,
-  VolumeDetector
+  VolumeDetector,
+  AudioPreprocessor,
+  createAudioPreprocessor,
+  PreprocessorPresets
 }
 
 export default AudioEnhancer
