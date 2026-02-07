@@ -7,9 +7,12 @@ from typing import Any, AsyncGenerator
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from app.api.v1 import api_router
 from app.core.config import settings
+from app.metrics import export_tasks_total  # 确保指标模块初始化
 
 
 @asynccontextmanager
@@ -135,6 +138,23 @@ async def database_health_check() -> dict[str, Any]:
                 "error": str(e),
             },
         )
+
+
+# Prometheus 监控指标端点
+@app.get("/metrics", include_in_schema=False)
+async def metrics() -> Response:
+    """
+    Prometheus 监控指标端点
+
+    暴露 Prometheus 格式的监控指标，供 Prometheus 服务器抓取。
+
+    Returns:
+        Prometheus 格式的指标文本
+
+    Note:
+        此端点不包含在 OpenAPI schema 中（include_in_schema=False）
+    """
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 if __name__ == "__main__":
