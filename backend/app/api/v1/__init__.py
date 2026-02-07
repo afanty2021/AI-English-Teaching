@@ -21,6 +21,7 @@ from app.api.v1 import (
     practice_sessions,
     reports_enhanced,
     notifications,
+    export_templates,
 )
 
 api_router = APIRouter()
@@ -43,3 +44,4 @@ api_router.include_router(question_banks.router, prefix="/question-banks", tags=
 api_router.include_router(questions.router, prefix="/questions", tags=["题目管理"])
 api_router.include_router(practice_sessions.router, prefix="/practice-sessions", tags=["练习会话"])
 api_router.include_router(notifications.router, prefix="/notifications", tags=["通知设置"])
+api_router.include_router(export_templates.router, prefix="/export-templates", tags=["导出模板"])
