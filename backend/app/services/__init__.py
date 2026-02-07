@@ -4,6 +4,7 @@
 """
 from app.services import auth_service, recommendation_service
 from app.services import question_service, question_bank_service, practice_session_service
+from app.services.document_generators import WordDocumentGenerator
 
 __all__ = [
     "auth_service",
@@ -11,4 +12,5 @@ __all__ = [
     "question_service",
     "question_bank_service",
     "practice_session_service",
+    "WordDocumentGenerator",
 ]
