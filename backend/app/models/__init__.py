@@ -54,6 +54,15 @@ from app.models.recommendation import (
 )
 from app.models.share_statistics_history import ShareStatisticsHistory
 from app.models.notification_preference import NotificationPreference
+from app.models.export_task import (
+    ExportTask,
+    TaskStatus,
+    ExportFormat,
+)
+from app.models.export_template import (
+    ExportTemplate,
+    TemplateFormat,
+)
 
 __all__ = [
     "User",
@@ -96,45 +105,9 @@ __all__ = [
     "RecommendationPreference",
     "ShareStatisticsHistory",
     "NotificationPreference",
-]
-
-__all__ = [
-    "User",
-    "UserRole",
-    "Organization",
-    "Student",
-    "Teacher",
-    "KnowledgeGraph",
-    "Content",
-    "Vocabulary",
-    "ContentVocabulary",
-    "ContentType",
-    "DifficultyLevel",
-    "ExamType",
-    "LessonPlan",
-    "LessonPlanTemplate",
-    "LessonPlanShare",
-    "SharePermission",
-    "ShareStatus",
-    "Conversation",
-    "ConversationScenario",
-    "ConversationStatus",
-    "Practice",
-    "PracticeStatus",
-    "PracticeType",
-    "Mistake",
-    "MistakeStatus",
-    "MistakeType",
-    "ClassInfo",
-    "ClassStudent",
-    "LearningReport",
-    "Question",
-    "QuestionBank",
-    "QuestionType",
-    "CEFRLevel",
-    "PracticeSession",
-    "SessionStatus",
-    "RecommendationFeedback",
-    "RecommendationHistory",
-    "RecommendationPreference",
+    "ExportTask",
+    "TaskStatus",
+    "ExportFormat",
+    "ExportTemplate",
+    "TemplateFormat",
 ]

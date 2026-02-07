@@ -4,13 +4,17 @@
 """
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import DateTime, ForeignKey, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.export_task import ExportTask
+    from app.models.lesson_plan_share import LessonPlanShare
 
 
 class LessonPlan(Base):
@@ -227,6 +231,14 @@ class LessonPlan(Base):
         remote_side=[forked_from],
         foreign_keys=[forked_from],
         back_populates="original_plan"
+    )
+
+    # 关系 - 导出任务
+    export_tasks: Mapped[list["ExportTask"]] = relationship(
+        "ExportTask",
+        back_populates="lesson",
+        foreign_keys="ExportTask.lesson_id",
+        cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:

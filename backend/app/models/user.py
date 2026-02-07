@@ -14,6 +14,7 @@ from app.db.base import Base
 
 if TYPE_CHECKING:
     from app.models.async_task import AsyncTask
+    from app.models.export_task import ExportTask
     from app.models.lesson_plan import LessonPlan
     from app.models.lesson_plan_share import LessonPlanShare
 
@@ -187,6 +188,14 @@ class User(Base):
         "AsyncTask",
         back_populates="user",
         foreign_keys="AsyncTask.user_id",
+        cascade="all, delete-orphan"
+    )
+
+    # 关系 - 导出任务
+    export_tasks: Mapped[list["ExportTask"]] = relationship(
+        "ExportTask",
+        back_populates="creator",
+        foreign_keys="ExportTask.created_by",
         cascade="all, delete-orphan"
     )
 
