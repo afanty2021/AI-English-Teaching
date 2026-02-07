@@ -3,6 +3,8 @@
  * 追踪语音识别准确率、延迟、缓存等功能
  */
 
+import { LatencyProfiler, createLatencyProfiler, LatencyProfile } from './latencyProfiler'
+
 export interface RecognitionMetrics {
   accuracy: number
   latency: number
@@ -488,11 +490,13 @@ export class PerformanceMonitor {
   private accuracyTracker: AccuracyTracker
   private latencyMonitor: LatencyMonitor
   private resultCache: ResultCache
+  private latencyProfiler: LatencyProfiler | null = null
 
   constructor() {
     this.accuracyTracker = new AccuracyTracker()
     this.latencyMonitor = new LatencyMonitor()
     this.resultCache = new ResultCache(1000)
+    this.latencyProfiler = null
   }
 
   /**
@@ -596,13 +600,107 @@ export class PerformanceMonitor {
     latency: LatencyBreakdown | null
     cache: { size: number; maxSize: number }
     slowestPhase: string | null
+    latencyProfile: LatencyProfile | null
   } {
     return {
       accuracy: this.accuracyTracker.getStatistics(10),
       latency: this.latencyMonitor.getAverageBreakdown(),
       cache: this.resultCache.getStats(),
-      slowestPhase: this.latencyMonitor.getSlowestPhase()
+      slowestPhase: this.latencyMonitor.getSlowestPhase(),
+      latencyProfile: this.getLatencyProfile()
     }
+  }
+
+  // ========== 延迟分析相关方法 ==========
+
+  /**
+   * 开始延迟跟踪
+   * 启动完整的语音识别延迟分析
+   */
+  startLatencyTracking(): void {
+    if (!this.latencyProfiler) {
+      this.latencyProfiler = createLatencyProfiler()
+    }
+    this.latencyProfiler.reset()
+    this.latencyProfiler.start('recording')
+  }
+
+  /**
+   * 记录录音阶段完成
+   * 在录音完成后调用
+   */
+  recordRecordingLatency(): void {
+    if (this.latencyProfiler) {
+      this.latencyProfiler.end('recording')
+      this.latencyProfiler.start('uploading')
+    }
+  }
+
+  /**
+   * 记录上传阶段完成
+   * 在音频上传完成后调用
+   */
+  recordUploadingLatency(): void {
+    if (this.latencyProfiler) {
+      this.latencyProfiler.end('uploading')
+      this.latencyProfiler.start('processing')
+    }
+  }
+
+  /**
+   * 记录处理阶段完成
+   * 在服务器处理完成后调用
+   */
+  recordProcessingLatency(): void {
+    if (this.latencyProfiler) {
+      this.latencyProfiler.end('processing')
+      this.latencyProfiler.start('downloading')
+    }
+  }
+
+  /**
+   * 记录下载阶段完成
+   * 在接收识别结果后调用
+   */
+  recordDownloadingLatency(): void {
+    if (this.latencyProfiler) {
+      this.latencyProfiler.end('downloading')
+    }
+  }
+
+  /**
+   * 获取延迟配置文件
+   * @returns 延迟配置文件，如果未开始跟踪则返回 null
+   */
+  getLatencyProfile(): LatencyProfile | null {
+    return this.latencyProfiler?.getProfile() || null
+  }
+
+  /**
+   * 清空延迟配置文件
+   */
+  clearLatencyProfile(): void {
+    this.latencyProfiler?.clear()
+  }
+
+  /**
+   * 获取延迟分析器的统计信息
+   * @returns 统计信息
+   */
+  getLatencyProfilerStats(): {
+    totalMilestones: number
+    completedOperations: number
+    inProgressOperations: number
+  } | null {
+    return this.latencyProfiler?.getStats() || null
+  }
+
+  /**
+   * 获取当前正在进行的延迟操作
+   * @returns 当前操作名称，如果没有则返回 null
+   */
+  getCurrentLatencyOperation(): string | null {
+    return this.latencyProfiler?.getCurrentOperation() || null
   }
 
   /**
@@ -612,6 +710,7 @@ export class PerformanceMonitor {
     this.accuracyTracker.reset()
     this.latencyMonitor.reset()
     this.resultCache.clear()
+    this.latencyProfiler?.reset()
   }
 }
 
