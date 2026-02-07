@@ -1,5 +1,8 @@
 <template>
-  <div class="confidence-indicator" :class="confidenceClass">
+  <div
+    class="confidence-indicator"
+    :class="confidenceClass"
+  >
     <div class="confidence-bar">
       <div
         class="confidence-fill"

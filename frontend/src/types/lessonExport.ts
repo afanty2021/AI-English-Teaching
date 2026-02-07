@@ -125,3 +125,19 @@ export interface ExportTaskListResponse {
 export interface ExportTemplateListResponse {
   templates: ExportTemplate[]
 }
+
+/**
+ * 导出进度事件
+ */
+export interface ExportProgressEvent {
+  type: 'progress' | 'stage' | 'completed' | 'failed'
+  task_id: string
+  data: {
+    progress?: number
+    stage?: string
+    stage_progress?: number
+    message?: string
+    download_url?: string
+    error?: string
+  }
+}

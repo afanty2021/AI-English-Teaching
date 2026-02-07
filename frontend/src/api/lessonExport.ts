@@ -188,6 +188,84 @@ export async function pollTaskUntilComplete(
   })
 }
 
+/**
+ * 预览模板效果
+ */
+export async function previewTemplate(
+  templateId: string,
+  format: ExportFormat
+): Promise<{ preview_url: string; preview_data: Record<string, any> }> {
+  return request({
+    url: `${BASE_URL}/templates/${templateId}/preview`,
+    method: 'POST',
+    data: { format }
+  })
+}
+
+/**
+ * 获取模板详情
+ */
+export async function getTemplate(templateId: string): Promise<{
+  template: {
+    id: string
+    name: string
+    description: string
+    preview_url: string
+    format: ExportFormat
+    is_default: boolean
+    config: Record<string, any>
+  }
+}> {
+  return request({
+    url: `${BASE_URL}/templates/${templateId}`,
+    method: 'GET'
+  })
+}
+
+/**
+ * 创建自定义模板
+ */
+export async function createTemplate(data: {
+  name: string
+  description: string
+  format: ExportFormat
+  config: Record<string, any>
+}): Promise<{ template: { id: string } }> {
+  return request({
+    url: `${BASE_URL}/templates`,
+    method: 'POST',
+    data
+  })
+}
+
+/**
+ * 更新模板
+ */
+export async function updateTemplate(
+  templateId: string,
+  data: {
+    name?: string
+    description?: string
+    config?: Record<string, any>
+  }
+): Promise<void> {
+  return request({
+    url: `${BASE_URL}/templates/${templateId}`,
+    method: 'PATCH',
+    data
+  })
+}
+
+/**
+ * 删除模板
+ */
+export async function deleteTemplate(templateId: string): Promise<void> {
+  return request({
+    url: `${BASE_URL}/templates/${templateId}`,
+    method: 'DELETE'
+  })
+}
+
 // 导出类型别名
 export type {
   ExportFormat,

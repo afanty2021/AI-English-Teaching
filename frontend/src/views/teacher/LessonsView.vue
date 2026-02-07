@@ -737,49 +737,14 @@
       </div>
     </el-drawer>
 
-    <!-- 导出对话框 -->
+    <!-- 导出选项对话框 -->
     <el-dialog
       v-model="showExportDialog"
       title="导出教案"
-      width="500px"
+      width="600px"
+      :close-on-click-modal="false"
     >
-      <el-form label-width="100px">
-        <el-form-item label="导出格式">
-          <el-radio-group v-model="exportFormat">
-            <el-radio label="word">
-              Word 文档
-            </el-radio>
-            <el-radio label="pdf">
-              PDF 文档
-            </el-radio>
-            <el-radio label="markdown">
-              Markdown
-            </el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="包含内容">
-          <el-checkbox-group v-model="exportSections">
-            <el-checkbox label="overview">
-              概览信息
-            </el-checkbox>
-            <el-checkbox label="objectives">
-              教学目标
-            </el-checkbox>
-            <el-checkbox label="vocabulary">
-              核心词汇
-            </el-checkbox>
-            <el-checkbox label="grammar">
-              语法点
-            </el-checkbox>
-            <el-checkbox label="structure">
-              教学流程
-            </el-checkbox>
-            <el-checkbox label="materials">
-              教学材料
-            </el-checkbox>
-          </el-checkbox-group>
-        </el-form-item>
-      </el-form>
+      <ExportOptionsPanel v-model="exportOptions" />
 
       <template #footer>
         <el-button @click="showExportDialog = false">
@@ -788,12 +753,26 @@
         <el-button
           type="primary"
           :loading="exporting"
-          @click="doExport"
+          @click="startExport"
         >
-          导出
+          开始导出
         </el-button>
       </template>
     </el-dialog>
+
+    <!-- 导出进度对话框 -->
+    <ExportProgressDialog
+      v-model:visible="showProgressDialog"
+      :task-id="currentExportTaskId"
+      :lesson-title="lessonTitle"
+      :format="exportOptions.format"
+      :initial-progress="exportProgress"
+      :initial-status="exportStatus"
+      :initial-error-message="exportErrorMessage"
+      @cancel="handleExportCancel"
+      @retry="handleExportRetry"
+      @download="handleExportDownload"
+    />
 
     <!-- 分享对话框 -->
     <ShareDialog
@@ -836,13 +815,23 @@ import {
   getLessonPlan,
   deleteLessonPlan,
   updateLessonContent,
-  getExportUrl,
   exportToMarkdown as apiExportToMarkdown
 } from '@/api/lesson'
 import { duplicateLessonPlan } from '@/api/lessonShare'
 import PPTPreview from '@/components/PPTPreview.vue'
 import ShareDialog from '@/components/ShareDialog.vue'
+import ExportOptionsPanel from '@/components/ExportOptionsPanel.vue'
+import ExportProgressDialog from '@/components/ExportProgressDialog.vue'
 import type { PPTSlide } from '@/types/lesson'
+import type { ExportOptions, ExportTask } from '@/types/lessonExport'
+import {
+  createExportTask,
+  getExportTask,
+  cancelExportTask,
+  downloadExportFile,
+  DEFAULT_EXPORT_OPTIONS
+} from '@/api/lessonExport'
+import { connectExportWebSocket } from '@/utils/exportWebSocket'
 
 // 类型定义
 interface LessonPlan {
@@ -896,11 +885,20 @@ const searchQuery = ref('')
 const filterLevel = ref('')
 const showDetailDrawer = ref(false)
 const showExportDialog = ref(false)
+const showProgressDialog = ref(false)
 const currentLesson = ref<LessonPlan | null>(null)
 const activeTab = ref('overview')
-const exportFormat = ref('word')
-const exportSections = ref(['overview', 'objectives', 'vocabulary', 'grammar', 'structure'])
+
+// 导出相关状态
+const exportOptions = ref<ExportOptions>({ ...DEFAULT_EXPORT_OPTIONS })
 const exporting = ref(false)
+const exportProgress = ref(0)
+const exportStatus = ref<'pending' | 'processing' | 'completed' | 'failed'>('pending')
+const exportErrorMessage = ref('')
+const currentExportTaskId = ref('')
+const currentExportTask = ref<ExportTask | null>(null)
+const lessonTitle = ref('')
+
 const saving = ref(false)
 const editorRef = ref<HTMLElement>()
 const editorContent = ref('')
@@ -1174,51 +1172,176 @@ const handleAction = (command: string, lesson: LessonPlan) => {
 }
 
 const handleExport = async (format: string) => {
-  exportFormat.value = format
-  await doExport()
+  if (!currentLesson.value) return
+
+  // 更新导出格式
+  exportOptions.value.format = format as ExportOptions['format']
+  lessonTitle.value = currentLesson.value.title
+
+  // 打开导出选项对话框
+  showExportDialog.value = true
 }
 
-const doExport = async () => {
+/**
+ * 开始导出
+ */
+const startExport = async () => {
   if (!currentLesson.value) return
 
   exporting.value = true
+  showExportDialog.value = false
+
   try {
-    if (exportFormat.value === 'markdown') {
-      // Markdown 导出直接在浏览器完成
+    // 创建导出任务
+    const response = await createExportTask({
+      lesson_id: currentLesson.value.id,
+      format: exportOptions.value.format,
+      options: exportOptions.value
+    })
+
+    const task = response.task
+    currentExportTaskId.value = task.id
+    currentExportTask.value = task
+    lessonTitle.value = currentLesson.value.title
+
+    // 显示进度对话框
+    showProgressDialog.value = true
+    exportProgress.value = task.progress
+    exportStatus.value = task.status
+
+    // 如果是 Markdown 导出，直接使用前端实现
+    if (exportOptions.value.format === 'markdown') {
       await exportToMarkdown(currentLesson.value)
-    } else {
-      // Word 和 PDF 从后端下载
-      const format = exportFormat.value === 'word' ? 'docx' : 'pdf'
-      const exportUrl = getExportUrl(currentLesson.value.id, format)
-
-      // 使用 fetch 下载文件
-      const response = await fetch(exportUrl, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token') || ''}`
-        }
-      })
-
-      if (!response.ok) {
-        throw new Error('导出失败')
-      }
-
-      const blob = await response.blob()
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `${currentLesson.value.title}.${format}`
-      link.click()
-      URL.revokeObjectURL(url)
+      exportStatus.value = 'completed'
+      exportProgress.value = 100
+      return
     }
 
-    showExportDialog.value = false
-    ElMessage.success('导出成功')
+    // 连接 WebSocket 监听进度
+    try {
+      await connectExportWebSocket(task.id, {
+        onProgress: (event) => {
+          if (event.data.progress !== undefined) {
+            exportProgress.value = event.data.progress
+          }
+        },
+        onComplete: async (event) => {
+          exportStatus.value = 'completed'
+          exportProgress.value = 100
+
+          // 更新任务信息
+          const updatedTask = await getExportTask(task.id)
+          currentExportTask.value = updatedTask.task
+
+          ElMessage.success('导出完成！')
+        },
+        onError: (event) => {
+          exportStatus.value = 'failed'
+          if (event.data.error) {
+            exportErrorMessage.value = event.data.error
+          }
+          ElMessage.error('导出失败')
+        }
+      })
+    } catch (wsError) {
+      console.warn('WebSocket 连接失败，使用轮询方式:', wsError)
+      // 降级到轮询方式
+      pollExportProgress(task.id)
+    }
   } catch (error) {
-    console.error('导出失败:', error)
-    ElMessage.error('导出失败')
+    console.error('创建导出任务失败:', error)
+    ElMessage.error('创建导出任务失败')
+    showExportDialog.value = true
   } finally {
     exporting.value = false
   }
+}
+
+/**
+ * 轮询导出进度（WebSocket 降级方案）
+ */
+const pollExportProgress = async (taskId: string) => {
+  const pollInterval = setInterval(async () => {
+    try {
+      const response = await getExportTask(taskId)
+      const task = response.task
+
+      exportProgress.value = task.progress
+      exportStatus.value = task.status
+      currentExportTask.value = task
+
+      if (task.status === 'completed') {
+        clearInterval(pollInterval)
+        ElMessage.success('导出完成！')
+      } else if (task.status === 'failed') {
+        clearInterval(pollInterval)
+        exportErrorMessage.value = task.error_message || '导出失败'
+        ElMessage.error('导出失败')
+      }
+    } catch (error) {
+      clearInterval(pollInterval)
+      console.error('获取导出进度失败:', error)
+    }
+  }, 1000)
+}
+
+/**
+ * 取消导出
+ */
+const handleExportCancel = async () => {
+  if (!currentExportTaskId.value) return
+
+  try {
+    await cancelExportTask(currentExportTaskId.value)
+    showProgressDialog.value = false
+    ElMessage.info('导出已取消')
+  } catch (error) {
+    console.error('取消导出失败:', error)
+    ElMessage.error('取消导出失败')
+  }
+}
+
+/**
+ * 重试导出
+ */
+const handleExportRetry = () => {
+  // 重新打开导出对话框
+  showExportDialog.value = true
+  // 重置状态
+  exportProgress.value = 0
+  exportStatus.value = 'pending'
+  exportErrorMessage.value = ''
+}
+
+/**
+ * 下载导出文件
+ */
+const handleExportDownload = async () => {
+  if (!currentExportTask.value) return
+
+  try {
+    await downloadExportFile(currentExportTask.value)
+    showProgressDialog.value = false
+    ElMessage.success('文件已下载')
+  } catch (error) {
+    console.error('下载文件失败:', error)
+    ElMessage.error('下载文件失败')
+  }
+}
+
+/**
+ * 导出为 Markdown
+ */
+const exportToMarkdown = async (lesson: LessonPlan) => {
+  const markdown = await apiExportToMarkdown(lesson)
+  const blob = new Blob([markdown], { type: 'text/markdown' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${lesson.title}.md`
+  a.click()
+  URL.revokeObjectURL(url)
+  ElMessage.success('Markdown 导出成功')
 }
 
 // Export functions reserved for future export feature enhancements
@@ -1239,18 +1362,6 @@ const doExport = async () => {
 //   link.click()
 //   ElMessage.success('PDF 导出成功')
 // }
-
-const exportToMarkdown = async (lesson: LessonPlan) => {
-  const markdown = await apiExportToMarkdown(lesson)
-  const blob = new Blob([markdown], { type: 'text/markdown' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `${lesson.title}.md`
-  a.click()
-  URL.revokeObjectURL(url)
-  ElMessage.success('Markdown 导出成功')
-}
 
 // 编辑器功能
 const execCommand = (command: string, value?: string) => {
