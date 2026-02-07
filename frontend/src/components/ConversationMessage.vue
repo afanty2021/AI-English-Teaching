@@ -4,41 +4,79 @@
   >
     <!-- 头像区域 -->
     <div class="message-avatar">
-      <el-avatar v-if="message.role === 'user'" :icon="User" />
-      <el-avatar v-else :icon="ChatDotRound" />
+      <el-avatar
+        v-if="message.role === 'user'"
+        :icon="User"
+      />
+      <el-avatar
+        v-else
+        :icon="ChatDotRound"
+      />
     </div>
 
     <!-- 消息内容区域 -->
     <div class="message-content-wrapper">
       <!-- 消息头部（显示时间戳和状态） -->
-      <div v-if="showHeader" class="message-header">
+      <div
+        v-if="showHeader"
+        class="message-header"
+      >
         <span class="message-time">{{ formatTime(message.timestamp) }}</span>
-        <el-tag v-if="message.is_final" type="success" size="small">最终回复</el-tag>
+        <el-tag
+          v-if="message.is_final"
+          type="success"
+          size="small"
+        >
+          最终回复
+        </el-tag>
       </div>
 
       <!-- 消息主体 -->
       <div :class="['message-body', { 'streaming-body': isStreaming }]">
         <!-- 文本内容 -->
-        <div v-if="message.type === 'text'" class="message-text">
+        <div
+          v-if="message.type === 'text'"
+          class="message-text"
+        >
           <span v-html="highlightedContent"></span>
-          <span v-if="isStreaming" class="typing-cursor"></span>
+          <span
+            v-if="isStreaming"
+            class="typing-cursor"
+          ></span>
         </div>
 
         <!-- 音频内容 -->
-        <div v-else-if="message.type === 'audio'" class="message-audio">
-          <el-button :icon="VideoPlay" circle @click="playAudio" />
-          <audio v-if="message.audio_url" ref="audioRef" :src="message.audio_url" />
+        <div
+          v-else-if="message.type === 'audio'"
+          class="message-audio"
+        >
+          <el-button
+            :icon="VideoPlay"
+            circle
+            @click="playAudio"
+          />
+          <audio
+            v-if="message.audio_url"
+            ref="audioRef"
+            :src="message.audio_url"
+          />
         </div>
 
         <!-- 系统消息 -->
-        <div v-else class="message-system">
+        <div
+          v-else
+          class="message-system"
+        >
           <el-icon><InfoFilled /></el-icon>
           <span>{{ message.content }}</span>
         </div>
       </div>
 
       <!-- AI 评分（助手消息） -->
-      <div v-if="showScores" class="message-scores">
+      <div
+        v-if="showScores"
+        class="message-scores"
+      >
         <div class="scores-header">
           <el-icon><Trophy /></el-icon>
           <span>AI 评分</span>
@@ -56,7 +94,10 @@
       </div>
 
       <!-- 语法错误反馈 -->
-      <div v-if="message.grammar_errors && message.grammar_errors.length > 0" class="grammar-feedback">
+      <div
+        v-if="message.grammar_errors && message.grammar_errors.length > 0"
+        class="grammar-feedback"
+      >
         <div class="feedback-header">
           <el-icon><Document /></el-icon>
           <span>语法建议</span>
@@ -70,7 +111,10 @@
             <span class="error-original">{{ error.original }}</span>
             <el-icon><Right /></el-icon>
             <span class="error-correction">{{ error.correction }}</span>
-            <el-tooltip :content="error.explanation" placement="top">
+            <el-tooltip
+              :content="error.explanation"
+              placement="top"
+            >
               <el-icon><QuestionFilled /></el-icon>
             </el-tooltip>
           </div>
@@ -78,7 +122,10 @@
       </div>
 
       <!-- 发音反馈 -->
-      <div v-if="message.pronunciation_feedback && message.pronunciation_feedback.length > 0" class="pronunciation-feedback">
+      <div
+        v-if="message.pronunciation_feedback && message.pronunciation_feedback.length > 0"
+        class="pronunciation-feedback"
+      >
         <div class="feedback-header">
           <el-icon><Microphone /></el-icon>
           <span>发音反馈</span>
@@ -92,7 +139,11 @@
             <span class="pronunciation-word">{{ feedback.word }}</span>
             <span class="pronunciation-phonetic">/{{ feedback.phonetic }}/</span>
             <span class="pronunciation-score">{{ feedback.score }}</span>
-            <el-icon v-if="feedback.audio_url" class="play-icon" @click="playPronunciationAudio(feedback.audio_url)">
+            <el-icon
+              v-if="feedback.audio_url"
+              class="play-icon"
+              @click="playPronunciationAudio(feedback.audio_url)"
+            >
               <VideoPlay />
             </el-icon>
           </div>

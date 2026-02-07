@@ -2,7 +2,10 @@
   <div :class="['conversation-status', statusClass]">
     <!-- 状态图标 -->
     <div class="status-icon-wrapper">
-      <el-icon v-if="status === 'connecting'" class="is-loading">
+      <el-icon
+        v-if="status === 'connecting'"
+        class="is-loading"
+      >
         <Loading />
       </el-icon>
       <component
@@ -10,13 +13,19 @@
         v-else-if="statusIcon"
         class="status-icon"
       />
-      <div v-else class="status-placeholder"></div>
+      <div
+        v-else
+        class="status-placeholder"
+      ></div>
     </div>
 
     <!-- 状态文本 -->
     <div class="status-text">
       <span class="status-label">{{ statusText }}</span>
-      <span v-if="showProgress" class="status-progress">
+      <span
+        v-if="showProgress"
+        class="status-progress"
+      >
         {{ messageCount }}/{{ targetMessages }}
       </span>
     </div>

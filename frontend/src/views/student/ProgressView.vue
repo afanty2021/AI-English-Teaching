@@ -10,11 +10,24 @@
             :ellipsis="false"
             router
           >
-            <el-menu-item index="/student">仪表板</el-menu-item>
-            <el-menu-item index="/student/learning">学习内容</el-menu-item>
-            <el-menu-item index="/student/speaking">口语练习</el-menu-item>
-            <el-menu-item index="/student/progress">学习进度</el-menu-item>
-            <el-menu-item index="/" @click="handleLogout">退出</el-menu-item>
+            <el-menu-item index="/student">
+              仪表板
+            </el-menu-item>
+            <el-menu-item index="/student/learning">
+              学习内容
+            </el-menu-item>
+            <el-menu-item index="/student/speaking">
+              口语练习
+            </el-menu-item>
+            <el-menu-item index="/student/progress">
+              学习进度
+            </el-menu-item>
+            <el-menu-item
+              index="/"
+              @click="handleLogout"
+            >
+              退出
+            </el-menu-item>
           </el-menu>
         </div>
       </el-header>

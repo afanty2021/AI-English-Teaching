@@ -2,7 +2,10 @@
   <div class="conversation-history-view">
     <!-- 页面头部 -->
     <div class="page-header">
-      <el-page-header @back="goBack" title="返回">
+      <el-page-header
+        title="返回"
+        @back="goBack"
+      >
         <template #content>
           <span class="page-title">对话历史</span>
         </template>
@@ -15,7 +18,12 @@
           clearable
           style="width: 250px"
         />
-        <el-select v-model="filterScenario" placeholder="筛选场景" clearable style="width: 150px">
+        <el-select
+          v-model="filterScenario"
+          placeholder="筛选场景"
+          clearable
+          style="width: 150px"
+        >
           <el-option
             v-for="scenario in scenarios"
             :key="scenario.value"
@@ -27,10 +35,20 @@
     </div>
 
     <!-- 对话列表 -->
-    <div v-loading="isLoading" class="history-list">
-      <el-empty v-if="!isLoading && filteredConversations.length === 0" description="暂无对话历史" />
+    <div
+      v-loading="isLoading"
+      class="history-list"
+    >
+      <el-empty
+        v-if="!isLoading && filteredConversations.length === 0"
+        description="暂无对话历史"
+      />
 
-      <transition-group name="list" tag="div" class="conversation-grid">
+      <transition-group
+        name="list"
+        tag="div"
+        class="conversation-grid"
+      >
         <div
           v-for="conversation in filteredConversations"
           :key="conversation.id"
@@ -39,7 +57,10 @@
         >
           <div class="card-header">
             <div class="scenario-info">
-              <el-icon :size="24" :color="getScenarioColor(conversation.scenario)">
+              <el-icon
+                :size="24"
+                :color="getScenarioColor(conversation.scenario)"
+              >
                 <component :is="getScenarioIcon(conversation.scenario)" />
               </el-icon>
               <div>
@@ -47,7 +68,10 @@
                 <span class="level-badge">{{ conversation.level }}</span>
               </div>
             </div>
-            <el-tag :type="getStatusType(conversation.status)" size="small">
+            <el-tag
+              :type="getStatusType(conversation.status)"
+              size="small"
+            >
               {{ getStatusText(conversation.status) }}
             </el-tag>
           </div>
@@ -58,13 +82,19 @@
                 <el-icon><ChatDotRound /></el-icon>
                 <span>{{ conversation.message_count }} 条消息</span>
               </div>
-              <div v-if="conversation.duration" class="stat-item">
+              <div
+                v-if="conversation.duration"
+                class="stat-item"
+              >
                 <el-icon><Clock /></el-icon>
                 <span>{{ formatDuration(conversation.duration) }}</span>
               </div>
             </div>
 
-            <div v-if="conversation.scores" class="score-preview">
+            <div
+              v-if="conversation.scores"
+              class="score-preview"
+            >
               <div class="score-circle">
                 <el-progress
                   type="circle"
@@ -78,7 +108,12 @@
 
             <div class="card-footer">
               <span class="date">{{ formatDate(conversation.started_at) }}</span>
-              <el-button type="primary" link>查看详情</el-button>
+              <el-button
+                type="primary"
+                link
+              >
+                查看详情
+              </el-button>
             </div>
           </div>
         </div>
@@ -92,13 +127,21 @@
       direction="rtl"
       size="600px"
     >
-      <div v-if="selectedConversation" class="detail-content">
+      <div
+        v-if="selectedConversation"
+        class="detail-content"
+      >
         <!-- 对话信息 -->
         <div class="detail-header">
           <h3>{{ getScenarioName(selectedConversation.scenario) }}</h3>
           <div class="detail-meta">
-            <el-tag size="small">{{ selectedConversation.level }}</el-tag>
-            <el-tag :type="getStatusType(selectedConversation.status)" size="small">
+            <el-tag size="small">
+              {{ selectedConversation.level }}
+            </el-tag>
+            <el-tag
+              :type="getStatusType(selectedConversation.status)"
+              size="small"
+            >
               {{ getStatusText(selectedConversation.status) }}
             </el-tag>
             <span>{{ formatDate(selectedConversation.started_at) }}</span>
@@ -106,7 +149,10 @@
         </div>
 
         <!-- 评分信息 -->
-        <div v-if="selectedConversation.scores" class="detail-scores">
+        <div
+          v-if="selectedConversation.scores"
+          class="detail-scores"
+        >
           <h4>综合评分</h4>
           <div class="overall-score">
             <el-progress
@@ -147,7 +193,10 @@
             </div>
           </div>
 
-          <div v-if="selectedConversation.scores.feedback" class="feedback-box">
+          <div
+            v-if="selectedConversation.scores.feedback"
+            class="feedback-box"
+          >
             <h5>评价</h5>
             <p>{{ selectedConversation.scores.feedback }}</p>
           </div>
@@ -163,22 +212,34 @@
               :class="['message-item', `message-${message.role}`]"
             >
               <div class="message-header">
-                <el-icon v-if="message.role === 'user'"><User /></el-icon>
-                <el-icon v-else><ChatDotRound /></el-icon>
+                <el-icon v-if="message.role === 'user'">
+                  <User />
+                </el-icon>
+                <el-icon v-else>
+                  <ChatDotRound />
+                </el-icon>
                 <span class="role-label">{{ message.role === 'user' ? '你' : 'AI' }}</span>
               </div>
-              <div class="message-content">{{ message.content }}</div>
+              <div class="message-content">
+                {{ message.content }}
+              </div>
             </div>
           </div>
         </div>
 
         <!-- 操作按钮 -->
         <div class="detail-actions">
-          <el-button type="primary" @click="practiceAgain">
+          <el-button
+            type="primary"
+            @click="practiceAgain"
+          >
             <el-icon><Refresh /></el-icon>
             再次练习
           </el-button>
-          <el-button @click="continueConversation" :disabled="selectedConversation.status === 'completed'">
+          <el-button
+            :disabled="selectedConversation.status === 'completed'"
+            @click="continueConversation"
+          >
             <el-icon><VideoPlay /></el-icon>
             继续对话
           </el-button>

@@ -10,11 +10,24 @@
             :ellipsis="false"
             router
           >
-            <el-menu-item index="/student">仪表板</el-menu-item>
-            <el-menu-item index="/student/learning">学习内容</el-menu-item>
-            <el-menu-item index="/student/speaking">口语练习</el-menu-item>
-            <el-menu-item index="/student/progress">学习进度</el-menu-item>
-            <el-menu-item index="/" @click="handleLogout">退出</el-menu-item>
+            <el-menu-item index="/student">
+              仪表板
+            </el-menu-item>
+            <el-menu-item index="/student/learning">
+              学习内容
+            </el-menu-item>
+            <el-menu-item index="/student/speaking">
+              口语练习
+            </el-menu-item>
+            <el-menu-item index="/student/progress">
+              学习进度
+            </el-menu-item>
+            <el-menu-item
+              index="/"
+              @click="handleLogout"
+            >
+              退出
+            </el-menu-item>
           </el-menu>
         </div>
       </el-header>
@@ -26,16 +39,25 @@
           </template>
 
           <el-row :gutter="20">
-            <el-col :span="8" v-for="scenario in scenarios" :key="scenario.value">
+            <el-col
+              v-for="scenario in scenarios"
+              :key="scenario.value"
+              :span="8"
+            >
               <el-card
                 class="scenario-card"
                 :class="{ selected: selectedScenario === scenario.value }"
                 @click="selectedScenario = scenario.value"
               >
-                <div class="scenario-icon">💬</div>
+                <div class="scenario-icon">
+                  💬
+                </div>
                 <h4>{{ scenario.label }}</h4>
                 <p>{{ scenario.description }}</p>
-                <el-tag :type="selectedScenario === scenario.value ? 'success' : 'info'" size="small">
+                <el-tag
+                  :type="selectedScenario === scenario.value ? 'success' : 'info'"
+                  size="small"
+                >
                   {{ scenario.level }}
                 </el-tag>
               </el-card>
@@ -59,11 +81,20 @@
           <template #header>
             <div class="card-header">
               <h3>对话历史</h3>
-              <el-button type="primary" link @click="loadConversations">刷新</el-button>
+              <el-button
+                type="primary"
+                link
+                @click="loadConversations"
+              >
+                刷新
+              </el-button>
             </div>
           </template>
 
-          <el-empty v-if="conversationHistory.length === 0" description="暂无对话记录" />
+          <el-empty
+            v-if="conversationHistory.length === 0"
+            description="暂无对话记录"
+          />
 
           <el-timeline v-else>
             <el-timeline-item
@@ -76,7 +107,9 @@
                 <div class="history-item">
                   <div class="history-header">
                     <h4>{{ conv.scenario }}</h4>
-                    <el-tag size="small">{{ conv.duration }}</el-tag>
+                    <el-tag size="small">
+                      {{ conv.duration }}
+                    </el-tag>
                   </div>
                   <p>{{ conv.messages }} 条对话消息</p>
                 </div>
@@ -98,19 +131,36 @@
         <div class="dialog-header">
           <div class="header-left">
             <h3>{{ currentScenario?.label }}</h3>
-            <el-tag :type="statusType" size="small">{{ statusText }}</el-tag>
+            <el-tag
+              :type="statusType"
+              size="small"
+            >
+              {{ statusText }}
+            </el-tag>
           </div>
           <div class="header-right">
-            <el-button link @click="handleComplete">结束练习</el-button>
+            <el-button
+              link
+              @click="handleComplete"
+            >
+              结束练习
+            </el-button>
           </div>
         </div>
       </template>
 
       <!-- 对话状态指示器 -->
-      <div class="conversation-status" v-if="status === 'active'">
+      <div
+        v-if="status === 'active'"
+        class="conversation-status"
+      >
         <div class="scenario-info">
-          <el-tag type="primary">{{ currentScenario?.label }}</el-tag>
-          <el-tag type="info">Level {{ currentScenario?.level }}</el-tag>
+          <el-tag type="primary">
+            {{ currentScenario?.label }}
+          </el-tag>
+          <el-tag type="info">
+            Level {{ currentScenario?.level }}
+          </el-tag>
         </div>
 
         <div class="progress-indicator">
@@ -131,7 +181,10 @@
 
       <!-- 消息区域 -->
       <div class="conversation-box">
-        <div class="messages" ref="messagesRef">
+        <div
+          ref="messagesRef"
+          class="messages"
+        >
           <div
             v-for="(msg, index) in messages"
             :key="index"
@@ -140,7 +193,9 @@
             <!-- 用户消息 -->
             <template v-if="msg.role === 'user'">
               <div class="message user-message">
-                <div class="avatar">👤</div>
+                <div class="avatar">
+                  👤
+                </div>
                 <div class="content">
                   <p>{{ msg.content }}</p>
                   <span class="time">{{ formatTimestamp(msg.timestamp) }}</span>
@@ -155,7 +210,10 @@
                   <p>{{ msg.content }}</p>
 
                   <!-- 评分胶囊 -->
-                  <div class="score-pills" v-if="msg.scores">
+                  <div
+                    v-if="msg.scores"
+                    class="score-pills"
+                  >
                     <el-tag
                       :type="getScoreType(msg.scores?.fluency)"
                       size="small"
@@ -181,8 +239,8 @@
                       link
                       type="primary"
                       size="small"
-                      @click="showFeedback(msg)"
                       class="feedback-btn"
+                      @click="showFeedback(msg)"
                     >
                       查看反馈
                     </el-button>
@@ -190,16 +248,26 @@
 
                   <span class="time">{{ formatTimestamp(msg.timestamp) }}</span>
                 </div>
-                <div class="avatar">🤖</div>
+                <div class="avatar">
+                  🤖
+                </div>
               </div>
             </template>
 
-            <el-icon v-if="loading" class="is-loading"><Loading /></el-icon>
+            <el-icon
+              v-if="loading"
+              class="is-loading"
+            >
+              <Loading />
+            </el-icon>
           </div>
         </div>
 
         <!-- 学习建议横幅 -->
-        <div class="learning-banner" v-if="latestRecommendation && status === 'active'">
+        <div
+          v-if="latestRecommendation && status === 'active'"
+          class="learning-banner"
+        >
           <el-alert
             type="info"
             :closable="false"
@@ -219,8 +287,8 @@
             type="textarea"
             :rows="2"
             placeholder="输入你的回复..."
-            @keydown.enter.exact="handleSend"
             :disabled="status !== 'active'"
+            @keydown.enter.exact="handleSend"
           />
 
           <div class="input-actions">
@@ -231,9 +299,9 @@
             />
             <el-button
               type="primary"
-              @click="handleSend"
               :loading="sending"
               :disabled="!inputMessage.trim() || status !== 'active'"
+              @click="handleSend"
             >
               发送
             </el-button>
@@ -242,7 +310,10 @@
       </div>
 
       <!-- 完成后的总结界面 -->
-      <div class="completion-summary" v-if="status === 'completed'">
+      <div
+        v-if="status === 'completed'"
+        class="completion-summary"
+      >
         <el-result
           icon="success"
           title="练习完成！"
@@ -277,10 +348,15 @@
               />
             </div>
 
-            <el-button type="primary" @click="viewFullFeedback">
+            <el-button
+              type="primary"
+              @click="viewFullFeedback"
+            >
               查看详细反馈
             </el-button>
-            <el-button @click="startNew">开始新练习</el-button>
+            <el-button @click="startNew">
+              开始新练习
+            </el-button>
           </template>
         </el-result>
       </div>
@@ -294,12 +370,22 @@
       size="45%"
       class="feedback-drawer"
     >
-      <div class="feedback-content" v-if="currentFeedback">
+      <div
+        v-if="currentFeedback"
+        class="feedback-content"
+      >
         <!-- 整体评分概览 -->
         <div class="score-overview">
           <h4>评分概览</h4>
-          <el-row :gutter="16" class="mt-2">
-            <el-col :span="6" v-for="item in scoreOverview" :key="item.label">
+          <el-row
+            :gutter="16"
+            class="mt-2"
+          >
+            <el-col
+              v-for="item in scoreOverview"
+              :key="item.label"
+              :span="6"
+            >
               <div class="score-card">
                 <el-progress
                   type="dashboard"
@@ -318,30 +404,68 @@
 
         <!-- 详细反馈 -->
         <!-- 优势 -->
-        <div class="feedback-section" v-if="currentFeedback.strengths?.length">
-          <h4><el-icon class="success-icon"><Check /></el-icon> 做得好的地方</h4>
+        <div
+          v-if="currentFeedback.strengths?.length"
+          class="feedback-section"
+        >
+          <h4>
+            <el-icon class="success-icon">
+              <Check />
+            </el-icon> 做得好的地方
+          </h4>
           <ul>
-            <li v-for="item in currentFeedback.strengths" :key="item">{{ item }}</li>
+            <li
+              v-for="item in currentFeedback.strengths"
+              :key="item"
+            >
+              {{ item }}
+            </li>
           </ul>
         </div>
 
         <!-- 改进建议 -->
-        <div class="feedback-section" v-if="currentFeedback.improvements?.length">
-          <h4><el-icon class="warning-icon"><TrendCharts /></el-icon> 需要改进</h4>
+        <div
+          v-if="currentFeedback.improvements?.length"
+          class="feedback-section"
+        >
+          <h4>
+            <el-icon class="warning-icon">
+              <TrendCharts />
+            </el-icon> 需要改进
+          </h4>
           <ul>
-            <li v-for="item in currentFeedback.improvements" :key="item">{{ item }}</li>
+            <li
+              v-for="item in currentFeedback.improvements"
+              :key="item"
+            >
+              {{ item }}
+            </li>
           </ul>
         </div>
 
         <!-- 语法注释 -->
-        <div class="feedback-section" v-if="currentFeedback.grammar_notes">
-          <h4><el-icon class="info-icon"><Document /></el-icon> 语法要点</h4>
+        <div
+          v-if="currentFeedback.grammar_notes"
+          class="feedback-section"
+        >
+          <h4>
+            <el-icon class="info-icon">
+              <Document />
+            </el-icon> 语法要点
+          </h4>
           <p>{{ currentFeedback.grammar_notes }}</p>
         </div>
 
         <!-- 学习建议 -->
-        <div class="feedback-section recommendations" v-if="currentFeedback.recommendations?.length">
-          <h4><el-icon class="star-icon"><Star /></el-icon> 学习建议</h4>
+        <div
+          v-if="currentFeedback.recommendations?.length"
+          class="feedback-section recommendations"
+        >
+          <h4>
+            <el-icon class="star-icon">
+              <Star />
+            </el-icon> 学习建议
+          </h4>
           <div class="recommendation-tags">
             <el-tag
               v-for="item in currentFeedback.recommendations"
@@ -356,13 +480,21 @@
         </div>
 
         <!-- 综合 AI 评语 -->
-        <div class="feedback-section" v-if="currentFeedback.feedback">
+        <div
+          v-if="currentFeedback.feedback"
+          class="feedback-section"
+        >
           <h4><el-icon><ChatDotSquare /></el-icon> AI 评语</h4>
-          <p class="ai-feedback">{{ currentFeedback.feedback }}</p>
+          <p class="ai-feedback">
+            {{ currentFeedback.feedback }}
+          </p>
         </div>
       </div>
 
-      <el-empty v-else description="暂无反馈数据" />
+      <el-empty
+        v-else
+        description="暂无反馈数据"
+      />
     </el-drawer>
   </div>
 </template>

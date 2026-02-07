@@ -1,14 +1,29 @@
 <template>
   <div class="question-renderer">
     <!-- 题目元信息 -->
-    <div v-if="showMeta" class="question-meta">
-      <el-tag v-if="question.difficulty_level" size="small" type="info">
+    <div
+      v-if="showMeta"
+      class="question-meta"
+    >
+      <el-tag
+        v-if="question.difficulty_level"
+        size="small"
+        type="info"
+      >
         难度：{{ question.difficulty_level }}
       </el-tag>
-      <el-tag v-if="question.topic" size="small" type="success" style="margin-left: 8px">
+      <el-tag
+        v-if="question.topic"
+        size="small"
+        type="success"
+        style="margin-left: 8px"
+      >
         主题：{{ question.topic }}
       </el-tag>
-      <div v-if="question.knowledge_points?.length" class="knowledge-points">
+      <div
+        v-if="question.knowledge_points?.length"
+        class="knowledge-points"
+      >
         <el-tag
           v-for="point in question.knowledge_points"
           :key="point"
@@ -21,8 +36,14 @@
     </div>
 
     <!-- 音频播放器（听力题） -->
-    <div v-if="question.audio_url" class="audio-player">
-      <audio controls :src="question.audio_url">
+    <div
+      v-if="question.audio_url"
+      class="audio-player"
+    >
+      <audio
+        controls
+        :src="question.audio_url"
+      >
         您的浏览器不支持音频播放
       </audio>
     </div>
@@ -55,10 +76,15 @@
       @update:model-value="$emit('update:modelValue', $event)"
       @submit="$emit('submit', $event)"
     />
-    <div v-else class="unsupported-type">
+    <div
+      v-else
+      class="unsupported-type"
+    >
       <el-empty description="暂不支持此题型">
         <template #image>
-          <el-icon :size="60"><Warning /></el-icon>
+          <el-icon :size="60">
+            <Warning />
+          </el-icon>
         </template>
       </el-empty>
     </div>

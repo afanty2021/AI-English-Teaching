@@ -5,51 +5,98 @@
         <div class="header-content">
           <h1>AI英语教学系统</h1>
           <div class="user-info">
-            <el-button link @click="$router.push('/settings')">
+            <el-button
+              link
+              @click="$router.push('/settings')"
+            >
               <el-icon><Setting /></el-icon>
               通知设置
             </el-button>
             <span>{{ authStore.user?.full_name || authStore.user?.username }}</span>
-            <el-button @click="handleLogout" type="danger" size="small">退出登录</el-button>
+            <el-button
+              type="danger"
+              size="small"
+              @click="handleLogout"
+            >
+              退出登录
+            </el-button>
           </div>
         </div>
       </el-header>
 
       <el-main>
         <el-row :gutter="20">
-          <el-col :span="24" v-if="authStore.isStudent">
+          <el-col
+            v-if="authStore.isStudent"
+            :span="24"
+          >
             <el-card class="welcome-card">
               <h2>欢迎回来，{{ authStore.user?.full_name }}同学！</h2>
-              <p class="subtitle">开始你的英语学习之旅</p>
+              <p class="subtitle">
+                开始你的英语学习之旅
+              </p>
               <el-space wrap>
-                <el-button type="primary" size="large" @click="$router.push('/student/learning')">
+                <el-button
+                  type="primary"
+                  size="large"
+                  @click="$router.push('/student/learning')"
+                >
                   开始学习
                 </el-button>
-                <el-button type="success" size="large" @click="$router.push('/student/speaking')">
+                <el-button
+                  type="success"
+                  size="large"
+                  @click="$router.push('/student/speaking')"
+                >
                   口语练习
                 </el-button>
-                <el-button type="info" size="large" @click="$router.push('/student/progress')">
+                <el-button
+                  type="info"
+                  size="large"
+                  @click="$router.push('/student/progress')"
+                >
                   学习进度
                 </el-button>
               </el-space>
             </el-card>
           </el-col>
 
-          <el-col :span="24" v-else-if="authStore.isTeacher">
+          <el-col
+            v-else-if="authStore.isTeacher"
+            :span="24"
+          >
             <el-card class="welcome-card">
               <h2>欢迎回来，{{ authStore.user?.full_name }}老师！</h2>
-              <p class="subtitle">管理您的教学内容和学生</p>
+              <p class="subtitle">
+                管理您的教学内容和学生
+              </p>
               <el-space wrap>
-                <el-button type="primary" size="large" @click="$router.push('/teacher/lessons')">
+                <el-button
+                  type="primary"
+                  size="large"
+                  @click="$router.push('/teacher/lessons')"
+                >
                   教案管理
                 </el-button>
-                <el-button type="success" size="large" @click="$router.push('/teacher/shared-lessons')">
+                <el-button
+                  type="success"
+                  size="large"
+                  @click="$router.push('/teacher/shared-lessons')"
+                >
                   分享的教案
                 </el-button>
-                <el-button type="warning" size="large" @click="$router.push('/teacher/students')">
+                <el-button
+                  type="warning"
+                  size="large"
+                  @click="$router.push('/teacher/students')"
+                >
                   学生管理
                 </el-button>
-                <el-button type="info" size="large" @click="$router.push('/teacher/ai-planning')">
+                <el-button
+                  type="info"
+                  size="large"
+                  @click="$router.push('/teacher/ai-planning')"
+                >
                   AI 备课
                 </el-button>
               </el-space>

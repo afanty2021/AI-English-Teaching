@@ -3,25 +3,47 @@
   根据不同的布局类型渲染幻灯片内容
 -->
 <template>
-  <div class="slide-content" :class="[`layout-${slide.layout || 'default'}`, { 'show-notes': showNotes }]">
+  <div
+    class="slide-content"
+    :class="[`layout-${slide.layout || 'default'}`, { 'show-notes': showNotes }]"
+  >
     <!-- 幻灯片主体内容 -->
     <div class="slide-body">
       <!-- 标题 -->
-      <h1 v-if="slide.title" class="slide-title">
+      <h1
+        v-if="slide.title"
+        class="slide-title"
+      >
         {{ slide.title }}
       </h1>
 
       <!-- 内容区域 - 根据布局类型渲染 -->
-      <div class="slide-content-area" :class="`layout-${slide.layout || 'default'}`">
+      <div
+        class="slide-content-area"
+        :class="`layout-${slide.layout || 'default'}`"
+      >
         <!-- 默认布局：垂直列表 -->
         <template v-if="!slide.layout || slide.layout === 'default'">
-          <ul v-if="slide.content && slide.content.length > 0" class="content-list">
-            <li v-for="(item, index) in slide.content" :key="index" class="content-item">
+          <ul
+            v-if="slide.content && slide.content.length > 0"
+            class="content-list"
+          >
+            <li
+              v-for="(item, index) in slide.content"
+              :key="index"
+              class="content-item"
+            >
               {{ item }}
             </li>
           </ul>
-          <div v-else class="content-empty">
-            <el-empty description="暂无内容" :image-size="80" />
+          <div
+            v-else
+            class="content-empty"
+          >
+            <el-empty
+              description="暂无内容"
+              :image-size="80"
+            />
           </div>
         </template>
 
@@ -31,7 +53,11 @@
             <div class="column left">
               <h3>要点</h3>
               <ul class="content-list">
-                <li v-for="(item, index) in leftColumn" :key="index" class="content-item">
+                <li
+                  v-for="(item, index) in leftColumn"
+                  :key="index"
+                  class="content-item"
+                >
                   {{ item }}
                 </li>
               </ul>
@@ -39,7 +65,11 @@
             <div class="column right">
               <h3>详解</h3>
               <ul class="content-list">
-                <li v-for="(item, index) in rightColumn" :key="index" class="content-item">
+                <li
+                  v-for="(item, index) in rightColumn"
+                  :key="index"
+                  class="content-item"
+                >
                   {{ item }}
                 </li>
               </ul>
@@ -51,8 +81,15 @@
         <template v-else-if="slide.layout === 'image-text'">
           <div class="image-text">
             <div class="text-content">
-              <ul v-if="slide.content && slide.content.length > 0" class="content-list">
-                <li v-for="(item, index) in slide.content" :key="index" class="content-item">
+              <ul
+                v-if="slide.content && slide.content.length > 0"
+                class="content-list"
+              >
+                <li
+                  v-for="(item, index) in slide.content"
+                  :key="index"
+                  class="content-item"
+                >
                   {{ item }}
                 </li>
               </ul>
@@ -67,7 +104,11 @@
         <!-- 标题居中布局 -->
         <template v-else-if="slide.layout === 'title-center'">
           <div class="title-center">
-            <p v-for="(item, index) in slide.content" :key="index" class="center-text">
+            <p
+              v-for="(item, index) in slide.content"
+              :key="index"
+              class="center-text"
+            >
               {{ item }}
             </p>
           </div>
@@ -81,8 +122,12 @@
               :key="index"
               class="timeline-item"
             >
-              <div class="timeline-marker">{{ index + 1 }}</div>
-              <div class="timeline-content">{{ item }}</div>
+              <div class="timeline-marker">
+                {{ index + 1 }}
+              </div>
+              <div class="timeline-content">
+                {{ item }}
+              </div>
             </div>
           </div>
         </template>
@@ -91,7 +136,10 @@
 
     <!-- 备注区域 -->
     <transition name="slide-down">
-      <div v-if="showNotes && slide.notes" class="slide-notes">
+      <div
+        v-if="showNotes && slide.notes"
+        class="slide-notes"
+      >
         <div class="notes-header">
           <el-icon><Document /></el-icon>
           <span>演讲者备注</span>

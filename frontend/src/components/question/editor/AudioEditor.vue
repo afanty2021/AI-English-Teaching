@@ -11,7 +11,10 @@
         :on-error="handleUploadError"
         accept="audio/*"
       >
-        <el-button type="primary" :icon="Upload">
+        <el-button
+          type="primary"
+          :icon="Upload"
+        >
           点击上传音频
         </el-button>
         <template #tip>
@@ -21,14 +24,26 @@
         </template>
       </el-upload>
 
-      <div v-if="audioUrl" class="audio-preview">
+      <div
+        v-if="audioUrl"
+        class="audio-preview"
+      >
         <div class="preview-header">
           <span>音频预览</span>
-          <el-button link type="danger" :icon="Delete" @click="handleRemoveAudio">
+          <el-button
+            link
+            type="danger"
+            :icon="Delete"
+            @click="handleRemoveAudio"
+          >
             删除
           </el-button>
         </div>
-        <audio :src="audioUrl" controls style="width: 100%; max-width: 500px;">
+        <audio
+          :src="audioUrl"
+          controls
+          style="width: 100%; max-width: 500px;"
+        >
           您的浏览器不支持音频播放
         </audio>
       </div>
@@ -42,7 +57,9 @@
         placeholder="或输入音频文件URL"
         @input="handleUrlChange"
       >
-        <template #prepend>URL</template>
+        <template #prepend>
+          URL
+        </template>
       </el-input>
     </div>
   </div>

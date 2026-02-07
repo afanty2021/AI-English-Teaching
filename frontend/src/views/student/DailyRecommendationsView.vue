@@ -12,7 +12,10 @@
         </p>
       </div>
       <div class="header-actions">
-        <el-button @click="refreshRecommendations" :loading="loading">
+        <el-button
+          :loading="loading"
+          @click="refreshRecommendations"
+        >
           <el-icon><Refresh /></el-icon>
           刷新推荐
         </el-button>
@@ -20,7 +23,10 @@
     </div>
 
     <!-- 学生画像概览 -->
-    <el-card class="profile-card" v-if="studentProfile">
+    <el-card
+      v-if="studentProfile"
+      class="profile-card"
+    >
       <template #header>
         <div class="card-header">
           <span>学习画像</span>
@@ -29,35 +35,55 @@
       <div class="profile-content">
         <div class="profile-item">
           <label>当前水平：</label>
-          <el-tag type="primary">{{ studentProfile.current_cefr_level || '未评估' }}</el-tag>
+          <el-tag type="primary">
+            {{ studentProfile.current_cefr_level || '未评估' }}
+          </el-tag>
         </div>
         <div class="profile-item">
           <label>目标考试：</label>
-          <el-tag type="success">{{ studentProfile.target_exam || '无' }}</el-tag>
+          <el-tag type="success">
+            {{ studentProfile.target_exam || '无' }}
+          </el-tag>
         </div>
         <div class="profile-item">
           <label>目标分数：</label>
-          <el-tag type="warning">{{ studentProfile.target_score || '未设置' }}</el-tag>
+          <el-tag type="warning">
+            {{ studentProfile.target_score || '未设置' }}
+          </el-tag>
         </div>
       </div>
     </el-card>
 
     <!-- 加载状态 -->
-    <div v-if="loading" class="loading-container">
-      <el-skeleton :rows="8" animated />
+    <div
+      v-if="loading"
+      class="loading-container"
+    >
+      <el-skeleton
+        :rows="8"
+        animated
+      />
     </div>
 
     <!-- 推荐内容 -->
-    <div v-else class="recommendations-content">
+    <div
+      v-else
+      class="recommendations-content"
+    >
       <!-- 阅读推荐 -->
-      <el-card class="recommendation-section" v-if="recommendations.reading?.length">
+      <el-card
+        v-if="recommendations.reading?.length"
+        class="recommendation-section"
+      >
         <template #header>
           <div class="section-header">
             <h3>
               <el-icon><Document /></el-icon>
               阅读推荐 ({{ recommendations.reading.length }})
             </h3>
-            <el-tag type="info">建议用时：{{ getReadingTime(recommendations.reading) }}分钟</el-tag>
+            <el-tag type="info">
+              建议用时：{{ getReadingTime(recommendations.reading) }}分钟
+            </el-tag>
           </div>
         </template>
         <div class="recommendation-list">
@@ -67,23 +93,47 @@
             class="recommendation-item"
           >
             <div class="item-header">
-              <h4 class="item-title">{{ item.title }}</h4>
+              <h4 class="item-title">
+                {{ item.title }}
+              </h4>
               <div class="item-meta">
-                <el-tag size="small">{{ item.difficulty_level }}</el-tag>
-                <el-tag size="small" type="info">{{ item.word_count }}词</el-tag>
-                <el-tag size="small" type="success" v-if="item.topic">{{ item.topic }}</el-tag>
+                <el-tag size="small">
+                  {{ item.difficulty_level }}
+                </el-tag>
+                <el-tag
+                  size="small"
+                  type="info"
+                >
+                  {{ item.word_count }}词
+                </el-tag>
+                <el-tag
+                  v-if="item.topic"
+                  size="small"
+                  type="success"
+                >
+                  {{ item.topic }}
+                </el-tag>
               </div>
             </div>
-            <p class="item-description">{{ item.description }}</p>
+            <p class="item-description">
+              {{ item.description }}
+            </p>
             <div class="item-reason">
               <el-icon><Star /></el-icon>
               <span>{{ item.recommendation_reason }}</span>
             </div>
             <div class="item-actions">
-              <el-button type="primary" size="small" @click="startReading(item)">
+              <el-button
+                type="primary"
+                size="small"
+                @click="startReading(item)"
+              >
                 开始阅读
               </el-button>
-              <el-button size="small" @click="previewContent(item)">
+              <el-button
+                size="small"
+                @click="previewContent(item)"
+              >
                 预览
               </el-button>
             </div>
@@ -92,14 +142,19 @@
       </el-card>
 
       <!-- 听力推荐 -->
-      <el-card class="recommendation-section" v-if="recommendations.listening?.length">
+      <el-card
+        v-if="recommendations.listening?.length"
+        class="recommendation-section"
+      >
         <template #header>
           <div class="section-header">
             <h3>
               <el-icon><Headphone /></el-icon>
               听力推荐 ({{ recommendations.listening.length }})
             </h3>
-            <el-tag type="info">建议用时：{{ getListeningTime(recommendations.listening) }}分钟</el-tag>
+            <el-tag type="info">
+              建议用时：{{ getListeningTime(recommendations.listening) }}分钟
+            </el-tag>
           </div>
         </template>
         <div class="recommendation-list">
@@ -109,15 +164,30 @@
             class="recommendation-item"
           >
             <div class="item-header">
-              <h4 class="item-title">{{ item.title }}</h4>
+              <h4 class="item-title">
+                {{ item.title }}
+              </h4>
               <div class="item-meta">
-                <el-tag size="small">{{ item.difficulty_level }}</el-tag>
-                <el-tag size="small" type="info">{{ item.duration }}秒</el-tag>
+                <el-tag size="small">
+                  {{ item.difficulty_level }}
+                </el-tag>
+                <el-tag
+                  size="small"
+                  type="info"
+                >
+                  {{ item.duration }}秒
+                </el-tag>
               </div>
             </div>
-            <p class="item-description">{{ item.description }}</p>
+            <p class="item-description">
+              {{ item.description }}
+            </p>
             <div class="item-actions">
-              <el-button type="primary" size="small" @click="startListening(item)">
+              <el-button
+                type="primary"
+                size="small"
+                @click="startListening(item)"
+              >
                 开始听力
               </el-button>
             </div>
@@ -126,14 +196,19 @@
       </el-card>
 
       <!-- 词汇推荐 -->
-      <el-card class="recommendation-section" v-if="recommendations.vocabulary?.length">
+      <el-card
+        v-if="recommendations.vocabulary?.length"
+        class="recommendation-section"
+      >
         <template #header>
           <div class="section-header">
             <h3>
               <el-icon><EditPen /></el-icon>
               词汇推荐 ({{ recommendations.vocabulary.length }})
             </h3>
-            <el-tag type="info">{{ recommendations.vocabulary.length }}个词汇</el-tag>
+            <el-tag type="info">
+              {{ recommendations.vocabulary.length }}个词汇
+            </el-tag>
           </div>
         </template>
         <div class="vocabulary-grid">
@@ -142,11 +217,22 @@
             :key="item.vocabulary_id"
             class="vocabulary-item"
           >
-            <div class="word">{{ item.word }}</div>
-            <div class="phonetic">{{ item.phonetic }}</div>
-            <div class="definition">{{ item.definition }}</div>
-            <div class="example">{{ item.example }}</div>
-            <el-button size="small" @click="markVocabularyKnown(item)">
+            <div class="word">
+              {{ item.word }}
+            </div>
+            <div class="phonetic">
+              {{ item.phonetic }}
+            </div>
+            <div class="definition">
+              {{ item.definition }}
+            </div>
+            <div class="example">
+              {{ item.example }}
+            </div>
+            <el-button
+              size="small"
+              @click="markVocabularyKnown(item)"
+            >
               已掌握
             </el-button>
           </div>
@@ -154,14 +240,19 @@
       </el-card>
 
       <!-- 语法推荐 -->
-      <el-card class="recommendation-section" v-if="recommendations.grammar?.length">
+      <el-card
+        v-if="recommendations.grammar?.length"
+        class="recommendation-section"
+      >
         <template #header>
           <div class="section-header">
             <h3>
               <el-icon><Edit /></el-icon>
               语法推荐 ({{ recommendations.grammar.length }})
             </h3>
-            <el-tag type="info">{{ recommendations.grammar.length }}个语法点</el-tag>
+            <el-tag type="info">
+              {{ recommendations.grammar.length }}个语法点
+            </el-tag>
           </div>
         </template>
         <div class="grammar-list">
@@ -170,14 +261,26 @@
             :key="item.grammar_point"
             class="grammar-item"
           >
-            <h4 class="grammar-title">{{ item.grammar_point }}</h4>
-            <p class="grammar-rule">{{ item.rule }}</p>
+            <h4 class="grammar-title">
+              {{ item.grammar_point }}
+            </h4>
+            <p class="grammar-rule">
+              {{ item.rule }}
+            </p>
             <div class="grammar-examples">
-              <div v-for="example in item.examples" :key="example" class="example-item">
+              <div
+                v-for="example in item.examples"
+                :key="example"
+                class="example-item"
+              >
                 {{ example }}
               </div>
             </div>
-            <el-button type="primary" size="small" @click="startGrammarPractice(item)">
+            <el-button
+              type="primary"
+              size="small"
+              @click="startGrammarPractice(item)"
+            >
               练习语法
             </el-button>
           </div>
@@ -185,7 +288,10 @@
       </el-card>
 
       <!-- 口语推荐 -->
-      <el-card class="recommendation-section" v-if="recommendations.speaking">
+      <el-card
+        v-if="recommendations.speaking"
+        class="recommendation-section"
+      >
         <template #header>
           <div class="section-header">
             <h3>
@@ -200,7 +306,10 @@
             <p>难度：{{ recommendations.speaking.level }}</p>
             <p>{{ recommendations.speaking.description }}</p>
           </div>
-          <el-button type="primary" @click="startSpeaking(recommendations.speaking)">
+          <el-button
+            type="primary"
+            @click="startSpeaking(recommendations.speaking)"
+          >
             开始对话
           </el-button>
         </div>
@@ -211,7 +320,10 @@
         v-if="!hasAnyRecommendations"
         description="暂无推荐内容"
       >
-        <el-button type="primary" @click="refreshRecommendations">
+        <el-button
+          type="primary"
+          @click="refreshRecommendations"
+        >
           刷新推荐
         </el-button>
       </el-empty>
@@ -223,9 +335,15 @@
       title="推荐反馈"
       width="400px"
     >
-      <el-form :model="feedbackForm" label-width="80px">
+      <el-form
+        :model="feedbackForm"
+        label-width="80px"
+      >
         <el-form-item label="满意度">
-          <el-rate v-model="feedbackForm.satisfaction" :max="5" />
+          <el-rate
+            v-model="feedbackForm.satisfaction"
+            :max="5"
+          />
         </el-form-item>
         <el-form-item label="理由">
           <el-input
@@ -237,8 +355,15 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="feedbackDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitFeedback">提交</el-button>
+        <el-button @click="feedbackDialogVisible = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="submitFeedback"
+        >
+          提交
+        </el-button>
       </template>
     </el-dialog>
   </div>

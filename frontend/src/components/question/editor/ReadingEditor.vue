@@ -4,7 +4,9 @@
     <div class="passage-section">
       <div class="section-header">
         <h4>文章内容</h4>
-        <el-tag size="small">{{ wordCount }} / 800 词</el-tag>
+        <el-tag size="small">
+          {{ wordCount }} / 800 词
+        </el-tag>
       </div>
       <el-input
         v-model="passage"
@@ -18,9 +20,16 @@
     </div>
 
     <!-- 文章预览区 -->
-    <div v-if="passage" class="passage-preview">
-      <div class="preview-header">文章预览</div>
-      <div class="preview-content">{{ passage }}</div>
+    <div
+      v-if="passage"
+      class="passage-preview"
+    >
+      <div class="preview-header">
+        文章预览
+      </div>
+      <div class="preview-content">
+        {{ passage }}
+      </div>
     </div>
   </div>
 </template>

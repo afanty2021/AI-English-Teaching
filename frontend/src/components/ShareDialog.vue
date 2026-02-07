@@ -6,9 +6,16 @@
     :close-on-click-modal="false"
     @close="handleClose"
   >
-    <el-form :model="form" label-width="80px" ref="formRef">
+    <el-form
+      ref="formRef"
+      :model="form"
+      label-width="80px"
+    >
       <!-- 选择接收教师 -->
-      <el-form-item label="分享给" required>
+      <el-form-item
+        label="分享给"
+        required
+      >
         <el-select
           v-model="form.shared_to"
           filterable
@@ -34,7 +41,10 @@
       </el-form-item>
 
       <!-- 分享权限 -->
-      <el-form-item label="权限" required>
+      <el-form-item
+        label="权限"
+        required
+      >
         <el-radio-group v-model="form.permission">
           <el-radio
             v-for="perm in SHARE_PERMISSIONS"
@@ -61,8 +71,12 @@
       <!-- 有效期 -->
       <el-form-item label="有效期">
         <el-radio-group v-model="expiresType">
-          <el-radio label="">永久有效</el-radio>
-          <el-radio label="custom">自定义天数</el-radio>
+          <el-radio label="">
+            永久有效
+          </el-radio>
+          <el-radio label="custom">
+            自定义天数
+          </el-radio>
         </el-radio-group>
         <el-input-number
           v-if="expiresType === 'custom'"
@@ -76,8 +90,14 @@
     </el-form>
 
     <template #footer>
-      <el-button @click="handleClose">取消</el-button>
-      <el-button type="primary" @click="handleShare" :loading="sharing">
+      <el-button @click="handleClose">
+        取消
+      </el-button>
+      <el-button
+        type="primary"
+        :loading="sharing"
+        @click="handleShare"
+      >
         分享
       </el-button>
     </template>

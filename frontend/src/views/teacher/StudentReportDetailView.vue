@@ -15,7 +15,10 @@
           <el-icon><ArrowLeft /></el-icon>
           返回
         </el-button>
-        <el-button @click="exportReport" :loading="exporting">
+        <el-button
+          :loading="exporting"
+          @click="exportReport"
+        >
           <el-icon><Download /></el-icon>
           导出报告
         </el-button>
@@ -23,9 +26,16 @@
     </div>
 
     <!-- 学生信息 -->
-    <el-card class="student-info-card" shadow="never" v-if="studentInfo">
+    <el-card
+      v-if="studentInfo"
+      class="student-info-card"
+      shadow="never"
+    >
       <div class="student-profile">
-        <el-avatar :size="60" :style="{ backgroundColor: '#409EFF' }">
+        <el-avatar
+          :size="60"
+          :style="{ backgroundColor: '#409EFF' }"
+        >
           {{ studentInfo.student_name.charAt(0) }}
         </el-avatar>
         <div class="student-details">
@@ -39,7 +49,10 @@
               <el-icon><OfficeBuilding /></el-icon>
               班级：{{ studentInfo.class_name }}
             </span>
-            <span class="info-item" v-if="studentInfo.grade">
+            <span
+              v-if="studentInfo.grade"
+              class="info-item"
+            >
               <el-icon><Calendar /></el-icon>
               年级：{{ studentInfo.grade }}
             </span>
@@ -49,9 +62,15 @@
     </el-card>
 
     <!-- 报告内容 -->
-    <div v-if="report" class="report-content">
+    <div
+      v-if="report"
+      class="report-content"
+    >
       <!-- 报告基本信息 -->
-      <el-card class="report-header" shadow="never">
+      <el-card
+        class="report-header"
+        shadow="never"
+      >
         <template #header>
           <div class="card-header">
             <div class="header-left">
@@ -68,56 +87,102 @@
             </div>
           </div>
         </template>
-        <p v-if="report.description" class="report-description">{{ report.description }}</p>
+        <p
+          v-if="report.description"
+          class="report-description"
+        >
+          {{ report.description }}
+        </p>
       </el-card>
 
       <!-- 学习统计 -->
-      <el-card v-if="report.statistics" class="statistics-card" shadow="never">
+      <el-card
+        v-if="report.statistics"
+        class="statistics-card"
+        shadow="never"
+      >
         <template #header>
           <h3><el-icon><TrendCharts /></el-icon> 学习统计</h3>
         </template>
         <div class="statistics-grid">
           <div class="stat-item">
-            <div class="stat-value">{{ report.statistics.total_practices }}</div>
-            <div class="stat-label">总练习数</div>
+            <div class="stat-value">
+              {{ report.statistics.total_practices }}
+            </div>
+            <div class="stat-label">
+              总练习数
+            </div>
           </div>
           <div class="stat-item">
-            <div class="stat-value">{{ report.statistics.completed_practices }}</div>
-            <div class="stat-label">已完成</div>
+            <div class="stat-value">
+              {{ report.statistics.completed_practices }}
+            </div>
+            <div class="stat-label">
+              已完成
+            </div>
           </div>
           <div class="stat-item">
-            <div class="stat-value">{{ (report.statistics.completion_rate * 100).toFixed(1) }}%</div>
-            <div class="stat-label">完成率</div>
+            <div class="stat-value">
+              {{ (report.statistics.completion_rate * 100).toFixed(1) }}%
+            </div>
+            <div class="stat-label">
+              完成率
+            </div>
           </div>
           <div class="stat-item">
-            <div class="stat-value">{{ (report.statistics.avg_correct_rate * 100).toFixed(1) }}%</div>
-            <div class="stat-label">平均正确率</div>
+            <div class="stat-value">
+              {{ (report.statistics.avg_correct_rate * 100).toFixed(1) }}%
+            </div>
+            <div class="stat-label">
+              平均正确率
+            </div>
           </div>
           <div class="stat-item">
-            <div class="stat-value">{{ report.statistics.total_duration_hours.toFixed(1) }}h</div>
-            <div class="stat-label">总学习时长</div>
+            <div class="stat-value">
+              {{ report.statistics.total_duration_hours.toFixed(1) }}h
+            </div>
+            <div class="stat-label">
+              总学习时长
+            </div>
           </div>
           <div class="stat-item">
-            <div class="stat-value">{{ report.statistics.total_mistakes }}</div>
-            <div class="stat-label">错题总数</div>
+            <div class="stat-value">
+              {{ report.statistics.total_mistakes }}
+            </div>
+            <div class="stat-label">
+              错题总数
+            </div>
           </div>
         </div>
       </el-card>
 
       <!-- 能力雷达图 -->
-      <el-card v-if="report.ability_analysis?.ability_radar?.length" class="ability-card" shadow="never">
+      <el-card
+        v-if="report.ability_analysis?.ability_radar?.length"
+        class="ability-card"
+        shadow="never"
+      >
         <template #header>
           <h3><el-icon><PieChart /></el-icon> 能力分析</h3>
         </template>
         <div class="ability-content">
-          <div ref="radarChartRef" class="radar-chart"></div>
+          <div
+            ref="radarChartRef"
+            class="radar-chart"
+          ></div>
           <div class="ability-summary">
-            <div v-if="report.ability_analysis.strongest_area" class="ability-item strong">
+            <div
+              v-if="report.ability_analysis.strongest_area"
+              class="ability-item strong"
+            >
               <strong>最强项：</strong>
               {{ report.ability_analysis.strongest_area.name }}
               ({{ report.ability_analysis.strongest_area.level }}分)
             </div>
-            <div v-if="report.ability_analysis.weakest_area" class="ability-item weak">
+            <div
+              v-if="report.ability_analysis.weakest_area"
+              class="ability-item weak"
+            >
               <strong>待提升：</strong>
               {{ report.ability_analysis.weakest_area.name }}
               ({{ report.ability_analysis.weakest_area.level }}分)
@@ -127,7 +192,11 @@
       </el-card>
 
       <!-- 薄弱点分析 -->
-      <el-card v-if="report.weak_points" class="weak-points-card" shadow="never">
+      <el-card
+        v-if="report.weak_points"
+        class="weak-points-card"
+        shadow="never"
+      >
         <template #header>
           <h3><el-icon><Warning /></el-icon> 薄弱点分析</h3>
         </template>
@@ -143,15 +212,25 @@
           <div class="weak-points-grid">
             <div class="weak-points-list">
               <h4>高频薄弱点</h4>
-              <div class="weak-point-item" v-for="wp in report.weak_points.top_weak_points" :key="wp.point">
+              <div
+                v-for="wp in report.weak_points.top_weak_points"
+                :key="wp.point"
+                class="weak-point-item"
+              >
                 <span>{{ wp.point }}</span>
-                <el-tag size="small">{{ wp.count }}次</el-tag>
+                <el-tag size="small">
+                  {{ wp.count }}次
+                </el-tag>
               </div>
             </div>
 
             <div class="topic-distribution">
               <h4>按主题分布</h4>
-              <div class="topic-item" v-for="(count, topic) in report.weak_points.by_topic" :key="topic">
+              <div
+                v-for="(count, topic) in report.weak_points.by_topic"
+                :key="topic"
+                class="topic-item"
+              >
                 <span>{{ topic }}</span>
                 <el-progress
                   :percentage="(count / report.weak_points.total_unmastered) * 100"
@@ -166,12 +245,19 @@
       </el-card>
 
       <!-- 学习建议 -->
-      <el-card v-if="report.recommendations" class="recommendations-card" shadow="never">
+      <el-card
+        v-if="report.recommendations"
+        class="recommendations-card"
+        shadow="never"
+      >
         <template #header>
           <h3><el-icon><Lightbulb /></el-icon> 学习建议</h3>
         </template>
         <div class="recommendations-content">
-          <div v-if="report.recommendations.rule_based?.length" class="recommendation-section">
+          <div
+            v-if="report.recommendations.rule_based?.length"
+            class="recommendation-section"
+          >
             <h4>系统建议</h4>
             <div class="recommendation-list">
               <div
@@ -179,7 +265,10 @@
                 :key="rec.title"
                 class="recommendation-item"
               >
-                <el-tag :type="getPriorityColor(rec.priority)" size="small">
+                <el-tag
+                  :type="getPriorityColor(rec.priority)"
+                  size="small"
+                >
                   {{ getPriorityText(rec.priority) }}
                 </el-tag>
                 <div class="rec-content">
@@ -190,7 +279,10 @@
             </div>
           </div>
 
-          <div v-if="report.recommendations.ai_generated?.length" class="recommendation-section">
+          <div
+            v-if="report.recommendations.ai_generated?.length"
+            class="recommendation-section"
+          >
             <h4>AI个性化建议</h4>
             <div class="recommendation-list">
               <div
@@ -198,7 +290,10 @@
                 :key="rec.title"
                 class="recommendation-item ai"
               >
-                <el-tag type="success" size="small">
+                <el-tag
+                  type="success"
+                  size="small"
+                >
                   AI ({{ (rec.confidence * 100).toFixed(0) }}%)
                 </el-tag>
                 <div class="rec-content">
@@ -212,7 +307,11 @@
       </el-card>
 
       <!-- AI洞察 -->
-      <el-card v-if="report.ai_insights" class="ai-insights-card" shadow="never">
+      <el-card
+        v-if="report.ai_insights"
+        class="ai-insights-card"
+        shadow="never"
+      >
         <template #header>
           <h3><el-icon><Robot /></el-icon> AI洞察</h3>
         </template>
@@ -223,12 +322,21 @@
     </div>
 
     <!-- 加载状态 -->
-    <div v-else-if="loading" class="loading">
-      <el-skeleton :rows="10" animated />
+    <div
+      v-else-if="loading"
+      class="loading"
+    >
+      <el-skeleton
+        :rows="10"
+        animated
+      />
     </div>
 
     <!-- 空状态 -->
-    <el-empty v-else description="报告不存在或已被删除" />
+    <el-empty
+      v-else
+      description="报告不存在或已被删除"
+    />
   </div>
 </template>
 

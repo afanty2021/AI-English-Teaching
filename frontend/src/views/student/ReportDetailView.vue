@@ -1,20 +1,34 @@
 <template>
   <div class="report-detail-view">
     <!-- 加载状态 -->
-    <div v-if="loading" class="loading-container">
-      <el-skeleton :rows="5" animated />
+    <div
+      v-if="loading"
+      class="loading-container"
+    >
+      <el-skeleton
+        :rows="5"
+        animated
+      />
     </div>
 
     <!-- 报告内容 -->
-    <div v-else-if="report" class="report-content">
+    <div
+      v-else-if="report"
+      class="report-content"
+    >
       <!-- 头部 -->
       <div class="report-header">
         <div class="header-left">
-          <el-button link @click="goBack">
+          <el-button
+            link
+            @click="goBack"
+          >
             <el-icon><ArrowLeft /></el-icon>
             返回列表
           </el-button>
-          <h1 class="report-title">{{ report.title || '学习报告' }}</h1>
+          <h1 class="report-title">
+            {{ report.title || '学习报告' }}
+          </h1>
           <div class="report-meta">
             <el-tag :type="getReportTypeColor(report.report_type)">
               {{ getReportTypeName(report.report_type) }}
@@ -26,15 +40,25 @@
           </div>
         </div>
         <div class="header-actions">
-          <el-button @click="handleExport('pdf')" :loading="exporting">
+          <el-button
+            :loading="exporting"
+            @click="handleExport('pdf')"
+          >
             <el-icon><Download /></el-icon>
             导出 PDF
           </el-button>
-          <el-button @click="handleExport('image')" :loading="exporting">
+          <el-button
+            :loading="exporting"
+            @click="handleExport('image')"
+          >
             <el-icon><Picture /></el-icon>
             导出图片
           </el-button>
-          <el-button type="danger" plain @click="confirmDelete">
+          <el-button
+            type="danger"
+            plain
+            @click="confirmDelete"
+          >
             <el-icon><Delete /></el-icon>
             删除
           </el-button>
@@ -43,32 +67,50 @@
 
       <!-- Tab 导航 -->
       <div class="tab-navigation">
-        <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-          <el-tab-pane label="概览" name="overview">
+        <el-tabs
+          v-model="activeTab"
+          @tab-change="handleTabChange"
+        >
+          <el-tab-pane
+            label="概览"
+            name="overview"
+          >
             <template #label>
               <el-icon><DataAnalysis /></el-icon>
               <span>概览</span>
             </template>
           </el-tab-pane>
-          <el-tab-pane label="学习趋势" name="trends">
+          <el-tab-pane
+            label="学习趋势"
+            name="trends"
+          >
             <template #label>
               <el-icon><TrendCharts /></el-icon>
               <span>学习趋势</span>
             </template>
           </el-tab-pane>
-          <el-tab-pane label="能力分析" name="abilities">
+          <el-tab-pane
+            label="能力分析"
+            name="abilities"
+          >
             <template #label>
               <el-icon><Odometer /></el-icon>
               <span>能力分析</span>
             </template>
           </el-tab-pane>
-          <el-tab-pane label="知识点" name="knowledge">
+          <el-tab-pane
+            label="知识点"
+            name="knowledge"
+          >
             <template #label>
               <el-icon><Grid /></el-icon>
               <span>知识点</span>
             </template>
           </el-tab-pane>
-          <el-tab-pane label="建议" name="recommendations">
+          <el-tab-pane
+            label="建议"
+            name="recommendations"
+          >
             <template #label>
               <el-icon><ChatLineRound /></el-icon>
               <span>学习建议</span>
@@ -80,21 +122,45 @@
       <!-- Tab 内容 -->
       <div class="tab-content">
         <!-- 概览 Tab -->
-        <div v-show="activeTab === 'overview'" class="tab-pane overview-tab">
+        <div
+          v-show="activeTab === 'overview'"
+          class="tab-pane overview-tab"
+        >
           <!-- 学习统计卡片 -->
-          <el-card class="stats-section" shadow="never">
+          <el-card
+            class="stats-section"
+            shadow="never"
+          >
             <template #header>
               <h3>学习概况</h3>
             </template>
-            <el-row :gutter="20" v-if="report.statistics">
-              <el-col :xs="12" :sm="6" v-for="stat in overviewStats" :key="stat.label">
+            <el-row
+              v-if="report.statistics"
+              :gutter="20"
+            >
+              <el-col
+                v-for="stat in overviewStats"
+                :key="stat.label"
+                :xs="12"
+                :sm="6"
+              >
                 <div class="stat-card">
-                  <div class="stat-icon" :style="{ background: stat.bgColor }">
-                    <el-icon :color="stat.color" v-html="stat.icon" />
+                  <div
+                    class="stat-icon"
+                    :style="{ background: stat.bgColor }"
+                  >
+                    <el-icon
+                      :color="stat.color"
+                      v-html="stat.icon"
+                    />
                   </div>
                   <div class="stat-content">
-                    <div class="stat-value">{{ stat.value }}</div>
-                    <div class="stat-label">{{ stat.label }}</div>
+                    <div class="stat-value">
+                      {{ stat.value }}
+                    </div>
+                    <div class="stat-label">
+                      {{ stat.label }}
+                    </div>
                   </div>
                 </div>
               </el-col>
@@ -102,26 +168,45 @@
           </el-card>
 
           <!-- 能力雷达图（简化版） -->
-          <el-card class="ability-preview-section" shadow="never" v-if="report.ability_analysis">
+          <el-card
+            v-if="report.ability_analysis"
+            class="ability-preview-section"
+            shadow="never"
+          >
             <template #header>
               <div class="section-header">
                 <h3>能力分布</h3>
-                <el-button text type="primary" @click="activeTab = 'abilities'">
+                <el-button
+                  text
+                  type="primary"
+                  @click="activeTab = 'abilities'"
+                >
                   查看详情 <el-icon><ArrowRight /></el-icon>
                 </el-button>
               </div>
             </template>
             <div class="radar-mini-container">
-              <div ref="radarMiniRef" class="radar-mini-chart"></div>
+              <div
+                ref="radarMiniRef"
+                class="radar-mini-chart"
+              ></div>
             </div>
           </el-card>
 
           <!-- 薄弱点预览 -->
-          <el-card class="weak-preview-section" shadow="never" v-if="report.weak_points?.top_weak_points?.length">
+          <el-card
+            v-if="report.weak_points?.top_weak_points?.length"
+            class="weak-preview-section"
+            shadow="never"
+          >
             <template #header>
               <div class="section-header">
                 <h3>薄弱知识点</h3>
-                <el-button text type="primary" @click="activeTab = 'knowledge'">
+                <el-button
+                  text
+                  type="primary"
+                  @click="activeTab = 'knowledge'"
+                >
                   查看详情 <el-icon><ArrowRight /></el-icon>
                 </el-button>
               </div>
@@ -141,7 +226,10 @@
         </div>
 
         <!-- 学习趋势 Tab -->
-        <div v-show="activeTab === 'trends'" class="tab-pane trends-tab">
+        <div
+          v-show="activeTab === 'trends'"
+          class="tab-pane trends-tab"
+        >
           <LearningTrendChart
             :student-id="report.student_id"
             :report-id="report.id"
@@ -152,7 +240,10 @@
         </div>
 
         <!-- 能力分析 Tab -->
-        <div v-show="activeTab === 'abilities'" class="tab-pane abilities-tab">
+        <div
+          v-show="activeTab === 'abilities'"
+          class="tab-pane abilities-tab"
+        >
           <AbilityRadarChart
             :student-id="report.student_id"
             :report-id="report.id"
@@ -164,7 +255,10 @@
         </div>
 
         <!-- 知识点 Tab -->
-        <div v-show="activeTab === 'knowledge'" class="tab-pane knowledge-tab">
+        <div
+          v-show="activeTab === 'knowledge'"
+          class="tab-pane knowledge-tab"
+        >
           <KnowledgeHeatmap
             :student-id="report.student_id"
             :report-id="report.id"
@@ -173,9 +267,16 @@
         </div>
 
         <!-- 学习建议 Tab -->
-        <div v-show="activeTab === 'recommendations'" class="tab-pane recommendations-tab">
+        <div
+          v-show="activeTab === 'recommendations'"
+          class="tab-pane recommendations-tab"
+        >
           <!-- AI 洞察 -->
-          <el-card class="ai-insights-section" shadow="never" v-if="report.ai_insights">
+          <el-card
+            v-if="report.ai_insights"
+            class="ai-insights-section"
+            shadow="never"
+          >
             <template #header>
               <h3>
                 <el-icon><MagicStick /></el-icon>
@@ -188,11 +289,17 @@
           </el-card>
 
           <!-- 学习建议列表 -->
-          <el-card class="recommendations-section" shadow="never" v-if="report.recommendations">
+          <el-card
+            v-if="report.recommendations"
+            class="recommendations-section"
+            shadow="never"
+          >
             <template #header>
               <div class="section-header">
                 <h3>学习建议</h3>
-                <el-tag type="info">共 {{ report.recommendations.total_count }} 条</el-tag>
+                <el-tag type="info">
+                  共 {{ report.recommendations.total_count }} 条
+                </el-tag>
               </div>
             </template>
 
@@ -204,13 +311,25 @@
                 :class="`priority-${rec.priority}`"
               >
                 <div class="recommendation-header">
-                  <el-tag :type="getPriorityType(rec.priority)" size="small">
+                  <el-tag
+                    :type="getPriorityType(rec.priority)"
+                    size="small"
+                  >
                     {{ getPriorityName(rec.priority) }}
                   </el-tag>
-                  <el-tag type="info" size="small">{{ rec.category }}</el-tag>
+                  <el-tag
+                    type="info"
+                    size="small"
+                  >
+                    {{ rec.category }}
+                  </el-tag>
                 </div>
-                <h4 class="recommendation-title">{{ rec.title }}</h4>
-                <p class="recommendation-description">{{ rec.description }}</p>
+                <h4 class="recommendation-title">
+                  {{ rec.title }}
+                </h4>
+                <p class="recommendation-description">
+                  {{ rec.description }}
+                </p>
               </div>
             </div>
 
@@ -218,9 +337,15 @@
             <el-divider />
             <div class="priority-stats">
               <span>建议分布：</span>
-              <el-tag type="danger">高优先级: {{ report.recommendations.priority_count.high }}</el-tag>
-              <el-tag type="warning">中优先级: {{ report.recommendations.priority_count.medium }}</el-tag>
-              <el-tag type="success">低优先级: {{ report.recommendations.priority_count.low }}</el-tag>
+              <el-tag type="danger">
+                高优先级: {{ report.recommendations.priority_count.high }}
+              </el-tag>
+              <el-tag type="warning">
+                中优先级: {{ report.recommendations.priority_count.medium }}
+              </el-tag>
+              <el-tag type="success">
+                低优先级: {{ report.recommendations.priority_count.low }}
+              </el-tag>
             </div>
           </el-card>
         </div>
@@ -228,7 +353,10 @@
     </div>
 
     <!-- 错误状态 -->
-    <el-empty v-else description="报告不存在或已被删除" />
+    <el-empty
+      v-else
+      description="报告不存在或已被删除"
+    />
 
     <!-- 导出进度组件 -->
     <ExportProgress

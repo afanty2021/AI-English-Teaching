@@ -18,7 +18,10 @@
     </div>
 
     <!-- 提交后显示解析 -->
-    <div v-if="showResult" class="result-section">
+    <div
+      v-if="showResult"
+      class="result-section"
+    >
       <el-alert
         :type="isCorrect ? 'success' : 'error'"
         :closable="false"
@@ -30,7 +33,10 @@
         <div class="correct-answer">
           <strong>正确答案：</strong>{{ question.correct_answer }}
         </div>
-        <div v-if="question.explanation" class="explanation">
+        <div
+          v-if="question.explanation"
+          class="explanation"
+        >
           <strong>解析：</strong>{{ question.explanation }}
         </div>
       </el-alert>

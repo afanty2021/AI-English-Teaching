@@ -12,7 +12,10 @@
         label-width="100px"
         @submit.prevent="handleRegister"
       >
-        <el-form-item label="用户名" prop="username">
+        <el-form-item
+          label="用户名"
+          prop="username"
+        >
           <el-input
             v-model="formData.username"
             placeholder="请输入用户名"
@@ -20,7 +23,10 @@
           />
         </el-form-item>
 
-        <el-form-item label="邮箱" prop="email">
+        <el-form-item
+          label="邮箱"
+          prop="email"
+        >
           <el-input
             v-model="formData.email"
             type="email"
@@ -29,10 +35,17 @@
           />
         </el-form-item>
 
-        <el-form-item label="角色" prop="role">
+        <el-form-item
+          label="角色"
+          prop="role"
+        >
           <el-radio-group v-model="formData.role">
-            <el-radio-button value="student">学生</el-radio-button>
-            <el-radio-button value="teacher">教师</el-radio-button>
+            <el-radio-button value="student">
+              学生
+            </el-radio-button>
+            <el-radio-button value="teacher">
+              教师
+            </el-radio-button>
           </el-radio-group>
         </el-form-item>
 
@@ -48,7 +61,10 @@
           />
         </el-form-item>
 
-        <el-form-item label="密码" prop="password">
+        <el-form-item
+          label="密码"
+          prop="password"
+        >
           <el-input
             v-model="formData.password"
             type="password"
@@ -58,7 +74,10 @@
           />
         </el-form-item>
 
-        <el-form-item label="确认密码" prop="confirm_password">
+        <el-form-item
+          label="确认密码"
+          prop="confirm_password"
+        >
           <el-input
             v-model="formData.confirm_password"
             type="password"
@@ -83,7 +102,9 @@
         <el-form-item>
           <div class="login-link">
             已有账号？
-            <router-link to="/login">立即登录</router-link>
+            <router-link to="/login">
+              立即登录
+            </router-link>
           </div>
         </el-form-item>
       </el-form>

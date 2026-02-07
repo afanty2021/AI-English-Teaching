@@ -3,29 +3,54 @@
   用于在模板库中展示单个模板的信息
 -->
 <template>
-  <div class="template-card" :class="{ 'is-official': template.is_official }" @click="handleCardClick">
+  <div
+    class="template-card"
+    :class="{ 'is-official': template.is_official }"
+    @click="handleCardClick"
+  >
     <!-- 官方标记 -->
-    <div v-if="template.is_official" class="official-badge">
+    <div
+      v-if="template.is_official"
+      class="official-badge"
+    >
       <el-icon><Star /></el-icon>
       <span>官方</span>
     </div>
 
     <!-- 缩略图区域 -->
     <div class="card-thumbnail">
-      <div v-if="template.thumbnail_url" class="thumbnail-image">
-        <img :src="template.thumbnail_url" :alt="template.name" />
+      <div
+        v-if="template.thumbnail_url"
+        class="thumbnail-image"
+      >
+        <img
+          :src="template.thumbnail_url"
+          :alt="template.name"
+        />
       </div>
-      <div v-else class="thumbnail-placeholder">
-        <el-icon :size="48"><Document /></el-icon>
+      <div
+        v-else
+        class="thumbnail-placeholder"
+      >
+        <el-icon :size="48">
+          <Document />
+        </el-icon>
       </div>
 
       <!-- 悬浮操作按钮 -->
       <div class="card-actions">
-        <el-button type="primary" size="small" @click.stop="handleApply">
+        <el-button
+          type="primary"
+          size="small"
+          @click.stop="handleApply"
+        >
           <el-icon><Plus /></el-icon>
           应用
         </el-button>
-        <el-button size="small" @click.stop="handlePreview">
+        <el-button
+          size="small"
+          @click.stop="handlePreview"
+        >
           <el-icon><View /></el-icon>
           预览
         </el-button>
@@ -36,24 +61,39 @@
     <div class="card-body">
       <!-- 标题和分类 -->
       <div class="card-header">
-        <h3 class="template-name">{{ template.name }}</h3>
-        <el-tag size="small" type="info">{{ template.category_label }}</el-tag>
+        <h3 class="template-name">
+          {{ template.name }}
+        </h3>
+        <el-tag
+          size="small"
+          type="info"
+        >
+          {{ template.category_label }}
+        </el-tag>
       </div>
 
       <!-- 描述 -->
-      <p class="template-description">{{ template.description }}</p>
+      <p class="template-description">
+        {{ template.description }}
+      </p>
 
       <!-- 元信息 -->
       <div class="card-meta">
         <div class="meta-item">
-          <el-tag size="small" :type="getLevelType(template.level)">
+          <el-tag
+            size="small"
+            :type="getLevelType(template.level)"
+          >
             {{ template.level }}
           </el-tag>
           <span class="duration">{{ template.duration }} 分钟</span>
         </div>
 
         <div class="meta-stats">
-          <span v-if="template.rating > 0" class="rating">
+          <span
+            v-if="template.rating > 0"
+            class="rating"
+          >
             <el-icon><StarFilled /></el-icon>
             {{ template.rating.toFixed(1) }}
           </span>
@@ -66,17 +106,44 @@
     </div>
 
     <!-- 更多操作菜单 -->
-    <div v-if="showMoreMenu" class="card-more" @click.stop>
+    <div
+      v-if="showMoreMenu"
+      class="card-more"
+      @click.stop
+    >
       <el-dropdown @command="handleMoreAction">
-        <el-button circle :icon="MoreFilled" size="small" />
+        <el-button
+          circle
+          :icon="MoreFilled"
+          size="small"
+        />
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item command="edit" :icon="Edit">编辑</el-dropdown-item>
-            <el-dropdown-item command="duplicate" :icon="CopyDocument">复制</el-dropdown-item>
-            <el-dropdown-item command="favorite" :icon="isFavorited ? StarFilled : Star">
+            <el-dropdown-item
+              command="edit"
+              :icon="Edit"
+            >
+              编辑
+            </el-dropdown-item>
+            <el-dropdown-item
+              command="duplicate"
+              :icon="CopyDocument"
+            >
+              复制
+            </el-dropdown-item>
+            <el-dropdown-item
+              command="favorite"
+              :icon="isFavorited ? StarFilled : Star"
+            >
               {{ isFavorited ? '取消收藏' : '收藏' }}
             </el-dropdown-item>
-            <el-dropdown-item divided command="delete" :icon="Delete">删除</el-dropdown-item>
+            <el-dropdown-item
+              divided
+              command="delete"
+              :icon="Delete"
+            >
+              删除
+            </el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>

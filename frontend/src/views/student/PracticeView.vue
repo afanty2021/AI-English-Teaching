@@ -17,22 +17,37 @@
             :show-text="false"
           />
           <div class="action-buttons">
-            <el-button @click="handlePause" :icon="VideoPause" circle />
-            <el-button @click="showQuitDialog = true" :icon="Close" circle type="danger" />
+            <el-button
+              :icon="VideoPause"
+              circle
+              @click="handlePause"
+            />
+            <el-button
+              :icon="Close"
+              circle
+              type="danger"
+              @click="showQuitDialog = true"
+            />
           </div>
         </div>
       </el-card>
     </el-affix>
 
     <!-- 题目内容 -->
-    <div v-loading="loading" class="question-area">
-      <el-empty v-if="!currentQuestion && !loading" description="没有更多题目" />
+    <div
+      v-loading="loading"
+      class="question-area"
+    >
+      <el-empty
+        v-if="!currentQuestion && !loading"
+        description="没有更多题目"
+      />
 
       <QuestionRenderer
         v-else-if="currentQuestion"
         :key="currentQuestion.id"
-        :question="currentQuestion"
         v-model="currentAnswer"
+        :question="currentQuestion"
         :show-result="showResult"
         :submitted="isQuestionAnswered"
         @submit="handleSubmit"
@@ -40,7 +55,10 @@
     </div>
 
     <!-- 底部导航栏 -->
-    <el-affix position="bottom" :offset="20">
+    <el-affix
+      position="bottom"
+      :offset="20"
+    >
       <el-card class="navigation-bar">
         <div class="nav-buttons">
           <el-button
@@ -64,7 +82,10 @@
           >
             完成练习 <el-icon><Check /></el-icon>
           </el-button>
-          <el-button v-else disabled>
+          <el-button
+            v-else
+            disabled
+          >
             请先答题
           </el-button>
         </div>
@@ -79,8 +100,15 @@
     >
       <p>练习已暂停，您可以稍后继续。</p>
       <template #footer>
-        <el-button type="primary" @click="handleResume">继续练习</el-button>
-        <el-button @click="$router.back()">返回列表</el-button>
+        <el-button
+          type="primary"
+          @click="handleResume"
+        >
+          继续练习
+        </el-button>
+        <el-button @click="$router.back()">
+          返回列表
+        </el-button>
       </template>
     </el-dialog>
 
@@ -92,8 +120,15 @@
     >
       <p>确定要退出练习吗？进度将自动保存。</p>
       <template #footer>
-        <el-button type="danger" @click="handleQuit">确定退出</el-button>
-        <el-button @click="showQuitDialog = false">继续练习</el-button>
+        <el-button
+          type="danger"
+          @click="handleQuit"
+        >
+          确定退出
+        </el-button>
+        <el-button @click="showQuitDialog = false">
+          继续练习
+        </el-button>
       </template>
     </el-dialog>
   </div>

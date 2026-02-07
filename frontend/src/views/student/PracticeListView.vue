@@ -8,44 +8,116 @@
 
     <!-- 筛选栏 -->
     <el-card class="filter-card">
-      <el-form :inline="true" :model="filters">
+      <el-form
+        :inline="true"
+        :model="filters"
+      >
         <el-form-item label="练习类型">
-          <el-select v-model="filters.practice_type" placeholder="全部" clearable @change="handleFilter">
-            <el-option label="阅读" value="reading" />
-            <el-option label="听力" value="listening" />
-            <el-option label="语法" value="grammar" />
-            <el-option label="词汇" value="vocabulary" />
-            <el-option label="写作" value="writing" />
-            <el-option label="口语" value="speaking" />
+          <el-select
+            v-model="filters.practice_type"
+            placeholder="全部"
+            clearable
+            @change="handleFilter"
+          >
+            <el-option
+              label="阅读"
+              value="reading"
+            />
+            <el-option
+              label="听力"
+              value="listening"
+            />
+            <el-option
+              label="语法"
+              value="grammar"
+            />
+            <el-option
+              label="词汇"
+              value="vocabulary"
+            />
+            <el-option
+              label="写作"
+              value="writing"
+            />
+            <el-option
+              label="口语"
+              value="speaking"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="难度等级">
-          <el-select v-model="filters.difficulty_level" placeholder="全部" clearable @change="handleFilter">
-            <el-option label="A1" value="A1" />
-            <el-option label="A2" value="A2" />
-            <el-option label="B1" value="B1" />
-            <el-option label="B2" value="B2" />
-            <el-option label="C1" value="C1" />
-            <el-option label="C2" value="C2" />
+          <el-select
+            v-model="filters.difficulty_level"
+            placeholder="全部"
+            clearable
+            @change="handleFilter"
+          >
+            <el-option
+              label="A1"
+              value="A1"
+            />
+            <el-option
+              label="A2"
+              value="A2"
+            />
+            <el-option
+              label="B1"
+              value="B1"
+            />
+            <el-option
+              label="B2"
+              value="B2"
+            />
+            <el-option
+              label="C1"
+              value="C1"
+            />
+            <el-option
+              label="C2"
+              value="C2"
+            />
           </el-select>
         </el-form-item>
       </el-form>
     </el-card>
 
     <!-- 题库列表 -->
-    <div v-loading="loading" class="bank-list">
-      <el-empty v-if="!banks.length && !loading" description="暂无可用的题库" />
+    <div
+      v-loading="loading"
+      class="bank-list"
+    >
+      <el-empty
+        v-if="!banks.length && !loading"
+        description="暂无可用的题库"
+      />
 
       <el-row :gutter="16">
-        <el-col v-for="bank in banks" :key="bank.id" :xs="24" :sm="12" :md="8" :lg="6">
-          <el-card class="bank-card" shadow="hover" @click="handleStartPractice(bank)">
+        <el-col
+          v-for="bank in banks"
+          :key="bank.id"
+          :xs="24"
+          :sm="12"
+          :md="8"
+          :lg="6"
+        >
+          <el-card
+            class="bank-card"
+            shadow="hover"
+            @click="handleStartPractice(bank)"
+          >
             <div class="bank-header">
               <h3>{{ bank.name }}</h3>
-              <el-tag size="small" :type="getTypeTagType(bank.practice_type)">
+              <el-tag
+                size="small"
+                :type="getTypeTagType(bank.practice_type)"
+              >
                 {{ getTypeLabel(bank.practice_type) }}
               </el-tag>
             </div>
-            <p v-if="bank.description" class="bank-description">
+            <p
+              v-if="bank.description"
+              class="bank-description"
+            >
               {{ bank.description }}
             </p>
             <div class="bank-info">
@@ -55,14 +127,22 @@
               </span>
             </div>
             <div class="bank-footer">
-              <el-button type="primary" plain>开始练习</el-button>
+              <el-button
+                type="primary"
+                plain
+              >
+                开始练习
+              </el-button>
             </div>
           </el-card>
         </el-col>
       </el-row>
 
       <!-- 分页 -->
-      <div v-if="total > 0" class="pagination">
+      <div
+        v-if="total > 0"
+        class="pagination"
+      >
         <el-pagination
           v-model:current-page="pagination.page"
           v-model:page-size="pagination.size"
@@ -81,23 +161,47 @@
       title="开始练习"
       width="500px"
     >
-      <el-form :model="practiceForm" label-width="100px">
+      <el-form
+        :model="practiceForm"
+        label-width="100px"
+      >
         <el-form-item label="练习模式">
           <el-radio-group v-model="practiceForm.mode">
-            <el-radio label="all">全部题目</el-radio>
-            <el-radio label="random">随机题目</el-radio>
+            <el-radio label="all">
+              全部题目
+            </el-radio>
+            <el-radio label="random">
+              随机题目
+            </el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item v-if="practiceForm.mode === 'random'" label="题目数量">
-          <el-input-number v-model="practiceForm.count" :min="5" :max="50" />
+        <el-form-item
+          v-if="practiceForm.mode === 'random'"
+          label="题目数量"
+        >
+          <el-input-number
+            v-model="practiceForm.count"
+            :min="5"
+            :max="50"
+          />
         </el-form-item>
         <el-form-item label="会话标题">
-          <el-input v-model="practiceForm.title" placeholder="可选，便于后续查找" />
+          <el-input
+            v-model="practiceForm.title"
+            placeholder="可选，便于后续查找"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="showStartDialog = false">取消</el-button>
-        <el-button type="primary" @click="confirmStartPractice">开始练习</el-button>
+        <el-button @click="showStartDialog = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="confirmStartPractice"
+        >
+          开始练习
+        </el-button>
       </template>
     </el-dialog>
   </div>

@@ -12,7 +12,10 @@
         label-width="80px"
         @submit.prevent="handleLogin"
       >
-        <el-form-item label="用户名" prop="username">
+        <el-form-item
+          label="用户名"
+          prop="username"
+        >
           <el-input
             v-model="formData.username"
             placeholder="请输入用户名"
@@ -20,7 +23,10 @@
           />
         </el-form-item>
 
-        <el-form-item label="密码" prop="password">
+        <el-form-item
+          label="密码"
+          prop="password"
+        >
           <el-input
             v-model="formData.password"
             type="password"
@@ -46,7 +52,9 @@
         <el-form-item>
           <div class="register-link">
             还没有账号？
-            <router-link to="/register">立即注册</router-link>
+            <router-link to="/register">
+              立即注册
+            </router-link>
           </div>
         </el-form-item>
       </el-form>

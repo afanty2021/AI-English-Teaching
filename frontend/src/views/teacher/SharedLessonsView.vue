@@ -7,9 +7,16 @@
           <div class="header-actions">
             <ShareNotificationBell />
             <div class="header-tabs">
-              <el-radio-group v-model="activeTab" @change="handleTabChange">
-                <el-radio-button value="received">分享给我的</el-radio-button>
-                <el-radio-button value="given">我分享的</el-radio-button>
+              <el-radio-group
+                v-model="activeTab"
+                @change="handleTabChange"
+              >
+                <el-radio-button value="received">
+                  分享给我的
+                </el-radio-button>
+                <el-radio-button value="given">
+                  我分享的
+                </el-radio-button>
               </el-radio-group>
             </div>
           </div>
@@ -21,33 +28,55 @@
         <div class="statistics-bar">
           <el-card class="stat-card">
             <div class="stat-item">
-              <div class="stat-value">{{ statistics.pending_count }}</div>
-              <div class="stat-label">待接受</div>
+              <div class="stat-value">
+                {{ statistics.pending_count }}
+              </div>
+              <div class="stat-label">
+                待接受
+              </div>
             </div>
           </el-card>
           <el-card class="stat-card">
             <div class="stat-item">
-              <div class="stat-value">{{ statistics.total_shared_by_me }}</div>
-              <div class="stat-label">我分享的</div>
+              <div class="stat-value">
+                {{ statistics.total_shared_by_me }}
+              </div>
+              <div class="stat-label">
+                我分享的
+              </div>
             </div>
           </el-card>
           <el-card class="stat-card">
             <div class="stat-item">
-              <div class="stat-value">{{ statistics.accepted_count }}</div>
-              <div class="stat-label">已接受</div>
+              <div class="stat-value">
+                {{ statistics.accepted_count }}
+              </div>
+              <div class="stat-label">
+                已接受
+              </div>
             </div>
           </el-card>
           <el-card class="stat-card">
             <div class="stat-item">
-              <div class="stat-value">{{ statistics.acceptance_rate }}%</div>
-              <div class="stat-label">接受率</div>
+              <div class="stat-value">
+                {{ statistics.acceptance_rate }}%
+              </div>
+              <div class="stat-label">
+                接受率
+              </div>
             </div>
           </el-card>
         </div>
 
         <!-- 筛选栏 -->
         <div class="filter-bar">
-          <el-select v-model="filterStatus" placeholder="状态筛选" clearable style="width: 120px" @change="loadShares">
+          <el-select
+            v-model="filterStatus"
+            placeholder="状态筛选"
+            clearable
+            style="width: 120px"
+            @change="loadShares"
+          >
             <el-option
               v-for="status in SHARE_STATUSES"
               :key="status.value"
@@ -59,11 +88,22 @@
 
         <!-- 分享列表 -->
         <el-card v-loading="isLoading">
-          <el-empty v-if="!isLoading && shares.length === 0" description="暂无分享记录">
-            <el-button type="primary" @click="goToLessons">浏览教案库</el-button>
+          <el-empty
+            v-if="!isLoading && shares.length === 0"
+            description="暂无分享记录"
+          >
+            <el-button
+              type="primary"
+              @click="goToLessons"
+            >
+              浏览教案库
+            </el-button>
           </el-empty>
 
-          <div v-else class="shares-list">
+          <div
+            v-else
+            class="shares-list"
+          >
             <div
               v-for="share in shares"
               :key="share.id"
@@ -72,12 +112,20 @@
               <!-- 分享信息 -->
               <div class="share-header">
                 <div class="share-info">
-                  <div class="share-title">{{ share.lesson_plan.title }}</div>
+                  <div class="share-title">
+                    {{ share.lesson_plan.title }}
+                  </div>
                   <div class="share-meta">
-                    <el-tag size="small" :type="getLevelType(share.lesson_plan.level)">
+                    <el-tag
+                      size="small"
+                      :type="getLevelType(share.lesson_plan.level)"
+                    >
                       {{ share.lesson_plan.level }}
                     </el-tag>
-                    <el-tag size="small" :type="getPermissionType(share.permission)">
+                    <el-tag
+                      size="small"
+                      :type="getPermissionType(share.permission)"
+                    >
                       {{ getPermissionLabel(share.permission) }}
                     </el-tag>
                     <span class="share-date">{{ formatDate(share.created_at) }}</span>
@@ -117,11 +165,18 @@
                 <template v-else>
                   <el-dropdown @command="(cmd: string) => handleAction(cmd, share)">
                     <el-button size="small">
-                      操作 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+                      操作 <el-icon class="el-icon--right">
+                        <ArrowDown />
+                      </el-icon>
                     </el-button>
                     <template #dropdown>
                       <el-dropdown-menu>
-                        <el-dropdown-item command="view" :icon="View">查看</el-dropdown-item>
+                        <el-dropdown-item
+                          command="view"
+                          :icon="View"
+                        >
+                          查看
+                        </el-dropdown-item>
                         <el-dropdown-item
                           v-if="share.status === 'pending'"
                           command="cancel"
@@ -141,7 +196,10 @@
                   <el-tag :type="getStatusType(share.status)">
                     {{ getStatusLabel(share.status) }}
                   </el-tag>
-                  <span v-if="share.expires_at" class="expires-info">
+                  <span
+                    v-if="share.expires_at"
+                    class="expires-info"
+                  >
                     {{ getExpiresText(share.expires_at) }}
                   </span>
                 </div>
@@ -155,7 +213,10 @@
                   </div>
                 </div>
 
-                <div v-if="share.message" class="share-message">
+                <div
+                  v-if="share.message"
+                  class="share-message"
+                >
                   <el-icon><ChatLineSquare /></el-icon>
                   <span>{{ share.message }}</span>
                 </div>
@@ -164,7 +225,10 @@
           </div>
 
           <!-- 分页 -->
-          <div v-if="total > 0" class="pagination-wrapper">
+          <div
+            v-if="total > 0"
+            class="pagination-wrapper"
+          >
             <el-pagination
               v-model:current-page="currentPage"
               v-model:page-size="pageSize"

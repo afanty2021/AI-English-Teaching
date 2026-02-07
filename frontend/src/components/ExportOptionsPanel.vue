@@ -10,7 +10,10 @@
         <el-icon><Document /></el-icon>
         导出格式
       </h4>
-      <el-radio-group v-model="localOptions.format" class="format-selector">
+      <el-radio-group
+        v-model="localOptions.format"
+        class="format-selector"
+      >
         <el-radio-button value="word">
           <div class="format-option">
             <el-icon><Document /></el-icon>
@@ -44,33 +47,65 @@
         <el-icon><List /></el-icon>
         导出内容
       </h4>
-      <el-checkbox-group v-model="localOptions.sections" class="sections-grid">
-        <el-checkbox value="overview">概览信息</el-checkbox>
-        <el-checkbox value="objectives">教学目标</el-checkbox>
-        <el-checkbox value="vocabulary">核心词汇</el-checkbox>
-        <el-checkbox value="grammar">语法点</el-checkbox>
-        <el-checkbox value="structure">教学流程</el-checkbox>
-        <el-checkbox value="materials">教学材料</el-checkbox>
-        <el-checkbox value="exercises">练习题</el-checkbox>
+      <el-checkbox-group
+        v-model="localOptions.sections"
+        class="sections-grid"
+      >
+        <el-checkbox value="overview">
+          概览信息
+        </el-checkbox>
+        <el-checkbox value="objectives">
+          教学目标
+        </el-checkbox>
+        <el-checkbox value="vocabulary">
+          核心词汇
+        </el-checkbox>
+        <el-checkbox value="grammar">
+          语法点
+        </el-checkbox>
+        <el-checkbox value="structure">
+          教学流程
+        </el-checkbox>
+        <el-checkbox value="materials">
+          教学材料
+        </el-checkbox>
+        <el-checkbox value="exercises">
+          练习题
+        </el-checkbox>
       </el-checkbox-group>
     </div>
 
     <!-- 高级选项 -->
     <el-collapse class="advanced-options">
-      <el-collapse-item name="advanced" title="高级选项">
+      <el-collapse-item
+        name="advanced"
+        title="高级选项"
+      >
         <!-- 语言设置 -->
         <div class="option-item">
           <span class="option-label">导出语言：</span>
-          <el-radio-group v-model="localOptions.language" size="small">
-            <el-radio-button value="zh">中文</el-radio-button>
-            <el-radio-button value="en">英文</el-radio-button>
-            <el-radio-button value="bilingual">双语</el-radio-button>
+          <el-radio-group
+            v-model="localOptions.language"
+            size="small"
+          >
+            <el-radio-button value="zh">
+              中文
+            </el-radio-button>
+            <el-radio-button value="en">
+              英文
+            </el-radio-button>
+            <el-radio-button value="bilingual">
+              双语
+            </el-radio-button>
           </el-radio-group>
         </div>
 
         <!-- 包含选项 -->
         <div class="option-item">
-          <el-space direction="vertical" :size="8">
+          <el-space
+            direction="vertical"
+            :size="8"
+          >
             <el-checkbox v-model="localOptions.include_teacher_notes">
               包含教师备注
             </el-checkbox>
@@ -89,11 +124,27 @@
         <!-- 样式模板 -->
         <div class="option-item">
           <span class="option-label">样式模板：</span>
-          <el-select v-model="localOptions.template_id" placeholder="选择模板" style="width: 200px">
-            <el-option label="默认模板" value="" />
-            <el-option label="简约模板" value="minimal" />
-            <el-option label="详细模板" value="detailed" />
-            <el-option label="彩色模板" value="colorful" />
+          <el-select
+            v-model="localOptions.template_id"
+            placeholder="选择模板"
+            style="width: 200px"
+          >
+            <el-option
+              label="默认模板"
+              value=""
+            />
+            <el-option
+              label="简约模板"
+              value="minimal"
+            />
+            <el-option
+              label="详细模板"
+              value="detailed"
+            />
+            <el-option
+              label="彩色模板"
+              value="colorful"
+            />
           </el-select>
         </div>
       </el-collapse-item>
@@ -106,16 +157,28 @@
         快捷预设
       </h4>
       <el-space wrap>
-        <el-button size="small" @click="applyPreset('complete')">
+        <el-button
+          size="small"
+          @click="applyPreset('complete')"
+        >
           完整导出
         </el-button>
-        <el-button size="small" @click="applyPreset('minimal')">
+        <el-button
+          size="small"
+          @click="applyPreset('minimal')"
+        >
           精简导出
         </el-button>
-        <el-button size="small" @click="applyPreset('print')">
+        <el-button
+          size="small"
+          @click="applyPreset('print')"
+        >
           打印版
         </el-button>
-        <el-button size="small" @click="applyPreset('archive')">
+        <el-button
+          size="small"
+          @click="applyPreset('archive')"
+        >
           归档版
         </el-button>
       </el-space>

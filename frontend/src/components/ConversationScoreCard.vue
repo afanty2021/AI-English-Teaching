@@ -3,7 +3,10 @@
   用于展示AI对话的评分结果，包括总分、分项评分、反馈和建议
 -->
 <template>
-  <el-card class="score-card" shadow="hover">
+  <el-card
+    class="score-card"
+    shadow="hover"
+  >
     <template #header>
       <div class="card-header">
         <el-icon><TrendCharts /></el-icon>
@@ -11,17 +14,30 @@
       </div>
     </template>
 
-    <el-empty v-if="!scores" description="暂无评分数据" class="empty-state" />
+    <el-empty
+      v-if="!scores"
+      description="暂无评分数据"
+      class="empty-state"
+    />
 
-    <div v-else class="score-content">
+    <div
+      v-else
+      class="score-content"
+    >
       <!-- 总分展示 -->
       <div class="overall-score">
-        <div class="score-circle" :class="getScoreClass(scores.overall_score || scores.overall || 0)">
+        <div
+          class="score-circle"
+          :class="getScoreClass(scores.overall_score || scores.overall || 0)"
+        >
           <span class="score-value">{{ scores.overall_score || scores.overall || 0 }}</span>
           <span class="score-label">总分</span>
         </div>
         <div class="score-labels">
-          <el-tag :type="getScoreType(scores.overall_score || scores.overall || 0)" size="large">
+          <el-tag
+            :type="getScoreType(scores.overall_score || scores.overall || 0)"
+            size="large"
+          >
             {{ getScoreLabel(scores.overall_score || scores.overall || 0) }}
           </el-tag>
         </div>
@@ -71,16 +87,28 @@
       <!-- 反馈 -->
       <el-divider />
 
-      <div v-if="scores.feedback" class="feedback-section">
+      <div
+        v-if="scores.feedback"
+        class="feedback-section"
+      >
         <h4>AI 反馈</h4>
-        <p class="feedback-text">{{ scores.feedback }}</p>
+        <p class="feedback-text">
+          {{ scores.feedback }}
+        </p>
       </div>
 
       <!-- 建议 -->
-      <div v-if="scores.suggestions?.length" class="suggestions-section">
+      <div
+        v-if="scores.suggestions?.length"
+        class="suggestions-section"
+      >
         <h4>改进建议</h4>
         <ul class="suggestions-list">
-          <li v-for="(suggestion, index) in scores.suggestions" :key="index" class="suggestion-item">
+          <li
+            v-for="(suggestion, index) in scores.suggestions"
+            :key="index"
+            class="suggestion-item"
+          >
             <el-icon><Right /></el-icon>
             <span>{{ suggestion }}</span>
           </li>

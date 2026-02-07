@@ -5,7 +5,9 @@
         <div class="header-content">
           <div class="header-left">
             <h1>教师中心</h1>
-            <p class="welcome-text">欢迎回来，{{ teacherName }}！准备好今天的教学了吗？</p>
+            <p class="welcome-text">
+              欢迎回来，{{ teacherName }}！准备好今天的教学了吗？
+            </p>
           </div>
           <el-menu
             :default-active="activeMenu"
@@ -13,12 +15,27 @@
             :ellipsis="false"
             router
           >
-            <el-menu-item index="/teacher">仪表板</el-menu-item>
-            <el-menu-item index="/teacher/lessons">教案管理</el-menu-item>
-            <el-menu-item index="/teacher/students">学生管理</el-menu-item>
-            <el-menu-item index="/teacher/reports">学生报告</el-menu-item>
-            <el-menu-item index="/teacher/ai-planning">AI 备课</el-menu-item>
-            <el-menu-item index="/" @click="handleLogout">退出</el-menu-item>
+            <el-menu-item index="/teacher">
+              仪表板
+            </el-menu-item>
+            <el-menu-item index="/teacher/lessons">
+              教案管理
+            </el-menu-item>
+            <el-menu-item index="/teacher/students">
+              学生管理
+            </el-menu-item>
+            <el-menu-item index="/teacher/reports">
+              学生报告
+            </el-menu-item>
+            <el-menu-item index="/teacher/ai-planning">
+              AI 备课
+            </el-menu-item>
+            <el-menu-item
+              index="/"
+              @click="handleLogout"
+            >
+              退出
+            </el-menu-item>
           </el-menu>
         </div>
       </el-header>
@@ -27,7 +44,11 @@
         <!-- 统计卡片 -->
         <el-row :gutter="20">
           <el-col :span="6">
-            <el-card class="stat-card" shadow="hover" @click="goTo('/teacher/students')">
+            <el-card
+              class="stat-card"
+              shadow="hover"
+              @click="goTo('/teacher/students')"
+            >
               <el-statistic
                 title="学生总数"
                 :value="stats.studentCount"
@@ -40,7 +61,11 @@
             </el-card>
           </el-col>
           <el-col :span="6">
-            <el-card class="stat-card" shadow="hover" @click="goTo('/teacher/lessons')">
+            <el-card
+              class="stat-card"
+              shadow="hover"
+              @click="goTo('/teacher/lessons')"
+            >
               <el-statistic
                 title="教案数量"
                 :value="stats.lessonCount"
@@ -53,7 +78,10 @@
             </el-card>
           </el-col>
           <el-col :span="6">
-            <el-card class="stat-card" shadow="hover">
+            <el-card
+              class="stat-card"
+              shadow="hover"
+            >
               <el-statistic
                 title="今日活跃"
                 :value="stats.todayActive"
@@ -66,7 +94,10 @@
             </el-card>
           </el-col>
           <el-col :span="6">
-            <el-card class="stat-card" shadow="hover">
+            <el-card
+              class="stat-card"
+              shadow="hover"
+            >
               <el-statistic
                 title="本周生成"
                 :value="stats.weeklyGenerated"
@@ -80,23 +111,39 @@
           </el-col>
         </el-row>
 
-        <el-row :gutter="20" class="mt-3">
+        <el-row
+          :gutter="20"
+          class="mt-3"
+        >
           <!-- 最近教案 -->
           <el-col :span="12">
             <el-card>
               <template #header>
                 <div class="card-header">
                   <h3>最近教案</h3>
-                  <el-button type="primary" link @click="goTo('/teacher/lessons')">
+                  <el-button
+                    type="primary"
+                    link
+                    @click="goTo('/teacher/lessons')"
+                  >
                     查看全部
                     <el-icon><ArrowRight /></el-icon>
                   </el-button>
                 </div>
               </template>
 
-              <el-empty v-if="loading" description="加载中..." />
-              <el-empty v-else-if="recentLessons.length === 0" description="暂无教案，去AI备课创建一个吧！">
-                <el-button type="primary" @click="goTo('/teacher/ai-planning')">
+              <el-empty
+                v-if="loading"
+                description="加载中..."
+              />
+              <el-empty
+                v-else-if="recentLessons.length === 0"
+                description="暂无教案，去AI备课创建一个吧！"
+              >
+                <el-button
+                  type="primary"
+                  @click="goTo('/teacher/ai-planning')"
+                >
                   <el-icon><Plus /></el-icon>
                   创建教案
                 </el-button>
@@ -111,7 +158,10 @@
                 >
                   <div class="lesson-header">
                     <div class="lesson-info">
-                      <el-tag :type="getStatusType(lesson.status)" size="small">
+                      <el-tag
+                        :type="getStatusType(lesson.status)"
+                        size="small"
+                      >
                         {{ getStatusText(lesson.status) }}
                       </el-tag>
                       <span class="lesson-title">{{ lesson.title }}</span>
@@ -142,24 +192,24 @@
                   type="primary"
                   size="large"
                   :icon="MagicStick"
-                  @click="goTo('/teacher/ai-planning')"
                   class="action-btn"
+                  @click="goTo('/teacher/ai-planning')"
                 >
                   AI 生成教案
                 </el-button>
                 <el-button
                   size="large"
                   :icon="Document"
-                  @click="goTo('/teacher/lessons')"
                   class="action-btn"
+                  @click="goTo('/teacher/lessons')"
                 >
                   管理教案
                 </el-button>
                 <el-button
                   size="large"
                   :icon="User"
-                  @click="goTo('/teacher/students')"
                   class="action-btn"
+                  @click="goTo('/teacher/students')"
                 >
                   学生管理
                 </el-button>

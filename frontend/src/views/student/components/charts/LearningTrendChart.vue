@@ -2,33 +2,62 @@
   <div class="learning-trend-chart">
     <!-- 时间范围选择器 -->
     <div class="chart-header">
-      <el-radio-group v-model="selectedPeriod" @change="handlePeriodChange" size="small">
-        <el-radio-button v-for="option in periodOptions" :key="option.value" :label="option.value">
+      <el-radio-group
+        v-model="selectedPeriod"
+        size="small"
+        @change="handlePeriodChange"
+      >
+        <el-radio-button
+          v-for="option in periodOptions"
+          :key="option.value"
+          :label="option.value"
+        >
           {{ option.label }}
         </el-radio-button>
       </el-radio-group>
 
       <!-- 指标切换 -->
       <div class="metric-toggles">
-        <el-checkbox-group v-model="selectedMetrics" @change="handleMetricsChange" size="small">
-          <el-checkbox label="practices">练习数量</el-checkbox>
-          <el-checkbox label="correctRate">正确率</el-checkbox>
-          <el-checkbox label="duration">学习时长</el-checkbox>
+        <el-checkbox-group
+          v-model="selectedMetrics"
+          size="small"
+          @change="handleMetricsChange"
+        >
+          <el-checkbox label="practices">
+            练习数量
+          </el-checkbox>
+          <el-checkbox label="correctRate">
+            正确率
+          </el-checkbox>
+          <el-checkbox label="duration">
+            学习时长
+          </el-checkbox>
         </el-checkbox-group>
       </div>
     </div>
 
     <!-- 图表容器 -->
-    <div ref="chartRef" class="chart-container"></div>
+    <div
+      ref="chartRef"
+      class="chart-container"
+    ></div>
 
     <!-- 加载状态 -->
-    <div v-if="loading" class="loading-overlay">
-      <el-icon class="is-loading"><Loading /></el-icon>
+    <div
+      v-if="loading"
+      class="loading-overlay"
+    >
+      <el-icon class="is-loading">
+        <Loading />
+      </el-icon>
       <span>加载数据中...</span>
     </div>
 
     <!-- 空数据状态 -->
-    <el-empty v-if="!loading && !hasData" description="暂无学习趋势数据" />
+    <el-empty
+      v-if="!loading && !hasData"
+      description="暂无学习趋势数据"
+    />
   </div>
 </template>
 

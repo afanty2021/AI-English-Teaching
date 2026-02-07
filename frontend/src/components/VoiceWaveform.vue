@@ -15,7 +15,10 @@
     </div>
 
     <!-- 音频频谱分析 -->
-    <div class="spectrum-analyzer" v-if="showSpectrum">
+    <div
+      v-if="showSpectrum"
+      class="spectrum-analyzer"
+    >
       <div
         v-for="(freq, index) in frequencyData"
         :key="index"
@@ -25,7 +28,10 @@
     </div>
 
     <!-- 音量指示器 -->
-    <div class="volume-indicator" v-if="showVolume">
+    <div
+      v-if="showVolume"
+      class="volume-indicator"
+    >
       <div class="volume-meter">
         <div
           class="volume-fill"
@@ -33,19 +39,29 @@
           :class="volumeClass"
         ></div>
       </div>
-      <div class="volume-label">{{ volumeLabel }}</div>
+      <div class="volume-label">
+        {{ volumeLabel }}
+      </div>
     </div>
 
     <!-- 语音活动指示 -->
-    <div class="voice-activity" v-if="showVAD">
+    <div
+      v-if="showVAD"
+      class="voice-activity"
+    >
       <div
         class="vad-indicator"
         :class="{ active: isVoiceActive }"
       >
-        <div class="pulse-ring" v-if="isVoiceActive"></div>
+        <div
+          v-if="isVoiceActive"
+          class="pulse-ring"
+        ></div>
         <div class="vad-dot"></div>
       </div>
-      <div class="vad-label">{{ vadLabel }}</div>
+      <div class="vad-label">
+        {{ vadLabel }}
+      </div>
     </div>
   </div>
 </template>

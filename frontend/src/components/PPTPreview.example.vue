@@ -20,7 +20,9 @@
       <!-- 基础用法 -->
       <div class="example-section">
         <h4>1. 基础用法</h4>
-        <el-button @click="showBasicPreview = true">打开基础预览</el-button>
+        <el-button @click="showBasicPreview = true">
+          打开基础预览
+        </el-button>
 
         <el-dialog
           v-model="showBasicPreview"
@@ -38,7 +40,9 @@
       <!-- 带自动播放 -->
       <div class="example-section">
         <h4>2. 自动播放模式</h4>
-        <el-button @click="showAutoplayPreview = true">打开自动播放预览</el-button>
+        <el-button @click="showAutoplayPreview = true">
+          打开自动播放预览
+        </el-button>
 
         <el-dialog
           v-model="showAutoplayPreview"
@@ -58,7 +62,9 @@
       <!-- 带事件回调 -->
       <div class="example-section">
         <h4>3. 带事件回调</h4>
-        <el-button @click="showCallbackPreview = true">打开带回调的预览</el-button>
+        <el-button @click="showCallbackPreview = true">
+          打开带回调的预览
+        </el-button>
 
         <el-dialog
           v-model="showCallbackPreview"
@@ -88,10 +94,18 @@
       <div class="example-section">
         <h4>4. 使用 ref 控制</h4>
         <el-space>
-          <el-button @click="showControlPreview = true">打开预览</el-button>
-          <el-button @click="controlNext">下一页</el-button>
-          <el-button @click="controlPrevious">上一页</el-button>
-          <el-button @click="controlFullscreen">全屏</el-button>
+          <el-button @click="showControlPreview = true">
+            打开预览
+          </el-button>
+          <el-button @click="controlNext">
+            下一页
+          </el-button>
+          <el-button @click="controlPrevious">
+            上一页
+          </el-button>
+          <el-button @click="controlFullscreen">
+            全屏
+          </el-button>
         </el-space>
 
         <el-dialog
@@ -110,17 +124,41 @@
     </el-card>
 
     <!-- 快捷键说明 -->
-    <el-card header="快捷键说明" style="margin-top: 20px">
-      <el-descriptions :column="2" border>
-        <el-descriptions-item label="← / →">切换幻灯片</el-descriptions-item>
-        <el-descriptions-item label="+ / -">放大 / 缩小</el-descriptions-item>
-        <el-descriptions-item label="0">重置缩放</el-descriptions-item>
-        <el-descriptions-item label="F">切换全屏</el-descriptions-item>
-        <el-descriptions-item label="T">切换缩略图</el-descriptions-item>
-        <el-descriptions-item label="N">切换备注</el-descriptions-item>
-        <el-descriptions-item label="Home">第一页</el-descriptions-item>
-        <el-descriptions-item label="End">最后一页</el-descriptions-item>
-        <el-descriptions-item label="Esc">退出全屏</el-descriptions-item>
+    <el-card
+      header="快捷键说明"
+      style="margin-top: 20px"
+    >
+      <el-descriptions
+        :column="2"
+        border
+      >
+        <el-descriptions-item label="← / →">
+          切换幻灯片
+        </el-descriptions-item>
+        <el-descriptions-item label="+ / -">
+          放大 / 缩小
+        </el-descriptions-item>
+        <el-descriptions-item label="0">
+          重置缩放
+        </el-descriptions-item>
+        <el-descriptions-item label="F">
+          切换全屏
+        </el-descriptions-item>
+        <el-descriptions-item label="T">
+          切换缩略图
+        </el-descriptions-item>
+        <el-descriptions-item label="N">
+          切换备注
+        </el-descriptions-item>
+        <el-descriptions-item label="Home">
+          第一页
+        </el-descriptions-item>
+        <el-descriptions-item label="End">
+          最后一页
+        </el-descriptions-item>
+        <el-descriptions-item label="Esc">
+          退出全屏
+        </el-descriptions-item>
       </el-descriptions>
     </el-card>
   </div>

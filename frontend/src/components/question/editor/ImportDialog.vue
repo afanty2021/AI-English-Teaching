@@ -5,20 +5,33 @@
     width="600px"
     @close="handleClose"
   >
-    <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+    <el-tabs
+      v-model="activeTab"
+      @tab-change="handleTabChange"
+    >
       <!-- JSON导入 -->
-      <el-tab-pane label="JSON导入" name="json">
+      <el-tab-pane
+        label="JSON导入"
+        name="json"
+      >
         <div class="json-import">
           <el-form label-width="80px">
             <el-form-item label="导入方式">
               <el-radio-group v-model="jsonImportMode">
-                <el-radio label="paste">粘贴JSON</el-radio>
-                <el-radio label="file">上传文件</el-radio>
+                <el-radio label="paste">
+                  粘贴JSON
+                </el-radio>
+                <el-radio label="file">
+                  上传文件
+                </el-radio>
               </el-radio-group>
             </el-form-item>
 
             <!-- 粘贴JSON -->
-            <div v-if="jsonImportMode === 'paste'" class="json-paste">
+            <div
+              v-if="jsonImportMode === 'paste'"
+              class="json-paste"
+            >
               <el-input
                 v-model="jsonContent"
                 type="textarea"
@@ -33,7 +46,10 @@
             </div>
 
             <!-- 上传JSON文件 -->
-            <div v-else class="json-file">
+            <div
+              v-else
+              class="json-file"
+            >
               <el-upload
                 class="upload-area"
                 drag
@@ -42,7 +58,9 @@
                 accept=".json"
                 :on-change="handleJsonFileChange"
               >
-                <el-icon class="el-icon--upload"><Upload /></el-icon>
+                <el-icon class="el-icon--upload">
+                  <Upload />
+                </el-icon>
                 <div class="el-upload__text">
                   拖拽JSON文件到此处或<em>点击上传</em>
                 </div>
@@ -53,7 +71,10 @@
       </el-tab-pane>
 
       <!-- Excel导入 -->
-      <el-tab-pane label="Excel导入" name="excel">
+      <el-tab-pane
+        label="Excel导入"
+        name="excel"
+      >
         <div class="excel-import">
           <el-alert
             type="info"
@@ -74,7 +95,12 @@
           </el-alert>
 
           <div class="excel-actions">
-            <el-button :icon="Download" @click="downloadTemplate">下载模板</el-button>
+            <el-button
+              :icon="Download"
+              @click="downloadTemplate"
+            >
+              下载模板
+            </el-button>
           </div>
 
           <el-upload
@@ -85,7 +111,9 @@
             accept=".xlsx,.xls"
             :on-change="handleExcelFileChange"
           >
-            <el-icon class="el-icon--upload"><Upload /></el-icon>
+            <el-icon class="el-icon--upload">
+              <Upload />
+            </el-icon>
             <div class="el-upload__text">
               拖拽Excel文件到此处或<em>点击上传</em>
             </div>
@@ -95,10 +123,17 @@
     </el-tabs>
 
     <!-- 导入结果预览 -->
-    <div v-if="parsedQuestions.length > 0" class="preview-section">
+    <div
+      v-if="parsedQuestions.length > 0"
+      class="preview-section"
+    >
       <div class="preview-header">
         <h4>已解析 {{ parsedQuestions.length }} 道题目</h4>
-        <el-button type="primary" size="small" @click="handleImport">
+        <el-button
+          type="primary"
+          size="small"
+          @click="handleImport"
+        >
           确认导入
         </el-button>
       </div>
@@ -110,10 +145,17 @@
         >
           <div class="question-header">
             <span class="question-index">第 {{ index + 1 }} 题</span>
-            <el-tag size="small">{{ getQuestionTypeLabel(question.question_type) }}</el-tag>
+            <el-tag size="small">
+              {{ getQuestionTypeLabel(question.question_type) }}
+            </el-tag>
           </div>
-          <div class="question-content">{{ question.content_text }}</div>
-          <div v-if="question.options?.length" class="question-options">
+          <div class="question-content">
+            {{ question.content_text }}
+          </div>
+          <div
+            v-if="question.options?.length"
+            class="question-options"
+          >
             <span
               v-for="option in question.options"
               :key="option.key"
@@ -128,7 +170,9 @@
 
     <!-- 底部操作 -->
     <template #footer>
-      <el-button @click="handleClose">取消</el-button>
+      <el-button @click="handleClose">
+        取消
+      </el-button>
       <el-button
         type="primary"
         :loading="importing"

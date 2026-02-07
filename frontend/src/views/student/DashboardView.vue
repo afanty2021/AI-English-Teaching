@@ -5,7 +5,9 @@
         <div class="header-content">
           <div class="header-left">
             <h1>学生中心</h1>
-            <p class="welcome-text">欢迎回来，{{ studentName }}！继续你的英语学习之旅。</p>
+            <p class="welcome-text">
+              欢迎回来，{{ studentName }}！继续你的英语学习之旅。
+            </p>
           </div>
           <el-menu
             :default-active="activeMenu"
@@ -13,13 +15,30 @@
             :ellipsis="false"
             router
           >
-            <el-menu-item index="/student">仪表板</el-menu-item>
-            <el-menu-item index="/student/learning">学习内容</el-menu-item>
-            <el-menu-item index="/student/speaking">口语练习</el-menu-item>
-            <el-menu-item index="/student/mistakes">错题本</el-menu-item>
-            <el-menu-item index="/student/reports">学习报告</el-menu-item>
-            <el-menu-item index="/student/progress">学习进度</el-menu-item>
-            <el-menu-item index="/" @click="handleLogout">退出</el-menu-item>
+            <el-menu-item index="/student">
+              仪表板
+            </el-menu-item>
+            <el-menu-item index="/student/learning">
+              学习内容
+            </el-menu-item>
+            <el-menu-item index="/student/speaking">
+              口语练习
+            </el-menu-item>
+            <el-menu-item index="/student/mistakes">
+              错题本
+            </el-menu-item>
+            <el-menu-item index="/student/reports">
+              学习报告
+            </el-menu-item>
+            <el-menu-item index="/student/progress">
+              学习进度
+            </el-menu-item>
+            <el-menu-item
+              index="/"
+              @click="handleLogout"
+            >
+              退出
+            </el-menu-item>
           </el-menu>
         </div>
       </el-header>
@@ -28,7 +47,10 @@
         <!-- 统计卡片 -->
         <el-row :gutter="20">
           <el-col :span="6">
-            <el-card class="stat-card" shadow="hover">
+            <el-card
+              class="stat-card"
+              shadow="hover"
+            >
               <el-statistic
                 title="今日学习时长"
                 :value="stats.todayMinutes"
@@ -42,7 +64,10 @@
             </el-card>
           </el-col>
           <el-col :span="6">
-            <el-card class="stat-card" shadow="hover">
+            <el-card
+              class="stat-card"
+              shadow="hover"
+            >
               <el-statistic
                 title="完成练习"
                 :value="stats.completedExercises"
@@ -56,7 +81,10 @@
             </el-card>
           </el-col>
           <el-col :span="6">
-            <el-card class="stat-card" shadow="hover">
+            <el-card
+              class="stat-card"
+              shadow="hover"
+            >
               <el-statistic
                 title="口语对话"
                 :value="stats.conversations"
@@ -70,7 +98,10 @@
             </el-card>
           </el-col>
           <el-col :span="6">
-            <el-card class="stat-card" shadow="hover">
+            <el-card
+              class="stat-card"
+              shadow="hover"
+            >
               <el-statistic
                 title="学习积分"
                 :value="stats.points"
@@ -84,22 +115,35 @@
           </el-col>
         </el-row>
 
-        <el-row :gutter="20" class="mt-3">
+        <el-row
+          :gutter="20"
+          class="mt-3"
+        >
           <!-- 今日推荐学习 -->
           <el-col :span="16">
             <el-card>
               <template #header>
                 <div class="card-header">
                   <h3>今日推荐学习</h3>
-                  <el-button type="primary" link @click="loadData">
+                  <el-button
+                    type="primary"
+                    link
+                    @click="loadData"
+                  >
                     <el-icon><Refresh /></el-icon>
                     刷新
                   </el-button>
                 </div>
               </template>
 
-              <el-empty v-if="loading" description="加载中..." />
-              <el-empty v-else-if="recommendations.length === 0" description="暂无推荐内容" />
+              <el-empty
+                v-if="loading"
+                description="加载中..."
+              />
+              <el-empty
+                v-else-if="recommendations.length === 0"
+                description="暂无推荐内容"
+              />
 
               <div v-else>
                 <div
@@ -109,14 +153,19 @@
                   @click="goToContent(item)"
                 >
                   <div class="item-left">
-                    <el-tag :type="getLevelType(item.difficulty_level)" size="small">
+                    <el-tag
+                      :type="getLevelType(item.difficulty_level)"
+                      size="small"
+                    >
                       {{ item.difficulty_level }}
                     </el-tag>
                     <span class="item-title">{{ item.title }}</span>
                   </div>
                   <div class="item-right">
                     <span class="item-meta">{{ item.word_count }} 词</span>
-                    <el-icon class="arrow-icon"><ArrowRight /></el-icon>
+                    <el-icon class="arrow-icon">
+                      <ArrowRight />
+                    </el-icon>
                   </div>
                 </div>
               </div>
@@ -138,7 +187,12 @@
                   placement="top"
                 >
                   <div class="activity-item">
-                    <el-tag :type="activity.type" size="small">{{ activity.label }}</el-tag>
+                    <el-tag
+                      :type="activity.type"
+                      size="small"
+                    >
+                      {{ activity.label }}
+                    </el-tag>
                     <p>{{ activity.description }}</p>
                   </div>
                 </el-timeline-item>
@@ -152,7 +206,11 @@
               </template>
 
               <div class="goal-list">
-                <div v-for="goal in goals" :key="goal.id" class="goal-item">
+                <div
+                  v-for="goal in goals"
+                  :key="goal.id"
+                  class="goal-item"
+                >
                   <div class="goal-header">
                     <span class="goal-title">{{ goal.title }}</span>
                     <span class="goal-progress">{{ goal.progress }}%</span>

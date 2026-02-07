@@ -3,11 +3,21 @@
     <div class="answers-section">
       <div class="section-header">
         <h4>正确答案设置</h4>
-        <el-button size="small" :icon="Plus" @click="addAnswer">添加答案</el-button>
+        <el-button
+          size="small"
+          :icon="Plus"
+          @click="addAnswer"
+        >
+          添加答案
+        </el-button>
       </div>
 
       <div class="answers-list">
-        <div v-for="(_answer, index) in answers" :key="index" class="answer-item">
+        <div
+          v-for="(_answer, index) in answers"
+          :key="index"
+          class="answer-item"
+        >
           <el-input
             v-model="answers[index]"
             placeholder="请输入正确答案"
@@ -21,8 +31,20 @@
               />
             </template>
           </el-input>
-          <el-tag v-if="index === 0" type="success" size="small">主要答案</el-tag>
-          <el-tag v-else type="info" size="small">等价答案 {{ index }}</el-tag>
+          <el-tag
+            v-if="index === 0"
+            type="success"
+            size="small"
+          >
+            主要答案
+          </el-tag>
+          <el-tag
+            v-else
+            type="info"
+            size="small"
+          >
+            等价答案 {{ index }}
+          </el-tag>
         </div>
       </div>
 

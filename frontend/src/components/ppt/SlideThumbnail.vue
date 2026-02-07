@@ -14,23 +14,38 @@
       <span class="slide-number">{{ number }}</span>
 
       <!-- 幻灯片标题 -->
-      <div class="slide-title" :title="slide.title">
+      <div
+        class="slide-title"
+        :title="slide.title"
+      >
         {{ slide.title || `幻灯片 ${number}` }}
       </div>
 
       <!-- 幻灯片预览内容 -->
       <div class="slide-preview">
         <template v-if="slide.content && slide.content.length > 0">
-          <p v-for="(line, index) in previewLines" :key="index" class="preview-line">
+          <p
+            v-for="(line, index) in previewLines"
+            :key="index"
+            class="preview-line"
+          >
             {{ line }}
           </p>
         </template>
-        <p v-else class="preview-empty">无内容</p>
+        <p
+          v-else
+          class="preview-empty"
+        >
+          无内容
+        </p>
       </div>
     </div>
 
     <!-- 活动状态指示器 -->
-    <div v-if="isActive" class="active-indicator">
+    <div
+      v-if="isActive"
+      class="active-indicator"
+    >
       <el-icon><Check /></el-icon>
     </div>
   </div>

@@ -21,23 +21,47 @@
         style="width: 120px"
         @change="loadLessons"
       >
-        <el-option label="A1" value="A1" />
-        <el-option label="A2" value="A2" />
-        <el-option label="B1" value="B1" />
-        <el-option label="B2" value="B2" />
-        <el-option label="C1" value="C1" />
-        <el-option label="C2" value="C2" />
+        <el-option
+          label="A1"
+          value="A1"
+        />
+        <el-option
+          label="A2"
+          value="A2"
+        />
+        <el-option
+          label="B1"
+          value="B1"
+        />
+        <el-option
+          label="B2"
+          value="B2"
+        />
+        <el-option
+          label="C1"
+          value="C1"
+        />
+        <el-option
+          label="C2"
+          value="C2"
+        />
       </el-select>
     </div>
 
     <!-- 教案列表 -->
-    <div v-loading="isLoading" class="lessons-list">
+    <div
+      v-loading="isLoading"
+      class="lessons-list"
+    >
       <el-empty
         v-if="!isLoading && filteredLessons.length === 0"
         description="暂无教案"
       />
 
-      <div v-else class="lessons-grid">
+      <div
+        v-else
+        class="lessons-grid"
+      >
         <div
           v-for="lesson in filteredLessons"
           :key="lesson.id"
@@ -53,10 +77,17 @@
           </div>
 
           <div class="lesson-content">
-            <h4 class="lesson-title">{{ lesson.title }}</h4>
-            <p class="lesson-topic">{{ lesson.topic || '未设置主题' }}</p>
+            <h4 class="lesson-title">
+              {{ lesson.title }}
+            </h4>
+            <p class="lesson-topic">
+              {{ lesson.topic || '未设置主题' }}
+            </p>
             <div class="lesson-meta">
-              <el-tag size="small" :type="getLevelType(lesson.level)">
+              <el-tag
+                size="small"
+                :type="getLevelType(lesson.level)"
+              >
                 {{ lesson.level }}
               </el-tag>
               <span class="lesson-duration">{{ lesson.duration }} 分钟</span>
@@ -65,7 +96,11 @@
           </div>
 
           <div class="lesson-status">
-            <el-icon v-if="isSelected(lesson.id)" :size="20" color="#409eff">
+            <el-icon
+              v-if="isSelected(lesson.id)"
+              :size="20"
+              color="#409eff"
+            >
               <CircleCheck />
             </el-icon>
           </div>
@@ -73,7 +108,10 @@
       </div>
 
       <!-- 分页 -->
-      <div v-if="total > pageSize" class="pagination">
+      <div
+        v-if="total > pageSize"
+        class="pagination"
+      >
         <el-pagination
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
@@ -92,8 +130,14 @@
         <span class="selection-count">
           已选择 {{ selectedCount }} 个教案
         </span>
-        <el-button @click="handleCancel">取消</el-button>
-        <el-button type="primary" @click="handleConfirm" :disabled="selectedCount === 0">
+        <el-button @click="handleCancel">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :disabled="selectedCount === 0"
+          @click="handleConfirm"
+        >
           确认选择
         </el-button>
       </el-space>

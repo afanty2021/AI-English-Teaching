@@ -1,7 +1,15 @@
 <template>
   <div class="notification-bell">
-    <el-badge :value="notificationCount" :hidden="notificationCount === 0" type="danger">
-      <el-button :icon="Bell" circle @click="showNotifications = true" />
+    <el-badge
+      :value="notificationCount"
+      :hidden="notificationCount === 0"
+      type="danger"
+    >
+      <el-button
+        :icon="Bell"
+        circle
+        @click="showNotifications = true"
+      />
     </el-badge>
 
     <!-- 通知抽屉 -->
@@ -12,18 +20,30 @@
       size="400px"
     >
       <div v-loading="isLoading">
-        <el-empty v-if="!isLoading && notifications.length === 0" description="暂无通知" />
+        <el-empty
+          v-if="!isLoading && notifications.length === 0"
+          description="暂无通知"
+        />
 
-        <div v-else class="notifications-list">
+        <div
+          v-else
+          class="notifications-list"
+        >
           <div
             v-for="notification in notifications"
             :key="notification.id"
             class="notification-item"
           >
             <div class="notification-header">
-              <el-icon class="notification-icon"><Share /></el-icon>
-              <div class="notification-title">{{ notification.title }}</div>
-              <div class="notification-time">{{ formatTime(notification.created_at) }}</div>
+              <el-icon class="notification-icon">
+                <Share />
+              </el-icon>
+              <div class="notification-title">
+                {{ notification.title }}
+              </div>
+              <div class="notification-time">
+                {{ formatTime(notification.created_at) }}
+              </div>
             </div>
 
             <div class="notification-content">

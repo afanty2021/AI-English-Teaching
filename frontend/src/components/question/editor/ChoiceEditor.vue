@@ -3,7 +3,11 @@
     <!-- 选项编辑区 -->
     <div class="options-list">
       <h4>选项设置（固定4项）</h4>
-      <div v-for="(option, index) in options" :key="index" class="option-item">
+      <div
+        v-for="(option, index) in options"
+        :key="index"
+        class="option-item"
+      >
         <div class="option-label">
           <el-tag :type="isCorrectAnswer(option.key) ? 'success' : 'info'">
             {{ option.key }}
@@ -34,7 +38,9 @@
     <!-- 正确答案预览 -->
     <div class="answer-preview">
       <span class="preview-label">正确答案：</span>
-      <el-tag type="success">{{ correctAnswerKey || '未设置' }}</el-tag>
+      <el-tag type="success">
+        {{ correctAnswerKey || '未设置' }}
+      </el-tag>
     </div>
   </div>
 </template>

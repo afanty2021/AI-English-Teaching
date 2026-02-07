@@ -578,4 +578,77 @@ describe('AudioEnhancer', () => {
       expect(volumeDetectorDestroy).toHaveBeenCalled()
     })
   })
+
+  describe('音频预处理集成', () => {
+    it('应该在启用预处理时创建预处理器', () => {
+      const enhancerWithPreprocessing = new AudioEnhancer({
+        ...options,
+        enablePreprocessing: true
+      })
+
+      expect(enhancerWithPreprocessing.getPreprocessor()).toBeDefined()
+      expect(enhancerWithPreprocessing.getPreprocessor()).not.toBeNull()
+
+      enhancerWithPreprocessing.destroy()
+    })
+
+    it('应该在禁用预处理时不创建预处理器', () => {
+      const enhancerWithoutPreprocessing = new AudioEnhancer({
+        ...options,
+        enablePreprocessing: false
+      })
+
+      expect(enhancerWithoutPreprocessing.getPreprocessor()).toBeNull()
+
+      enhancerWithoutPreprocessing.destroy()
+    })
+
+    it('应该支持更新预处理器配置', () => {
+      const enhancerWithPreprocessing = new AudioEnhancer({
+        ...options,
+        enablePreprocessing: true
+      })
+
+      expect(() => {
+        enhancerWithPreprocessing.updatePreprocessorConfig({
+          highPassCutoff: 100,
+          noiseGateThreshold: 0.05
+        })
+      }).not.toThrow()
+
+      enhancerWithPreprocessing.destroy()
+    })
+
+    it('应该在未初始化预处理器时记录警告', () => {
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+      const enhancerWithoutPreprocessing = new AudioEnhancer({
+        ...options,
+        enablePreprocessing: false
+      })
+
+      enhancerWithoutPreprocessing.updatePreprocessorConfig({ highPassCutoff: 100 })
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith('预处理器未初始化')
+
+      consoleWarnSpy.mockRestore()
+      enhancerWithoutPreprocessing.destroy()
+    })
+
+    it('应该在销毁时清理预处理器', () => {
+      const enhancerWithPreprocessing = new AudioEnhancer({
+        ...options,
+        enablePreprocessing: true
+      })
+
+      const preprocessor = enhancerWithPreprocessing.getPreprocessor()
+      expect(preprocessor).not.toBeNull()
+
+      enhancerWithPreprocessing.destroy()
+
+      // 预处理器应该在销毁后不再可用
+      const status = preprocessor?.getStatus()
+      expect(status?.isActive).toBe(false)
+    })
+  })
 })

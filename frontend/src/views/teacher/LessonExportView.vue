@@ -10,7 +10,9 @@
         <div class="page-header">
           <div class="header-left">
             <h1>教案导出</h1>
-            <p class="page-description">选择教案并配置导出选项，批量生成文档</p>
+            <p class="page-description">
+              选择教案并配置导出选项，批量生成文档
+            </p>
           </div>
           <div class="header-actions">
             <el-button @click="goBack">
@@ -27,7 +29,10 @@
           <!-- 左侧：教案选择和导出选项 -->
           <el-col :span="16">
             <!-- 选择教案 -->
-            <el-card class="selection-card" shadow="never">
+            <el-card
+              class="selection-card"
+              shadow="never"
+            >
               <template #header>
                 <div class="card-header">
                   <span>选择要导出的教案</span>
@@ -43,7 +48,10 @@
               </template>
 
               <!-- 已选教案列表 -->
-              <div v-if="selectedLessons.length > 0" class="selected-lessons">
+              <div
+                v-if="selectedLessons.length > 0"
+                class="selected-lessons"
+              >
                 <el-space wrap>
                   <el-tag
                     v-for="lesson in selectedLessons"
@@ -65,14 +73,21 @@
                 description="暂未选择教案"
                 :image-size="80"
               >
-                <el-button type="primary" @click="openLessonSelector">
+                <el-button
+                  type="primary"
+                  @click="openLessonSelector"
+                >
                   选择教案
                 </el-button>
               </el-empty>
             </el-card>
 
             <!-- 导出选项配置 -->
-            <el-card v-if="selectedLessons.length > 0" class="options-card" shadow="never">
+            <el-card
+              v-if="selectedLessons.length > 0"
+              class="options-card"
+              shadow="never"
+            >
               <template #header>
                 <span>导出配置</span>
               </template>
@@ -81,7 +96,10 @@
             </el-card>
 
             <!-- 导出操作 -->
-            <div v-if="selectedLessons.length > 0" class="export-actions">
+            <div
+              v-if="selectedLessons.length > 0"
+              class="export-actions"
+            >
               <el-space>
                 <el-button
                   type="primary"
@@ -105,11 +123,17 @@
 
           <!-- 右侧：导出任务状态 -->
           <el-col :span="8">
-            <el-card class="tasks-card" shadow="never">
+            <el-card
+              class="tasks-card"
+              shadow="never"
+            >
               <template #header>
                 <div class="card-header">
                   <span>导出任务</span>
-                  <el-badge :value="pendingTaskCount" :hidden="pendingTaskCount === 0">
+                  <el-badge
+                    :value="pendingTaskCount"
+                    :hidden="pendingTaskCount === 0"
+                  >
                     <el-button
                       text
                       @click="refreshTasks"
@@ -121,30 +145,49 @@
               </template>
 
               <!-- 任务统计 -->
-              <div v-if="tasks.length > 0" class="task-stats">
+              <div
+                v-if="tasks.length > 0"
+                class="task-stats"
+              >
                 <el-row :gutter="8">
                   <el-col :span="6">
                     <div class="stat-item">
-                      <div class="stat-value">{{ getStatusCount('processing') }}</div>
-                      <div class="stat-label">处理中</div>
+                      <div class="stat-value">
+                        {{ getStatusCount('processing') }}
+                      </div>
+                      <div class="stat-label">
+                        处理中
+                      </div>
                     </div>
                   </el-col>
                   <el-col :span="6">
                     <div class="stat-item">
-                      <div class="stat-value success">{{ getStatusCount('completed') }}</div>
-                      <div class="stat-label">已完成</div>
+                      <div class="stat-value success">
+                        {{ getStatusCount('completed') }}
+                      </div>
+                      <div class="stat-label">
+                        已完成
+                      </div>
                     </div>
                   </el-col>
                   <el-col :span="6">
                     <div class="stat-item">
-                      <div class="stat-value info">{{ getStatusCount('failed') }}</div>
-                      <div class="stat-label">失败</div>
+                      <div class="stat-value info">
+                        {{ getStatusCount('failed') }}
+                      </div>
+                      <div class="stat-label">
+                        失败
+                      </div>
                     </div>
                   </el-col>
                   <el-col :span="6">
                     <div class="stat-item">
-                      <div class="stat-value">{{ getStatusCount('pending') }}</div>
-                      <div class="stat-label">等待中</div>
+                      <div class="stat-value">
+                        {{ getStatusCount('pending') }}
+                      </div>
+                      <div class="stat-label">
+                        等待中
+                      </div>
                     </div>
                   </el-col>
                 </el-row>

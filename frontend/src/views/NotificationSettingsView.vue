@@ -6,7 +6,11 @@
       <template #header>
         <div class="card-header">
           <span>通知偏好设置</span>
-          <el-button type="primary" link @click="resetToDefault">
+          <el-button
+            type="primary"
+            link
+            @click="resetToDefault"
+          >
             重置为默认
           </el-button>
         </div>
@@ -24,7 +28,9 @@
                 inactive-text="关闭"
                 @change="savePreferences"
               />
-              <div class="description">当其他教师分享教案给您时接收通知</div>
+              <div class="description">
+                当其他教师分享教案给您时接收通知
+              </div>
             </el-form-item>
 
             <el-form-item label="评论通知">
@@ -34,7 +40,9 @@
                 inactive-text="关闭"
                 @change="savePreferences"
               />
-              <div class="description">当您的内容收到评论时接收通知</div>
+              <div class="description">
+                当您的内容收到评论时接收通知
+              </div>
             </el-form-item>
 
             <el-form-item label="系统通知">
@@ -44,7 +52,9 @@
                 inactive-text="关闭"
                 @change="savePreferences"
               />
-              <div class="description">接收系统公告和重要提醒</div>
+              <div class="description">
+                接收系统公告和重要提醒
+              </div>
             </el-form-item>
           </el-form>
         </div>
@@ -63,7 +73,9 @@
                 :disabled="!preferences.enable_share_notifications && !preferences.enable_comment_notifications && !preferences.enable_system_notifications"
                 @change="savePreferences"
               />
-              <div class="description">通过 WebSocket 实时推送通知（无需刷新页面）</div>
+              <div class="description">
+                通过 WebSocket 实时推送通知（无需刷新页面）
+              </div>
             </el-form-item>
 
             <el-form-item label="邮件通知">
@@ -73,7 +85,9 @@
                 inactive-text="关闭"
                 @change="savePreferences"
               />
-              <div class="description">通过邮件接收通知摘要</div>
+              <div class="description">
+                通过邮件接收通知摘要
+              </div>
             </el-form-item>
 
             <el-form-item
@@ -85,11 +99,26 @@
                 style="width: 200px"
                 @change="savePreferences"
               >
-                <el-option label="立即发送" value="immediate" />
-                <el-option label="每小时汇总" value="hourly" />
-                <el-option label="每天汇总" value="daily" />
-                <el-option label="每周汇总" value="weekly" />
-                <el-option label="从不发送" value="never" />
+                <el-option
+                  label="立即发送"
+                  value="immediate"
+                />
+                <el-option
+                  label="每小时汇总"
+                  value="hourly"
+                />
+                <el-option
+                  label="每天汇总"
+                  value="daily"
+                />
+                <el-option
+                  label="每周汇总"
+                  value="weekly"
+                />
+                <el-option
+                  label="从不发送"
+                  value="never"
+                />
               </el-select>
             </el-form-item>
           </el-form>

@@ -2,10 +2,20 @@
   <div class="ability-radar-chart">
     <!-- 头部控制栏 -->
     <div class="chart-header">
-      <el-radio-group v-model="compareMode" @change="handleCompareChange" size="small">
-        <el-radio-button label="none">当前水平</el-radio-button>
-        <el-radio-button label="class_avg">班级对比</el-radio-button>
-        <el-radio-button label="history">历史对比</el-radio-button>
+      <el-radio-group
+        v-model="compareMode"
+        size="small"
+        @change="handleCompareChange"
+      >
+        <el-radio-button label="none">
+          当前水平
+        </el-radio-button>
+        <el-radio-button label="class_avg">
+          班级对比
+        </el-radio-button>
+        <el-radio-button label="history">
+          历史对比
+        </el-radio-button>
       </el-radio-group>
     </div>
 
@@ -13,14 +23,23 @@
     <div class="chart-content">
       <!-- 雷达图 - 添加错误边界 -->
       <ErrorBoundary>
-        <div ref="chartRef" class="radar-container"></div>
+        <div
+          ref="chartRef"
+          class="radar-container"
+        ></div>
       </ErrorBoundary>
 
       <!-- 能力详情面板 -->
-      <div v-if="showDetails && selectedAbility" class="ability-details">
+      <div
+        v-if="showDetails && selectedAbility"
+        class="ability-details"
+      >
         <div class="detail-header">
           <h4>{{ selectedAbility.name }}</h4>
-          <el-button text @click="selectedAbility = null">
+          <el-button
+            text
+            @click="selectedAbility = null"
+          >
             <el-icon><Close /></el-icon>
           </el-button>
         </div>
@@ -36,12 +55,18 @@
             />
           </div>
 
-          <div v-if="compareMode === 'class_avg' && classAverage" class="detail-comparison">
+          <div
+            v-if="compareMode === 'class_avg' && classAverage"
+            class="detail-comparison"
+          >
             <span class="label">班级平均</span>
             <span class="value">{{ (classAverage[selectedAbility.key] || 0).toFixed(1) }}</span>
           </div>
 
-          <div v-if="selectedAbility.history?.length" class="detail-history">
+          <div
+            v-if="selectedAbility.history?.length"
+            class="detail-history"
+          >
             <span class="label">历史趋势</span>
             <div class="history-dots">
               <span
@@ -53,7 +78,10 @@
             </div>
           </div>
 
-          <div v-if="selectedAbility.relatedTopics?.length" class="detail-topics">
+          <div
+            v-if="selectedAbility.relatedTopics?.length"
+            class="detail-topics"
+          >
             <span class="label">相关知识点</span>
             <div class="topic-tags">
               <el-tag
@@ -67,7 +95,10 @@
             </div>
           </div>
 
-          <div v-if="selectedAbility.recommendedContent?.length" class="detail-recommendations">
+          <div
+            v-if="selectedAbility.recommendedContent?.length"
+            class="detail-recommendations"
+          >
             <span class="label">推荐练习</span>
             <div class="recommendation-list">
               <div
@@ -77,7 +108,9 @@
                 @click="handleContentClick(content)"
               >
                 <span class="title">{{ content.title }}</span>
-                <el-tag size="small">{{ content.difficulty }}</el-tag>
+                <el-tag size="small">
+                  {{ content.difficulty }}
+                </el-tag>
               </div>
             </div>
           </div>
@@ -100,8 +133,13 @@
     </div>
 
     <!-- 加载状态 -->
-    <div v-if="loading" class="loading-overlay">
-      <el-icon class="is-loading"><Loading /></el-icon>
+    <div
+      v-if="loading"
+      class="loading-overlay"
+    >
+      <el-icon class="is-loading">
+        <Loading />
+      </el-icon>
       <span>加载数据中...</span>
     </div>
   </div>

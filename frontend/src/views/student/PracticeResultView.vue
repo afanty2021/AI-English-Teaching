@@ -6,53 +6,125 @@
       </template>
     </el-page-header>
 
-    <div v-loading="loading" class="result-content">
-      <el-empty v-if="!result && !loading" description="暂无结果" />
+    <div
+      v-loading="loading"
+      class="result-content"
+    >
+      <el-empty
+        v-if="!result && !loading"
+        description="暂无结果"
+      />
 
-      <div v-else class="result-detail">
+      <div
+        v-else
+        class="result-detail"
+      >
         <!-- 总体统计卡片 -->
-        <el-row :gutter="16" class="stats-cards">
-          <el-col :xs="12" :sm="6">
+        <el-row
+          :gutter="16"
+          class="stats-cards"
+        >
+          <el-col
+            :xs="12"
+            :sm="6"
+          >
             <el-card class="stat-card">
-              <div class="stat-icon" style="background: #e1f3ff;">
-                <el-icon :size="32" color="#409eff"><Document /></el-icon>
+              <div
+                class="stat-icon"
+                style="background: #e1f3ff;"
+              >
+                <el-icon
+                  :size="32"
+                  color="#409eff"
+                >
+                  <Document />
+                </el-icon>
               </div>
               <div class="stat-info">
-                <div class="stat-value">{{ result?.total_questions }}</div>
-                <div class="stat-label">总题数</div>
+                <div class="stat-value">
+                  {{ result?.total_questions }}
+                </div>
+                <div class="stat-label">
+                  总题数
+                </div>
               </div>
             </el-card>
           </el-col>
-          <el-col :xs="12" :sm="6">
+          <el-col
+            :xs="12"
+            :sm="6"
+          >
             <el-card class="stat-card">
-              <div class="stat-icon" style="background: #f0f9ff;">
-                <el-icon :size="32" color="#67c23a"><Select /></el-icon>
+              <div
+                class="stat-icon"
+                style="background: #f0f9ff;"
+              >
+                <el-icon
+                  :size="32"
+                  color="#67c23a"
+                >
+                  <Select />
+                </el-icon>
               </div>
               <div class="stat-info">
-                <div class="stat-value">{{ result?.correct_count }}</div>
-                <div class="stat-label">答对</div>
+                <div class="stat-value">
+                  {{ result?.correct_count }}
+                </div>
+                <div class="stat-label">
+                  答对
+                </div>
               </div>
             </el-card>
           </el-col>
-          <el-col :xs="12" :sm="6">
+          <el-col
+            :xs="12"
+            :sm="6"
+          >
             <el-card class="stat-card">
-              <div class="stat-icon" style="background: #fef0f0;">
-                <el-icon :size="32" color="#f56c6c"><Close /></el-icon>
+              <div
+                class="stat-icon"
+                style="background: #fef0f0;"
+              >
+                <el-icon
+                  :size="32"
+                  color="#f56c6c"
+                >
+                  <Close />
+                </el-icon>
               </div>
               <div class="stat-info">
-                <div class="stat-value">{{ (result?.total_questions ?? 0) - (result?.correct_count ?? 0) }}</div>
-                <div class="stat-label">答错</div>
+                <div class="stat-value">
+                  {{ (result?.total_questions ?? 0) - (result?.correct_count ?? 0) }}
+                </div>
+                <div class="stat-label">
+                  答错
+                </div>
               </div>
             </el-card>
           </el-col>
-          <el-col :xs="12" :sm="6">
+          <el-col
+            :xs="12"
+            :sm="6"
+          >
             <el-card class="stat-card">
-              <div class="stat-icon" style="background: #f4f4f5;">
-                <el-icon :size="32" color="#909399"><TrendCharts /></el-icon>
+              <div
+                class="stat-icon"
+                style="background: #f4f4f5;"
+              >
+                <el-icon
+                  :size="32"
+                  color="#909399"
+                >
+                  <TrendCharts />
+                </el-icon>
               </div>
               <div class="stat-info">
-                <div class="stat-value">{{ ((result?.correct_rate ?? 0) * 100).toFixed(1) }}%</div>
-                <div class="stat-label">正确率</div>
+                <div class="stat-value">
+                  {{ ((result?.correct_rate ?? 0) * 100).toFixed(1) }}%
+                </div>
+                <div class="stat-label">
+                  正确率
+                </div>
               </div>
             </el-card>
           </el-col>
@@ -67,59 +139,104 @@
           <el-tabs>
             <!-- 按题型统计 -->
             <el-tab-pane label="按题型">
-              <div v-if="getTypeStats().length" class="stats-list">
-                <div v-for="item in getTypeStats()" :key="item.type" class="stats-item">
-                  <div class="stats-label">{{ getTypeLabel(item.type) }}</div>
+              <div
+                v-if="getTypeStats().length"
+                class="stats-list"
+              >
+                <div
+                  v-for="item in getTypeStats()"
+                  :key="item.type"
+                  class="stats-item"
+                >
+                  <div class="stats-label">
+                    {{ getTypeLabel(item.type) }}
+                  </div>
                   <div class="stats-bar">
                     <div
                       class="stats-bar-fill"
                       :style="{ width: `${(item.correct / item.total) * 100}%` }"
                     />
                   </div>
-                  <div class="stats-value">{{ item.correct }}/{{ item.total }}</div>
+                  <div class="stats-value">
+                    {{ item.correct }}/{{ item.total }}
+                  </div>
                 </div>
               </div>
-              <el-empty v-else description="暂无数据" />
+              <el-empty
+                v-else
+                description="暂无数据"
+              />
             </el-tab-pane>
 
             <!-- 按难度统计 -->
             <el-tab-pane label="按难度">
-              <div v-if="getDifficultyStats().length" class="stats-list">
-                <div v-for="item in getDifficultyStats()" :key="item.level" class="stats-item">
-                  <div class="stats-label">{{ item.level }}</div>
+              <div
+                v-if="getDifficultyStats().length"
+                class="stats-list"
+              >
+                <div
+                  v-for="item in getDifficultyStats()"
+                  :key="item.level"
+                  class="stats-item"
+                >
+                  <div class="stats-label">
+                    {{ item.level }}
+                  </div>
                   <div class="stats-bar">
                     <div
                       class="stats-bar-fill"
                       :style="{ width: `${(item.correct / item.total) * 100}%` }"
                     />
                   </div>
-                  <div class="stats-value">{{ item.correct }}/{{ item.total }}</div>
+                  <div class="stats-value">
+                    {{ item.correct }}/{{ item.total }}
+                  </div>
                 </div>
               </div>
-              <el-empty v-else description="暂无数据" />
+              <el-empty
+                v-else
+                description="暂无数据"
+              />
             </el-tab-pane>
 
             <!-- 按主题统计 -->
             <el-tab-pane label="按主题">
-              <div v-if="getTopicStats().length" class="stats-list">
-                <div v-for="item in getTopicStats()" :key="item.topic" class="stats-item">
-                  <div class="stats-label">{{ item.topic }}</div>
+              <div
+                v-if="getTopicStats().length"
+                class="stats-list"
+              >
+                <div
+                  v-for="item in getTopicStats()"
+                  :key="item.topic"
+                  class="stats-item"
+                >
+                  <div class="stats-label">
+                    {{ item.topic }}
+                  </div>
                   <div class="stats-bar">
                     <div
                       class="stats-bar-fill"
                       :style="{ width: `${(item.correct / item.total) * 100}%` }"
                     />
                   </div>
-                  <div class="stats-value">{{ item.correct }}/{{ item.total }}</div>
+                  <div class="stats-value">
+                    {{ item.correct }}/{{ item.total }}
+                  </div>
                 </div>
               </div>
-              <el-empty v-else description="暂无数据" />
+              <el-empty
+                v-else
+                description="暂无数据"
+              />
             </el-tab-pane>
           </el-tabs>
         </el-card>
 
         <!-- 错题列表 -->
-        <el-card v-if="result?.wrong_questions?.length" class="wrong-questions">
+        <el-card
+          v-if="result?.wrong_questions?.length"
+          class="wrong-questions"
+        >
           <template #header>
             <div class="card-header">
               <h3>错题回顾</h3>
@@ -128,12 +245,20 @@
           </template>
 
           <div class="wrong-list">
-            <div v-for="(wrong, index) in result.wrong_questions" :key="wrong.question_id" class="wrong-item">
+            <div
+              v-for="(wrong, index) in result.wrong_questions"
+              :key="wrong.question_id"
+              class="wrong-item"
+            >
               <div class="wrong-header">
                 <span class="wrong-index">第 {{ index + 1 }} 题</span>
-                <el-tag size="small">{{ getQuestionTypeLabel(wrong.question_type) }}</el-tag>
+                <el-tag size="small">
+                  {{ getQuestionTypeLabel(wrong.question_type) }}
+                </el-tag>
               </div>
-              <div class="wrong-content">{{ wrong.content_text }}</div>
+              <div class="wrong-content">
+                {{ wrong.content_text }}
+              </div>
               <div class="wrong-answers">
                 <div class="answer-item">
                   <span class="answer-label">您的答案：</span>
@@ -144,10 +269,16 @@
                   <span class="answer-value correct">{{ formatAnswer(wrong.correct_answer) }}</span>
                 </div>
               </div>
-              <div v-if="wrong.explanation" class="wrong-explanation">
+              <div
+                v-if="wrong.explanation"
+                class="wrong-explanation"
+              >
                 <strong>解析：</strong>{{ wrong.explanation }}
               </div>
-              <div v-if="wrong.knowledge_points?.length" class="knowledge-points">
+              <div
+                v-if="wrong.knowledge_points?.length"
+                class="knowledge-points"
+              >
                 <el-tag
                   v-for="point in wrong.knowledge_points"
                   :key="point"
@@ -163,10 +294,17 @@
 
         <!-- 操作按钮 -->
         <div class="action-buttons">
-          <el-button size="large" @click="$router.back()">
+          <el-button
+            size="large"
+            @click="$router.back()"
+          >
             <el-icon><Back /></el-icon> 返回
           </el-button>
-          <el-button type="primary" size="large" @click="$router.push({ name: 'practice-list' })">
+          <el-button
+            type="primary"
+            size="large"
+            @click="$router.push({ name: 'practice-list' })"
+          >
             <el-icon><Document /></el-icon> 继续练习
           </el-button>
           <el-button

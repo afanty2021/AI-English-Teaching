@@ -4,8 +4,8 @@
     :title="isEditMode ? '编辑题目' : '新建题目'"
     width="900px"
     :close-on-click-modal="false"
-    @close="handleClose"
     class="question-editor-dialog"
+    @close="handleClose"
   >
     <el-form
       ref="formRef"
@@ -15,44 +15,100 @@
       class="question-form"
     >
       <!-- 基础信息 -->
-      <el-divider content-position="left">基础信息</el-divider>
+      <el-divider content-position="left">
+        基础信息
+      </el-divider>
 
       <el-row :gutter="16">
         <el-col :span="12">
-          <el-form-item label="题目类型" prop="question_type">
+          <el-form-item
+            label="题目类型"
+            prop="question_type"
+          >
             <el-select
               v-model="formData.question_type"
               placeholder="请选择题目类型"
               :disabled="isEditMode"
               @change="handleTypeChange"
             >
-              <el-option label="选择题" value="choice" />
-              <el-option label="填空题" value="fill_blank" />
-              <el-option label="阅读理解" value="reading" />
-              <el-option label="写作题" value="writing" />
-              <el-option label="口语题" value="speaking" />
-              <el-option label="听力题" value="listening" />
-              <el-option label="翻译题" value="translation" />
+              <el-option
+                label="选择题"
+                value="choice"
+              />
+              <el-option
+                label="填空题"
+                value="fill_blank"
+              />
+              <el-option
+                label="阅读理解"
+                value="reading"
+              />
+              <el-option
+                label="写作题"
+                value="writing"
+              />
+              <el-option
+                label="口语题"
+                value="speaking"
+              />
+              <el-option
+                label="听力题"
+                value="listening"
+              />
+              <el-option
+                label="翻译题"
+                value="translation"
+              />
             </el-select>
           </el-form-item>
         </el-col>
 
         <el-col :span="12">
-          <el-form-item label="难度等级" prop="difficulty_level">
-            <el-select v-model="formData.difficulty_level" placeholder="请选择难度">
-              <el-option label="A1" value="A1" />
-              <el-option label="A2" value="A2" />
-              <el-option label="B1" value="B1" />
-              <el-option label="B2" value="B2" />
-              <el-option label="C1" value="C1" />
-              <el-option label="C2" value="C2" />
+          <el-form-item
+            label="难度等级"
+            prop="difficulty_level"
+          >
+            <el-select
+              v-model="formData.difficulty_level"
+              placeholder="请选择难度"
+            >
+              <el-option
+                label="A1"
+                value="A1"
+              />
+              <el-option
+                label="A2"
+                value="A2"
+              />
+              <el-option
+                label="B1"
+                value="B1"
+              />
+              <el-option
+                label="B2"
+                value="B2"
+              />
+              <el-option
+                label="C1"
+                value="C1"
+              />
+              <el-option
+                label="C2"
+                value="C2"
+              />
             </el-select>
           </el-form-item>
         </el-col>
       </el-row>
 
-      <el-form-item label="主题分类" prop="topic">
-        <el-input v-model="formData.topic" placeholder="如：语法、词汇、阅读理解等" />
+      <el-form-item
+        label="主题分类"
+        prop="topic"
+      >
+        <el-input
+          v-model="formData.topic"
+          placeholder="如：语法、词汇、阅读理解等"
+        />
       </el-form-item>
 
       <el-form-item label="知识点标签">
@@ -74,10 +130,15 @@
       </el-form-item>
 
       <!-- 题目内容 -->
-      <el-divider content-position="left">题目内容</el-divider>
+      <el-divider content-position="left">
+        题目内容
+      </el-divider>
 
       <!-- 题目文本内容（富文本） -->
-      <el-form-item label="题目内容" prop="content_text">
+      <el-form-item
+        label="题目内容"
+        prop="content_text"
+      >
         <RichTextEditor
           v-model="formData.content_text"
           placeholder="请输入题目内容..."
@@ -141,7 +202,9 @@
       </div>
 
       <!-- 解析说明 -->
-      <el-divider content-position="left">答案解析</el-divider>
+      <el-divider content-position="left">
+        答案解析
+      </el-divider>
 
       <el-form-item label="题目解析">
         <RichTextEditor
@@ -155,14 +218,25 @@
     <template #footer>
       <div class="dialog-footer">
         <div class="footer-left">
-          <el-checkbox v-model="autoSave">自动保存草稿</el-checkbox>
-          <span v-if="lastSaveTime" class="save-time">
+          <el-checkbox v-model="autoSave">
+            自动保存草稿
+          </el-checkbox>
+          <span
+            v-if="lastSaveTime"
+            class="save-time"
+          >
             上次保存: {{ lastSaveTime }}
           </span>
         </div>
         <div class="footer-right">
-          <el-button @click="handleClose">取消</el-button>
-          <el-button type="primary" :loading="saving" @click="handleSave">
+          <el-button @click="handleClose">
+            取消
+          </el-button>
+          <el-button
+            type="primary"
+            :loading="saving"
+            @click="handleSave"
+          >
             保存题目
           </el-button>
         </div>
@@ -182,7 +256,10 @@
           :question="previewQuestion"
           :show-meta="true"
         />
-        <el-empty v-else description="填写题目内容后可查看预览" />
+        <el-empty
+          v-else
+          description="填写题目内容后可查看预览"
+        />
       </div>
     </el-drawer>
   </el-dialog>

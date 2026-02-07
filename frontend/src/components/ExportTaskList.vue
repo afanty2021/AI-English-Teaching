@@ -5,7 +5,10 @@
 <template>
   <div class="export-task-list">
     <!-- 任务列表 -->
-    <div v-if="tasks.length > 0" class="tasks-container">
+    <div
+      v-if="tasks.length > 0"
+      class="tasks-container"
+    >
       <div
         v-for="task in tasks"
         :key="task.id"
@@ -15,8 +18,13 @@
         <!-- 任务信息 -->
         <div class="task-info">
           <div class="task-header">
-            <h4 class="task-title">{{ task.lesson_title }}</h4>
-            <el-tag :type="getStatusType(task.status)" size="small">
+            <h4 class="task-title">
+              {{ task.lesson_title }}
+            </h4>
+            <el-tag
+              :type="getStatusType(task.status)"
+              size="small"
+            >
               {{ getStatusText(task.status) }}
             </el-tag>
           </div>
@@ -29,14 +37,20 @@
           </div>
 
           <!-- 错误信息 -->
-          <div v-if="task.status === 'failed' && task.error_message" class="task-error">
+          <div
+            v-if="task.status === 'failed' && task.error_message"
+            class="task-error"
+          >
             <el-icon><Warning /></el-icon>
             <span>{{ task.error_message }}</span>
           </div>
         </div>
 
         <!-- 进度条 -->
-        <div v-if="task.status === 'processing'" class="task-progress">
+        <div
+          v-if="task.status === 'processing'"
+          class="task-progress"
+        >
           <el-progress
             :percentage="task.progress"
             :indeterminate="task.progress === 0"

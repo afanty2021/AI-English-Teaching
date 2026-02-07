@@ -1,22 +1,45 @@
 <template>
-  <div v-if="visible" class="export-progress">
+  <div
+    v-if="visible"
+    class="export-progress"
+  >
     <div class="progress-card">
       <div class="card-header">
         <div class="header-title">
-          <el-icon v-if="status === 'processing'" class="is-loading"><Loading /></el-icon>
-          <el-icon v-else-if="status === 'completed'"><CircleCheck /></el-icon>
-          <el-icon v-else-if="status === 'failed'"><CircleClose /></el-icon>
-          <el-icon v-else><Clock /></el-icon>
+          <el-icon
+            v-if="status === 'processing'"
+            class="is-loading"
+          >
+            <Loading />
+          </el-icon>
+          <el-icon v-else-if="status === 'completed'">
+            <CircleCheck />
+          </el-icon>
+          <el-icon v-else-if="status === 'failed'">
+            <CircleClose />
+          </el-icon>
+          <el-icon v-else>
+            <Clock />
+          </el-icon>
           <span>{{ getStatusTitle() }}</span>
         </div>
-        <el-button v-if="showClose" text circle size="small" @click="handleClose">
+        <el-button
+          v-if="showClose"
+          text
+          circle
+          size="small"
+          @click="handleClose"
+        >
           <el-icon><Close /></el-icon>
         </el-button>
       </div>
 
       <div class="card-content">
         <!-- 进度条 -->
-        <div class="progress-section" v-if="status === 'processing'">
+        <div
+          v-if="status === 'processing'"
+          class="progress-section"
+        >
           <el-progress
             :percentage="progress"
             :stroke-width="10"
@@ -29,25 +52,51 @@
         </div>
 
         <!-- 完成状态 -->
-        <div class="completed-section" v-else-if="status === 'completed'">
+        <div
+          v-else-if="status === 'completed'"
+          class="completed-section"
+        >
           <div class="completed-icon">
-            <el-icon :size="48" color="#67C23A"><CircleCheck /></el-icon>
+            <el-icon
+              :size="48"
+              color="#67C23A"
+            >
+              <CircleCheck />
+            </el-icon>
           </div>
-          <p class="completed-message">导出完成！</p>
-          <el-button type="primary" @click="handleDownload">
+          <p class="completed-message">
+            导出完成！
+          </p>
+          <el-button
+            type="primary"
+            @click="handleDownload"
+          >
             <el-icon><Download /></el-icon>
             下载文件
           </el-button>
         </div>
 
         <!-- 失败状态 -->
-        <div class="failed-section" v-else-if="status === 'failed'">
+        <div
+          v-else-if="status === 'failed'"
+          class="failed-section"
+        >
           <div class="failed-icon">
-            <el-icon :size="48" color="#F56C6C"><CircleClose /></el-icon>
+            <el-icon
+              :size="48"
+              color="#F56C6C"
+            >
+              <CircleClose />
+            </el-icon>
           </div>
-          <p class="failed-message">{{ errorMessage || '导出失败，请稍后重试' }}</p>
+          <p class="failed-message">
+            {{ errorMessage || '导出失败，请稍后重试' }}
+          </p>
           <div class="failed-actions">
-            <el-button @click="handleRetry" v-if="canRetry">
+            <el-button
+              v-if="canRetry"
+              @click="handleRetry"
+            >
               <el-icon><Refresh /></el-icon>
               重新导出
             </el-button>
@@ -55,18 +104,29 @@
         </div>
 
         <!-- 等待状态 -->
-        <div class="pending-section" v-else>
-          <el-icon class="is-loading"><Loading /></el-icon>
+        <div
+          v-else
+          class="pending-section"
+        >
+          <el-icon class="is-loading">
+            <Loading />
+          </el-icon>
           <span>{{ message || '正在等待处理...' }}</span>
         </div>
 
         <!-- 批量导出信息 -->
-        <div v-if="isBatch && batchInfo" class="batch-info">
+        <div
+          v-if="isBatch && batchInfo"
+          class="batch-info"
+        >
           <div class="batch-progress">
             <span>已完成: {{ batchInfo.completed }} / {{ batchInfo.total }}</span>
           </div>
           <div class="batch-details">
-            <span v-if="batchInfo.failed > 0" class="batch-failed">
+            <span
+              v-if="batchInfo.failed > 0"
+              class="batch-failed"
+            >
               失败: {{ batchInfo.failed }}
             </span>
             <span class="batch-remaining">
@@ -77,7 +137,10 @@
       </div>
 
       <!-- 底部操作 -->
-      <div class="card-footer" v-if="showActions">
+      <div
+        v-if="showActions"
+        class="card-footer"
+      >
         <el-button
           v-if="canCancel && status === 'processing'"
           type="danger"

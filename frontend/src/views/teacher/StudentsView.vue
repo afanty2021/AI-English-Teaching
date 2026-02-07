@@ -10,11 +10,24 @@
             :ellipsis="false"
             router
           >
-            <el-menu-item index="/teacher">仪表板</el-menu-item>
-            <el-menu-item index="/teacher/lessons">教案管理</el-menu-item>
-            <el-menu-item index="/teacher/students">学生管理</el-menu-item>
-            <el-menu-item index="/teacher/ai-planning">AI 备课</el-menu-item>
-            <el-menu-item index="/" @click="handleLogout">退出</el-menu-item>
+            <el-menu-item index="/teacher">
+              仪表板
+            </el-menu-item>
+            <el-menu-item index="/teacher/lessons">
+              教案管理
+            </el-menu-item>
+            <el-menu-item index="/teacher/students">
+              学生管理
+            </el-menu-item>
+            <el-menu-item index="/teacher/ai-planning">
+              AI 备课
+            </el-menu-item>
+            <el-menu-item
+              index="/"
+              @click="handleLogout"
+            >
+              退出
+            </el-menu-item>
           </el-menu>
         </div>
       </el-header>
@@ -42,7 +55,10 @@
               style="width: 180px"
               @change="loadStudents"
             >
-              <el-option label="全部班级" value="" />
+              <el-option
+                label="全部班级"
+                value=""
+              />
               <el-option
                 v-for="cls in classes"
                 :key="cls.id"
@@ -60,7 +76,10 @@
               <el-icon><Monitor /></el-icon>
               批量诊断 ({{ selectedStudents.length }})
             </el-button>
-            <el-button @click="loadStudents" :loading="loading">
+            <el-button
+              :loading="loading"
+              @click="loadStudents"
+            >
               <el-icon><Refresh /></el-icon>
               刷新
             </el-button>
@@ -68,52 +87,95 @@
         </div>
 
         <!-- 学生列表 -->
-        <el-card shadow="never" v-loading="loading">
+        <el-card
+          v-loading="loading"
+          shadow="never"
+        >
           <el-table
             :data="students"
-            @selection-change="handleSelectionChange"
             style="width: 100%"
+            @selection-change="handleSelectionChange"
           >
-            <el-table-column type="selection" width="55" />
+            <el-table-column
+              type="selection"
+              width="55"
+            />
 
-            <el-table-column label="学生" min-width="200">
+            <el-table-column
+              label="学生"
+              min-width="200"
+            >
               <template #default="{ row }">
                 <div class="student-cell">
-                  <el-avatar :size="40" :style="{ backgroundColor: '#409EFF' }">
+                  <el-avatar
+                    :size="40"
+                    :style="{ backgroundColor: '#409EFF' }"
+                  >
                     {{ row.username.charAt(0) }}
                   </el-avatar>
                   <div class="student-info">
-                    <div class="name">{{ row.username }}</div>
-                    <div class="email">{{ row.email }}</div>
+                    <div class="name">
+                      {{ row.username }}
+                    </div>
+                    <div class="email">
+                      {{ row.email }}
+                    </div>
                   </div>
                 </div>
               </template>
             </el-table-column>
 
-            <el-table-column prop="email" label="邮箱" min-width="180" />
+            <el-table-column
+              prop="email"
+              label="邮箱"
+              min-width="180"
+            />
 
-            <el-table-column label="CEFR等级" width="120" align="center">
+            <el-table-column
+              label="CEFR等级"
+              width="120"
+              align="center"
+            >
               <template #default="{ row }">
-                <el-tag v-if="row.current_cefr_level" type="success">
+                <el-tag
+                  v-if="row.current_cefr_level"
+                  type="success"
+                >
                   {{ row.current_cefr_level }}
                 </el-tag>
-                <el-tag v-else type="info">未评估</el-tag>
+                <el-tag
+                  v-else
+                  type="info"
+                >
+                  未评估
+                </el-tag>
               </template>
             </el-table-column>
 
-            <el-table-column label="目标考试" width="120">
+            <el-table-column
+              label="目标考试"
+              width="120"
+            >
               <template #default="{ row }">
                 {{ row.target_exam || '-' }}
               </template>
             </el-table-column>
 
-            <el-table-column label="目标分数" width="100" align="center">
+            <el-table-column
+              label="目标分数"
+              width="100"
+              align="center"
+            >
               <template #default="{ row }">
                 {{ row.target_score || '-' }}
               </template>
             </el-table-column>
 
-            <el-table-column label="知识图谱" width="120" align="center">
+            <el-table-column
+              label="知识图谱"
+              width="120"
+              align="center"
+            >
               <template #default="{ row }">
                 <el-button
                   link
@@ -126,7 +188,11 @@
               </template>
             </el-table-column>
 
-            <el-table-column label="操作" width="180" fixed="right">
+            <el-table-column
+              label="操作"
+              width="180"
+              fixed="right"
+            >
               <template #default="{ row }">
                 <el-button
                   link
@@ -138,8 +204,8 @@
                 <el-button
                   link
                   type="success"
-                  @click="diagnoseStudent(row)"
                   :loading="diagnosingStudentId === row.id"
+                  @click="diagnoseStudent(row)"
                 >
                   {{ hasKnowledgeGraph(row.id) ? '重新诊断' : '诊断' }}
                 </el-button>
@@ -170,17 +236,32 @@
       size="60%"
       destroy-on-close
     >
-      <div v-if="graphLoading" class="graph-loading">
-        <el-skeleton :rows="8" animated />
+      <div
+        v-if="graphLoading"
+        class="graph-loading"
+      >
+        <el-skeleton
+          :rows="8"
+          animated
+        />
       </div>
 
-      <div v-else-if="currentGraph" class="graph-content">
+      <div
+        v-else-if="currentGraph"
+        class="graph-content"
+      >
         <!-- CEFR等级和基本信息 -->
-        <el-card class="info-card" shadow="never">
+        <el-card
+          class="info-card"
+          shadow="never"
+        >
           <div class="info-grid">
             <div class="info-item">
               <span class="label">CEFR等级：</span>
-              <el-tag size="large" type="success">
+              <el-tag
+                size="large"
+                type="success"
+              >
                 {{ currentGraph.cefr_level || '未评估' }}
               </el-tag>
             </div>
@@ -200,37 +281,66 @@
         </el-card>
 
         <!-- 能力雷达图 -->
-        <el-card class="ability-card" shadow="never">
+        <el-card
+          class="ability-card"
+          shadow="never"
+        >
           <template #header>
             <h3><el-icon><TrendCharts /></el-icon> 能力分析</h3>
           </template>
-          <div ref="radarChartRef" class="radar-chart" v-if="hasAbilityData"></div>
-          <el-empty v-else description="暂无能力数据" />
+          <div
+            v-if="hasAbilityData"
+            ref="radarChartRef"
+            class="radar-chart"
+          ></div>
+          <el-empty
+            v-else
+            description="暂无能力数据"
+          />
         </el-card>
 
         <!-- 考试覆盖度 -->
-        <el-card class="exam-card" shadow="never">
+        <el-card
+          class="exam-card"
+          shadow="never"
+        >
           <template #header>
             <h3><el-icon><DataAnalysis /></el-icon> 考试准备度</h3>
           </template>
           <div class="exam-stats">
             <div class="stat-item">
-              <div class="stat-value">{{ currentGraph.exam_coverage.total_practices }}</div>
-              <div class="stat-label">总练习数</div>
+              <div class="stat-value">
+                {{ currentGraph.exam_coverage.total_practices }}
+              </div>
+              <div class="stat-label">
+                总练习数
+              </div>
             </div>
             <div class="stat-item">
-              <div class="stat-value">{{ currentGraph.exam_coverage.topics_covered }}</div>
-              <div class="stat-label">覆盖主题</div>
+              <div class="stat-value">
+                {{ currentGraph.exam_coverage.topics_covered }}
+              </div>
+              <div class="stat-label">
+                覆盖主题
+              </div>
             </div>
             <div class="stat-item">
-              <div class="stat-value">{{ currentGraph.exam_coverage.recent_activity }}</div>
-              <div class="stat-label">近期活跃(7天)</div>
+              <div class="stat-value">
+                {{ currentGraph.exam_coverage.recent_activity }}
+              </div>
+              <div class="stat-label">
+                近期活跃(7天)
+              </div>
             </div>
           </div>
         </el-card>
 
         <!-- 薄弱点分析 -->
-        <el-card v-if="weakPoints.length > 0" class="weak-points-card" shadow="never">
+        <el-card
+          v-if="weakPoints.length > 0"
+          class="weak-points-card"
+          shadow="never"
+        >
           <template #header>
             <h3><el-icon><Warning /></el-icon> 薄弱点分析</h3>
           </template>
@@ -242,18 +352,29 @@
             >
               <div class="wp-header">
                 <span class="wp-topic">{{ wp.topic }}</span>
-                <el-tag :type="getPriorityType(wp.priority)" size="small">
+                <el-tag
+                  :type="getPriorityType(wp.priority)"
+                  size="small"
+                >
                   {{ getPriorityText(wp.priority) }}
                 </el-tag>
               </div>
-              <div class="wp-reason">{{ wp.reason }}</div>
-              <div class="wp-level">当前水平：{{ wp.current_level.toFixed(1) }}</div>
+              <div class="wp-reason">
+                {{ wp.reason }}
+              </div>
+              <div class="wp-level">
+                当前水平：{{ wp.current_level.toFixed(1) }}
+              </div>
             </div>
           </div>
         </el-card>
 
         <!-- 学习建议 -->
-        <el-card v-if="recommendations.length > 0" class="recommendations-card" shadow="never">
+        <el-card
+          v-if="recommendations.length > 0"
+          class="recommendations-card"
+          shadow="never"
+        >
           <template #header>
             <h3><el-icon><ReadingLamp /></el-icon> 学习建议</h3>
           </template>
@@ -263,19 +384,32 @@
               :key="index"
               class="recommendation-item"
             >
-              <el-tag :type="getPriorityType(rec.priority)" size="small">
+              <el-tag
+                :type="getPriorityType(rec.priority)"
+                size="small"
+              >
                 {{ getPriorityText(rec.priority) }}
               </el-tag>
               <div class="rec-content">
-                <div class="rec-suggestion">{{ rec.suggestion }}</div>
-                <div class="rec-ability" v-if="rec.ability">相关能力：{{ rec.ability }}</div>
+                <div class="rec-suggestion">
+                  {{ rec.suggestion }}
+                </div>
+                <div
+                  v-if="rec.ability"
+                  class="rec-ability"
+                >
+                  相关能力：{{ rec.ability }}
+                </div>
               </div>
             </div>
           </div>
         </el-card>
       </div>
 
-      <el-empty v-else description="暂无知识图谱数据，请先进行诊断" />
+      <el-empty
+        v-else
+        description="暂无知识图谱数据，请先进行诊断"
+      />
     </el-drawer>
 
     <!-- 批量诊断进度对话框 -->
@@ -297,12 +431,18 @@
           <span>失败：{{ batchFailed }}</span>
           <span>总计：{{ batchTotal }}</span>
         </div>
-        <div v-if="batchCurrentStudent" class="current-student">
+        <div
+          v-if="batchCurrentStudent"
+          class="current-student"
+        >
           正在诊断：{{ batchCurrentStudent }}
         </div>
       </div>
       <template #footer>
-        <el-button @click="batchDiagnoseVisible = false" :disabled="batchDiagnosing">
+        <el-button
+          :disabled="batchDiagnosing"
+          @click="batchDiagnoseVisible = false"
+        >
           关闭
         </el-button>
       </template>

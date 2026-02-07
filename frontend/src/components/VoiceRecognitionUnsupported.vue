@@ -14,18 +14,36 @@
       >
         <template #extra>
           <div class="browser-recommendations">
-            <div class="browser-item" @click="openBrowserLink('chrome')">
-              <el-icon :size="32"><Platform /></el-icon>
+            <div
+              class="browser-item"
+              @click="openBrowserLink('chrome')"
+            >
+              <el-icon :size="32">
+                <Platform />
+              </el-icon>
               <div class="browser-info">
-                <div class="browser-name">Google Chrome</div>
-                <div class="browser-desc">推荐 ⭐⭐⭐⭐⭐</div>
+                <div class="browser-name">
+                  Google Chrome
+                </div>
+                <div class="browser-desc">
+                  推荐 ⭐⭐⭐⭐⭐
+                </div>
               </div>
             </div>
-            <div class="browser-item" @click="openBrowserLink('edge')">
-              <el-icon :size="32"><Platform /></el-icon>
+            <div
+              class="browser-item"
+              @click="openBrowserLink('edge')"
+            >
+              <el-icon :size="32">
+                <Platform />
+              </el-icon>
               <div class="browser-info">
-                <div class="browser-name">Microsoft Edge</div>
-                <div class="browser-desc">推荐 ⭐⭐⭐⭐⭐</div>
+                <div class="browser-name">
+                  Microsoft Edge
+                </div>
+                <div class="browser-desc">
+                  推荐 ⭐⭐⭐⭐⭐
+                </div>
               </div>
             </div>
           </div>
@@ -41,7 +59,10 @@
         </ul>
       </div>
 
-      <el-button type="primary" @click="handleConfirm">
+      <el-button
+        type="primary"
+        @click="handleConfirm"
+      >
         我知道了，继续使用文本输入
       </el-button>
     </div>

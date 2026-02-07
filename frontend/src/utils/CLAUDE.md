@@ -10,7 +10,6 @@
 | #1586 | 12:14 PM | 🔵 | Voice recognition optimization in progress | ~297 |
 | #1493 | 11:25 AM | 🔵 | BrowserCompatibility utility provides foundation for fallback strategy | ~306 |
 | #1482 | 11:17 AM | 🔵 | VoiceRecognitionFallback implementation reviewed | ~320 |
-| #1464 | 11:11 AM | 🔵 | VoiceRecognitionFallback implementation complete | ~287 |
 </claude-mem-context>
 ---
 
@@ -23,6 +22,23 @@
 ---
 
 ## 变更记录
+
+### 2026-02-07 12:35:00
+- ✨ **新增**: 音频预处理模块 (`audioPreprocessor.ts`)
+  - 实现音频预处理管道（高通滤波、噪音门）
+  - 高通滤波去除低频噪音（可配置截止频率）
+  - 噪音门静音低音量部分
+  - 支持多种预设配置（激进/轻柔/仅高通/直通）
+  - 归一化功能预留接口（暂时禁用，需要更复杂实现）
+  - 完整的错误处理和资源清理
+  - 完整的单元测试（26个测试用例，100%通过）
+- 🔧 **更新**: AudioEnhancer 集成音频预处理
+  - 新增 `enablePreprocessing` 选项
+  - 新增 `preprocessorConfig` 配置项
+  - `enhance()` 方法现在支持异步处理
+  - 新增 `getPreprocessor()` 获取预处理器实例
+  - 新增 `updatePreprocessorConfig()` 更新预处理器配置
+  - 测试更新：新增5个预处理集成测试用例
 
 ### 2026-02-07 12:30:00
 - ✨ **新增**: LRU 缓存模块 (`recognitionCache.ts`)
@@ -76,9 +92,9 @@ utils 模块提供前端应用的各种工具函数和辅助类：
 1. **HTTP请求**: 基于 Axios 的请求封装
 2. **语音识别**: Web Speech API STT 封装
 3. **语音合成**: Web Speech API TTS 封装
-4. **音频增强**: VAD 优化、噪音抑制、音量检测 ⚡
+4. **音频增强**: VAD 优化、噪音抑制、音量检测、音频预处理 ✨
 5. **音频缓冲**: CloudSTT 模式的音频缓冲策略
-6. **识别缓存**: LRU 缓存避免重复识别 ✨
+6. **识别缓存**: LRU 缓存避免重复识别
 7. **错误恢复**: 重试机制与状态恢复
 8. **通用工具**: 各种辅助函数
 
@@ -121,7 +137,7 @@ utils 模块提供前端应用的各种工具函数和辅助类：
 
 ### 音频增强工具 ⚡
 
-**文件**: `audioEnhancer.ts`
+**文件**: `audioEnhancer.ts`, `audioPreprocessor.ts`
 
 | 类/函数 | 描述 |
 |---------|------|
@@ -129,8 +145,23 @@ utils 模块提供前端应用的各种工具函数和辅助类：
 | `NoiseSuppressor` | 噪音抑制处理器 |
 | `VolumeDetector` | 音量检测器 |
 | `AudioEnhancer` | 音频增强主类 |
+| `AudioPreprocessor` | 音频预处理器 ✨ |
+| `createAudioPreprocessor()` | 创建音频预处理器实例 |
+| `PreprocessorPresets` | 预设配置集合 |
 
 **VAD 优化参数**:
+- 检测队列大小: 2
+- 检测间隔: 30ms
+- 总延迟: 约 60ms
+- 多数表决: 只要有 1 个样本为正就判定为有语音
+
+**音频预处理配置** ✨:
+- `enableHighPassFilter`: 是否启用高通滤波
+- `highPassCutoff`: 高通截止频率
+- `enableNormalization`: 是否启用归一化（暂时禁用）
+- `enableNoiseGate`: 是否启用噪音门
+- `noiseGateThreshold`: 噪音门阈值
+- `targetLevel`: 目标音量等级
 - 检测队列大小: 2
 - 检测间隔: 30ms
 - 总延迟: 约 60ms
@@ -196,7 +227,8 @@ utils 模块提供前端应用的各种工具函数和辅助类：
 | `request.ts` | HTTP请求工具 | - |
 | `voiceRecognition.ts` | 语音识别(STT) | 344 |
 | `textToSpeech.ts` | 语音合成(TTS) | 366 |
-| `audioEnhancer.ts` | 音频增强工具（VAD优化）⚡ | 470+ |
+| `audioEnhancer.ts` | 音频增强工具（VAD优化）⚡ | 600+ |
+| `audioPreprocessor.ts` | 音频预处理（高通滤波、噪音门）✨ | 280 |
 | `audioBuffer.ts` | 音频缓冲器 | 210 |
 | `recognitionCache.ts` | LRU 缓存（语音识别结果）✨ | 240 |
 | `errorRecovery.ts` | 错误恢复工具 | - |
@@ -210,5 +242,7 @@ utils 模块提供前端应用的各种工具函数和辅助类：
 
 - [Web Speech API - SpeechRecognition](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition)
 - [Web Speech API - SpeechSynthesis](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis)
+- [Web Audio API - BiquadFilterNode](https://developer.mozilla.org/en-US/docs/Web/API/BiquadFilterNode)
+- [Web Audio API - DynamicsCompressorNode](https://developer.mozilla.org/en-US/docs/Web/API/DynamicsCompressorNode)
 - [MediaRecorder API](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder)
 - [Axios 文档](https://axios-http.com/)

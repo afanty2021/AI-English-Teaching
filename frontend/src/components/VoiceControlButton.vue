@@ -13,7 +13,10 @@
     </el-icon>
 
     <!-- 录音时的波纹动画 -->
-    <span v-if="type === 'record' && state === 'listening'" class="ripple"></span>
+    <span
+      v-if="type === 'record' && state === 'listening'"
+      class="ripple"
+    ></span>
   </el-button>
 </template>
 

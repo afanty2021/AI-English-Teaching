@@ -58,13 +58,19 @@
     </div>
 
     <!-- 热力图表格 -->
-    <div class="heatmap-container" v-if="!loading">
+    <div
+      v-if="!loading"
+      class="heatmap-container"
+    >
       <div
         v-for="topic in heatmapData?.topics || []"
         :key="topic.id"
         class="heatmap-topic"
       >
-        <div class="topic-header" @click="toggleTopic(topic.id)">
+        <div
+          class="topic-header"
+          @click="toggleTopic(topic.id)"
+        >
           <el-icon :class="{ expanded: expandedTopics.includes(topic.id) }">
             <ArrowRight />
           </el-icon>
@@ -72,7 +78,10 @@
           <span class="topic-count">{{ topic.abilities.length }} 个能力点</span>
         </div>
 
-        <div v-show="expandedTopics.includes(topic.id)" class="topic-details">
+        <div
+          v-show="expandedTopics.includes(topic.id)"
+          class="topic-details"
+        >
           <div class="abilities-grid">
             <div
               v-for="ability in topic.abilities"
@@ -85,7 +94,10 @@
             >
               <span class="ability-name">{{ ability.name }}</span>
               <span class="ability-rate">{{ ability.masteryRate.toFixed(0) }}%</span>
-              <span class="ability-trend" :class="ability.trend">
+              <span
+                class="ability-trend"
+                :class="ability.trend"
+              >
                 <el-icon v-if="ability.trend === 'up'"><Top /></el-icon>
                 <el-icon v-else-if="ability.trend === 'down'"><Bottom /></el-icon>
                 <el-icon v-else><Remove /></el-icon>
@@ -95,12 +107,20 @@
         </div>
       </div>
 
-      <el-empty v-if="!heatmapData?.topics?.length" description="暂无知识点数据" />
+      <el-empty
+        v-if="!heatmapData?.topics?.length"
+        description="暂无知识点数据"
+      />
     </div>
 
     <!-- 加载状态 -->
-    <div v-else class="loading-state">
-      <el-icon class="is-loading"><Loading /></el-icon>
+    <div
+      v-else
+      class="loading-state"
+    >
+      <el-icon class="is-loading">
+        <Loading />
+      </el-icon>
       <span>加载数据中...</span>
     </div>
 
@@ -125,11 +145,16 @@
         </div>
         <div class="detail-row">
           <span class="label">难度</span>
-          <el-tag size="small">{{ cellDetail.data?.ability?.difficulty }}</el-tag>
+          <el-tag size="small">
+            {{ cellDetail.data?.ability?.difficulty }}
+          </el-tag>
         </div>
         <div class="detail-row">
           <span class="label">趋势</span>
-          <span class="trend-value" :class="cellDetail.data?.ability?.trend">
+          <span
+            class="trend-value"
+            :class="cellDetail.data?.ability?.trend"
+          >
             <el-icon v-if="cellDetail.data?.ability?.trend === 'up'"><Top /></el-icon>
             <el-icon v-else-if="cellDetail.data?.ability?.trend === 'down'"><Bottom /></el-icon>
             <el-icon v-else><Remove /></el-icon>

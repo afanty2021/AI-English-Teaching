@@ -10,20 +10,45 @@
     size="50%"
     @update:model-value="$emit('update:modelValue', $event)"
   >
-    <div v-if="isLoading" v-loading="true" style="height: 200px"></div>
+    <div
+      v-if="isLoading"
+      v-loading="true"
+      style="height: 200px"
+    ></div>
 
-    <div v-else-if="template" class="preview-content">
+    <div
+      v-else-if="template"
+      class="preview-content"
+    >
       <!-- 操作按钮 -->
       <div class="preview-actions">
-        <el-button type="primary" :icon="Plus" @click="handleApply">
+        <el-button
+          type="primary"
+          :icon="Plus"
+          @click="handleApply"
+        >
           应用此模板
         </el-button>
-        <el-button :icon="Edit" @click="handleEdit">编辑</el-button>
-        <el-button :icon="CopyDocument" @click="handleDuplicate">复制</el-button>
+        <el-button
+          :icon="Edit"
+          @click="handleEdit"
+        >
+          编辑
+        </el-button>
+        <el-button
+          :icon="CopyDocument"
+          @click="handleDuplicate"
+        >
+          复制
+        </el-button>
       </div>
 
       <!-- 基本信息 -->
-      <el-descriptions :column="2" border class="info-section">
+      <el-descriptions
+        :column="2"
+        border
+        class="info-section"
+      >
         <el-descriptions-item label="模板名称">
           {{ template.name }}
         </el-descriptions-item>
@@ -42,13 +67,35 @@
           {{ template.usage_count }} 次
         </el-descriptions-item>
         <el-descriptions-item label="评分">
-          <el-rate v-model="template.rating" disabled show-score />
+          <el-rate
+            v-model="template.rating"
+            disabled
+            show-score
+          />
         </el-descriptions-item>
-        <el-descriptions-item label="状态" :span="2">
+        <el-descriptions-item
+          label="状态"
+          :span="2"
+        >
           <el-space>
-            <el-tag v-if="template.is_official" type="warning">官方模板</el-tag>
-            <el-tag v-if="template.is_public" type="success">公开</el-tag>
-            <el-tag v-else type="info">私有</el-tag>
+            <el-tag
+              v-if="template.is_official"
+              type="warning"
+            >
+              官方模板
+            </el-tag>
+            <el-tag
+              v-if="template.is_public"
+              type="success"
+            >
+              公开
+            </el-tag>
+            <el-tag
+              v-else
+              type="info"
+            >
+              私有
+            </el-tag>
           </el-space>
         </el-descriptions-item>
       </el-descriptions>
@@ -71,7 +118,11 @@
           >
             <div class="section-item">
               <h4>{{ section.label }}</h4>
-              <el-tag v-if="section.required" size="small" type="danger">
+              <el-tag
+                v-if="section.required"
+                size="small"
+                type="danger"
+              >
                 必需
               </el-tag>
             </div>
@@ -87,7 +138,10 @@
             <div class="include-item">
               <el-icon><Aim /></el-icon>
               <span>教学目标</span>
-              <el-tag size="small" type="success">
+              <el-tag
+                size="small"
+                type="success"
+              >
                 {{ template.structure.objectives?.length || 0 }} 个
               </el-tag>
             </div>
@@ -96,7 +150,10 @@
             <div class="include-item">
               <el-icon><CollectionTag /></el-icon>
               <span>词汇</span>
-              <el-tag size="small" type="success">
+              <el-tag
+                size="small"
+                type="success"
+              >
                 {{ getVocabularyCount() }} 个
               </el-tag>
             </div>
@@ -105,7 +162,10 @@
             <div class="include-item">
               <el-icon><Notebook /></el-icon>
               <span>语法点</span>
-              <el-tag size="small" type="success">
+              <el-tag
+                size="small"
+                type="success"
+              >
                 {{ template.structure.grammar_points?.length || 0 }} 个
               </el-tag>
             </div>
@@ -114,7 +174,10 @@
       </div>
     </div>
 
-    <el-empty v-else description="加载失败" />
+    <el-empty
+      v-else
+      description="加载失败"
+    />
   </el-drawer>
 </template>
 

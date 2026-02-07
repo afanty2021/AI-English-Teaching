@@ -2,15 +2,25 @@
   <div class="student-reports-view">
     <div class="header">
       <h1>学生报告</h1>
-      <el-button type="primary" @click="refreshData">
+      <el-button
+        type="primary"
+        @click="refreshData"
+      >
         <el-icon><Refresh /></el-icon>
         刷新
       </el-button>
     </div>
 
     <!-- 筛选器 -->
-    <el-card class="filter-card" shadow="never">
-      <el-form :inline="true" :model="filters" @submit.prevent="loadStudents">
+    <el-card
+      class="filter-card"
+      shadow="never"
+    >
+      <el-form
+        :inline="true"
+        :model="filters"
+        @submit.prevent="loadStudents"
+      >
         <el-form-item label="班级">
           <el-select
             v-model="filters.classId"
@@ -29,21 +39,40 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" @click="loadStudents">查询</el-button>
-          <el-button @click="resetFilters">重置</el-button>
+          <el-button
+            type="primary"
+            @click="loadStudents"
+          >
+            查询
+          </el-button>
+          <el-button @click="resetFilters">
+            重置
+          </el-button>
         </el-form-item>
       </el-form>
     </el-card>
 
     <!-- 学生列表 -->
-    <el-card class="student-list" shadow="never" v-loading="loading">
+    <el-card
+      v-loading="loading"
+      class="student-list"
+      shadow="never"
+    >
       <template v-if="students.length === 0 && !loading">
         <el-empty description="暂无学生数据">
-          <el-button type="primary" @click="refreshData">刷新数据</el-button>
+          <el-button
+            type="primary"
+            @click="refreshData"
+          >
+            刷新数据
+          </el-button>
         </el-empty>
       </template>
 
-      <div v-else class="student-cards">
+      <div
+        v-else
+        class="student-cards"
+      >
         <div
           v-for="student in students"
           :key="student.student_id"
@@ -52,14 +81,21 @@
         >
           <div class="card-header">
             <div class="student-info">
-              <el-avatar :size="40" :style="{ backgroundColor: '#409EFF' }">
+              <el-avatar
+                :size="40"
+                :style="{ backgroundColor: '#409EFF' }"
+              >
                 {{ student.student_name.charAt(0) }}
               </el-avatar>
               <div class="student-details">
                 <h3>{{ student.student_name }}</h3>
                 <p class="student-meta">
                   {{ student.student_number }} | {{ student.class_name }}
-                  <el-tag v-if="student.grade" size="small" style="margin-left: 8px">
+                  <el-tag
+                    v-if="student.grade"
+                    size="small"
+                    style="margin-left: 8px"
+                  >
                     {{ student.grade }}
                   </el-tag>
                 </p>
@@ -71,7 +107,10 @@
           </div>
 
           <div class="card-body">
-            <div v-if="student.latest_report" class="latest-report">
+            <div
+              v-if="student.latest_report"
+              class="latest-report"
+            >
               <div class="report-info">
                 <el-icon><Document /></el-icon>
                 <span>{{ formatReportType(student.latest_report.report_type) }}</span>
@@ -81,13 +120,19 @@
                 <span>{{ formatTime(student.latest_report.created_at) }}</span>
               </div>
             </div>
-            <div v-else class="no-report">
-              <el-empty :image-size="30" description="暂无学习报告">
+            <div
+              v-else
+              class="no-report"
+            >
+              <el-empty
+                :image-size="30"
+                description="暂无学习报告"
+              >
                 <el-button
                   type="primary"
                   size="small"
-                  @click.stop="generateReport(student.student_id)"
                   :loading="generatingStudentId === student.student_id"
+                  @click.stop="generateReport(student.student_id)"
                 >
                   生成报告
                 </el-button>
@@ -97,13 +142,16 @@
         </div>
       </div>
 
-      <div v-if="total > 0" class="pagination">
+      <div
+        v-if="total > 0"
+        class="pagination"
+      >
         <el-pagination
           :current-page="currentPage"
           :page-size="pageSize"
           :total="total"
-          @current-change="handlePageChange"
           layout="prev, pager, next, jumper, ->, total"
+          @current-change="handlePageChange"
         />
       </div>
     </el-card>

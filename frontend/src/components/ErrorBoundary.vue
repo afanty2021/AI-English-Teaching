@@ -1,12 +1,18 @@
 <template>
-  <div v-if="error" class="error-boundary">
+  <div
+    v-if="error"
+    class="error-boundary"
+  >
     <el-result
       icon="error"
       title="页面出错了"
       :sub-title="errorMessage"
     >
       <template #extra>
-        <el-button type="primary" @click="handleRetry">
+        <el-button
+          type="primary"
+          @click="handleRetry"
+        >
           刷新重试
         </el-button>
         <el-button @click="handleReload">

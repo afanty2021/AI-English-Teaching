@@ -18,9 +18,19 @@
     </div>
 
     <!-- 选项列表 -->
-    <el-radio-group v-model="selectedAnswer" @change="handleChange">
-      <div v-for="option in question.options" :key="option.key" class="option-item">
-        <el-radio :label="option.key" :disabled="submitted">
+    <el-radio-group
+      v-model="selectedAnswer"
+      @change="handleChange"
+    >
+      <div
+        v-for="option in question.options"
+        :key="option.key"
+        class="option-item"
+      >
+        <el-radio
+          :label="option.key"
+          :disabled="submitted"
+        >
           <span class="option-label">{{ option.key }}.</span>
           <span class="option-content">{{ option.content }}</span>
         </el-radio>
@@ -28,7 +38,10 @@
     </el-radio-group>
 
     <!-- 提交后显示解析 -->
-    <div v-if="showResult" class="result-section">
+    <div
+      v-if="showResult"
+      class="result-section"
+    >
       <el-alert
         :type="isCorrect ? 'success' : 'error'"
         :closable="false"
@@ -40,7 +53,10 @@
         <div class="correct-answer">
           <strong>正确答案：</strong>{{ question.correct_answer.key }}
         </div>
-        <div v-if="question.explanation" class="explanation">
+        <div
+          v-if="question.explanation"
+          class="explanation"
+        >
           <strong>解析：</strong>{{ question.explanation }}
         </div>
       </el-alert>

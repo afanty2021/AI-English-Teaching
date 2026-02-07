@@ -13,15 +13,45 @@
               style="width: 250px"
               @input="handleSearch"
             />
-            <el-select v-model="filterLevel" placeholder="筛选难度" clearable style="width: 120px" @change="loadLessons">
-              <el-option label="A1" value="A1" />
-              <el-option label="A2" value="A2" />
-              <el-option label="B1" value="B1" />
-              <el-option label="B2" value="B2" />
-              <el-option label="C1" value="C1" />
-              <el-option label="C2" value="C2" />
+            <el-select
+              v-model="filterLevel"
+              placeholder="筛选难度"
+              clearable
+              style="width: 120px"
+              @change="loadLessons"
+            >
+              <el-option
+                label="A1"
+                value="A1"
+              />
+              <el-option
+                label="A2"
+                value="A2"
+              />
+              <el-option
+                label="B1"
+                value="B1"
+              />
+              <el-option
+                label="B2"
+                value="B2"
+              />
+              <el-option
+                label="C1"
+                value="C1"
+              />
+              <el-option
+                label="C2"
+                value="C2"
+              />
             </el-select>
-            <el-button type="primary" :icon="Plus" @click="goToAIPlanning">AI 生成教案</el-button>
+            <el-button
+              type="primary"
+              :icon="Plus"
+              @click="goToAIPlanning"
+            >
+              AI 生成教案
+            </el-button>
           </div>
         </div>
       </el-header>
@@ -29,11 +59,22 @@
       <el-main>
         <!-- 教案列表 -->
         <el-card v-loading="isLoading">
-          <el-empty v-if="!isLoading && filteredLessons.length === 0" description="暂无教案">
-            <el-button type="primary" @click="goToAIPlanning">使用 AI 生成第一个教案</el-button>
+          <el-empty
+            v-if="!isLoading && filteredLessons.length === 0"
+            description="暂无教案"
+          >
+            <el-button
+              type="primary"
+              @click="goToAIPlanning"
+            >
+              使用 AI 生成第一个教案
+            </el-button>
           </el-empty>
 
-          <div v-else class="lessons-grid">
+          <div
+            v-else
+            class="lessons-grid"
+          >
             <div
               v-for="lesson in filteredLessons"
               :key="lesson.id"
@@ -42,21 +83,60 @@
             >
               <div class="card-header">
                 <div class="lesson-info">
-                  <h3 class="lesson-title">{{ lesson.title }}</h3>
+                  <h3 class="lesson-title">
+                    {{ lesson.title }}
+                  </h3>
                   <div class="lesson-meta">
-                    <el-tag size="small" :type="getLevelType(lesson.level)">{{ lesson.level }}</el-tag>
+                    <el-tag
+                      size="small"
+                      :type="getLevelType(lesson.level)"
+                    >
+                      {{ lesson.level }}
+                    </el-tag>
                     <span class="lesson-duration">{{ lesson.duration }} 分钟</span>
                   </div>
                 </div>
-                <el-dropdown @command="(cmd: string) => handleAction(cmd, lesson)" @click.stop>
-                  <el-button circle :icon="MoreFilled" />
+                <el-dropdown
+                  @command="(cmd: string) => handleAction(cmd, lesson)"
+                  @click.stop
+                >
+                  <el-button
+                    circle
+                    :icon="MoreFilled"
+                  />
                   <template #dropdown>
                     <el-dropdown-menu>
-                      <el-dropdown-item command="edit" :icon="Edit">编辑</el-dropdown-item>
-                      <el-dropdown-item command="duplicate" :icon="CopyDocument">复制</el-dropdown-item>
-                      <el-dropdown-item command="share" :icon="Share">分享</el-dropdown-item>
-                      <el-dropdown-item command="export" :icon="Download">导出</el-dropdown-item>
-                      <el-dropdown-item divided command="delete" :icon="Delete">删除</el-dropdown-item>
+                      <el-dropdown-item
+                        command="edit"
+                        :icon="Edit"
+                      >
+                        编辑
+                      </el-dropdown-item>
+                      <el-dropdown-item
+                        command="duplicate"
+                        :icon="CopyDocument"
+                      >
+                        复制
+                      </el-dropdown-item>
+                      <el-dropdown-item
+                        command="share"
+                        :icon="Share"
+                      >
+                        分享
+                      </el-dropdown-item>
+                      <el-dropdown-item
+                        command="export"
+                        :icon="Download"
+                      >
+                        导出
+                      </el-dropdown-item>
+                      <el-dropdown-item
+                        divided
+                        command="delete"
+                        :icon="Delete"
+                      >
+                        删除
+                      </el-dropdown-item>
                     </el-dropdown-menu>
                   </template>
                 </el-dropdown>
@@ -85,7 +165,10 @@
 
                 <div class="card-footer">
                   <span class="lesson-date">{{ formatDate(lesson.created_at) }}</span>
-                  <el-tag size="small" :type="getStatusType(lesson.status)">
+                  <el-tag
+                    size="small"
+                    :type="getStatusType(lesson.status)"
+                  >
                     {{ getStatusText(lesson.status) }}
                   </el-tag>
                 </div>
@@ -104,15 +187,38 @@
       size="70%"
       @close="handleDrawerClose"
     >
-      <div v-if="currentLesson" class="lesson-detail-content">
+      <div
+        v-if="currentLesson"
+        class="lesson-detail-content"
+      >
         <!-- 操作栏 -->
         <div class="detail-actions">
-          <el-button :icon="Edit" @click="editLesson">编辑</el-button>
-          <el-button :icon="CopyDocument" @click="duplicateLesson">复制</el-button>
-          <el-button :icon="Share" @click="openShareDialog">分享</el-button>
-          <el-dropdown @command="handleExport" style="display: inline-block">
+          <el-button
+            :icon="Edit"
+            @click="editLesson"
+          >
+            编辑
+          </el-button>
+          <el-button
+            :icon="CopyDocument"
+            @click="duplicateLesson"
+          >
+            复制
+          </el-button>
+          <el-button
+            :icon="Share"
+            @click="openShareDialog"
+          >
+            分享
+          </el-button>
+          <el-dropdown
+            style="display: inline-block"
+            @command="handleExport"
+          >
             <el-button :icon="Download">
-              导出 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+              导出 <el-icon class="el-icon--right">
+                <ArrowDown />
+              </el-icon>
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
@@ -131,31 +237,68 @@
               </el-dropdown-menu>
             </template>
           </el-dropdown>
-          <el-button :icon="Delete" type="danger" @click="deleteLesson">删除</el-button>
+          <el-button
+            :icon="Delete"
+            type="danger"
+            @click="deleteLesson"
+          >
+            删除
+          </el-button>
         </div>
 
         <!-- 教案内容标签页 -->
-        <el-tabs v-model="activeTab" class="lesson-tabs">
+        <el-tabs
+          v-model="activeTab"
+          class="lesson-tabs"
+        >
           <!-- 概览 -->
-          <el-tab-pane label="概览" name="overview">
+          <el-tab-pane
+            label="概览"
+            name="overview"
+          >
             <div class="tab-content">
-              <el-descriptions :column="2" border>
-                <el-descriptions-item label="标题">{{ currentLesson.title }}</el-descriptions-item>
-                <el-descriptions-item label="主题">{{ currentLesson.topic }}</el-descriptions-item>
-                <el-descriptions-item label="难度">
-                  <el-tag :type="getLevelType(currentLesson.level)">{{ currentLesson.level }}</el-tag>
+              <el-descriptions
+                :column="2"
+                border
+              >
+                <el-descriptions-item label="标题">
+                  {{ currentLesson.title }}
                 </el-descriptions-item>
-                <el-descriptions-item label="时长">{{ currentLesson.duration }} 分钟</el-descriptions-item>
-                <el-descriptions-item label="学生人数">{{ currentLesson.student_count || '未设置' }}</el-descriptions-item>
-                <el-descriptions-item label="创建时间">{{ formatDateTime(currentLesson.created_at) }}</el-descriptions-item>
-                <el-descriptions-item label="更新时间">{{ formatDateTime(currentLesson.updated_at) }}</el-descriptions-item>
-                <el-descriptions-item label="状态" :span="2">
-                  <el-tag :type="getStatusType(currentLesson.status)">{{ getStatusText(currentLesson.status) }}</el-tag>
+                <el-descriptions-item label="主题">
+                  {{ currentLesson.topic }}
+                </el-descriptions-item>
+                <el-descriptions-item label="难度">
+                  <el-tag :type="getLevelType(currentLesson.level)">
+                    {{ currentLesson.level }}
+                  </el-tag>
+                </el-descriptions-item>
+                <el-descriptions-item label="时长">
+                  {{ currentLesson.duration }} 分钟
+                </el-descriptions-item>
+                <el-descriptions-item label="学生人数">
+                  {{ currentLesson.student_count || '未设置' }}
+                </el-descriptions-item>
+                <el-descriptions-item label="创建时间">
+                  {{ formatDateTime(currentLesson.created_at) }}
+                </el-descriptions-item>
+                <el-descriptions-item label="更新时间">
+                  {{ formatDateTime(currentLesson.updated_at) }}
+                </el-descriptions-item>
+                <el-descriptions-item
+                  label="状态"
+                  :span="2"
+                >
+                  <el-tag :type="getStatusType(currentLesson.status)">
+                    {{ getStatusText(currentLesson.status) }}
+                  </el-tag>
                 </el-descriptions-item>
               </el-descriptions>
 
               <!-- 教学重点 -->
-              <div v-if="currentLesson.focus_areas?.length" class="section">
+              <div
+                v-if="currentLesson.focus_areas?.length"
+                class="section"
+              >
                 <h4>教学重点</h4>
                 <div class="tags-list">
                   <el-tag
@@ -171,19 +314,37 @@
           </el-tab-pane>
 
           <!-- 教学目标 -->
-          <el-tab-pane label="教学目标" name="objectives">
+          <el-tab-pane
+            label="教学目标"
+            name="objectives"
+          >
             <div class="tab-content">
               <div v-if="currentLesson.objectives">
-                <div v-if="currentLesson.objectives.language_knowledge?.length" class="objectives-section">
+                <div
+                  v-if="currentLesson.objectives.language_knowledge?.length"
+                  class="objectives-section"
+                >
                   <h4>语言知识</h4>
                   <ul class="objectives-list">
-                    <li v-for="(obj, i) in currentLesson.objectives.language_knowledge" :key="i">{{ obj }}</li>
+                    <li
+                      v-for="(obj, i) in currentLesson.objectives.language_knowledge"
+                      :key="i"
+                    >
+                      {{ obj }}
+                    </li>
                   </ul>
                 </div>
 
-                <div v-if="currentLesson.objectives.language_skills" class="objectives-section">
+                <div
+                  v-if="currentLesson.objectives.language_skills"
+                  class="objectives-section"
+                >
                   <h4>语言技能</h4>
-                  <div v-for="(skills, type) in currentLesson.objectives.language_skills" :key="type" class="skills-group">
+                  <div
+                    v-for="(skills, type) in currentLesson.objectives.language_skills"
+                    :key="type"
+                    class="skills-group"
+                  >
                     <div class="skill-type">
                       <span class="skill-label">{{ getSkillTypeName(type) }}:</span>
                       <span class="skill-items">{{ skills.join('、') }}</span>
@@ -191,53 +352,122 @@
                   </div>
                 </div>
               </div>
-              <el-empty v-else description="暂无教学目标数据" />
+              <el-empty
+                v-else
+                description="暂无教学目标数据"
+              />
             </div>
           </el-tab-pane>
 
           <!-- 核心词汇 -->
-          <el-tab-pane label="核心词汇" name="vocabulary">
+          <el-tab-pane
+            label="核心词汇"
+            name="vocabulary"
+          >
             <div class="tab-content">
               <div v-if="hasVocabulary(currentLesson)">
                 <!-- 名词 -->
-                <div v-if="currentLesson.vocabulary?.noun?.length" class="vocab-section">
+                <div
+                  v-if="currentLesson.vocabulary?.noun?.length"
+                  class="vocab-section"
+                >
                   <h4>名词</h4>
-                  <el-table :data="currentLesson.vocabulary.noun" size="small">
-                    <el-table-column prop="word" label="单词" width="150" />
-                    <el-table-column prop="meaning_cn" label="中文含义" />
-                    <el-table-column prop="pronunciation" label="发音" />
-                    <el-table-column prop="example" label="例句" />
+                  <el-table
+                    :data="currentLesson.vocabulary.noun"
+                    size="small"
+                  >
+                    <el-table-column
+                      prop="word"
+                      label="单词"
+                      width="150"
+                    />
+                    <el-table-column
+                      prop="meaning_cn"
+                      label="中文含义"
+                    />
+                    <el-table-column
+                      prop="pronunciation"
+                      label="发音"
+                    />
+                    <el-table-column
+                      prop="example"
+                      label="例句"
+                    />
                   </el-table>
                 </div>
 
                 <!-- 动词 -->
-                <div v-if="currentLesson.vocabulary?.verb?.length" class="vocab-section">
+                <div
+                  v-if="currentLesson.vocabulary?.verb?.length"
+                  class="vocab-section"
+                >
                   <h4>动词</h4>
-                  <el-table :data="currentLesson.vocabulary.verb" size="small">
-                    <el-table-column prop="word" label="单词" width="150" />
-                    <el-table-column prop="meaning_cn" label="中文含义" />
-                    <el-table-column prop="pronunciation" label="发音" />
-                    <el-table-column prop="example" label="例句" />
+                  <el-table
+                    :data="currentLesson.vocabulary.verb"
+                    size="small"
+                  >
+                    <el-table-column
+                      prop="word"
+                      label="单词"
+                      width="150"
+                    />
+                    <el-table-column
+                      prop="meaning_cn"
+                      label="中文含义"
+                    />
+                    <el-table-column
+                      prop="pronunciation"
+                      label="发音"
+                    />
+                    <el-table-column
+                      prop="example"
+                      label="例句"
+                    />
                   </el-table>
                 </div>
 
                 <!-- 其他词性 -->
-                <div v-if="currentLesson.vocabulary?.adjective?.length" class="vocab-section">
+                <div
+                  v-if="currentLesson.vocabulary?.adjective?.length"
+                  class="vocab-section"
+                >
                   <h4>形容词</h4>
-                  <el-table :data="currentLesson.vocabulary.adjective" size="small">
-                    <el-table-column prop="word" label="单词" width="150" />
-                    <el-table-column prop="meaning_cn" label="中文含义" />
-                    <el-table-column prop="pronunciation" label="发音" />
-                    <el-table-column prop="example" label="例句" />
+                  <el-table
+                    :data="currentLesson.vocabulary.adjective"
+                    size="small"
+                  >
+                    <el-table-column
+                      prop="word"
+                      label="单词"
+                      width="150"
+                    />
+                    <el-table-column
+                      prop="meaning_cn"
+                      label="中文含义"
+                    />
+                    <el-table-column
+                      prop="pronunciation"
+                      label="发音"
+                    />
+                    <el-table-column
+                      prop="example"
+                      label="例句"
+                    />
                   </el-table>
                 </div>
               </div>
-              <el-empty v-else description="暂无词汇数据" />
+              <el-empty
+                v-else
+                description="暂无词汇数据"
+              />
             </div>
           </el-tab-pane>
 
           <!-- 语法点 -->
-          <el-tab-pane label="语法点" name="grammar">
+          <el-tab-pane
+            label="语法点"
+            name="grammar"
+          >
             <div class="tab-content">
               <div v-if="currentLesson.grammar_points?.length">
                 <div
@@ -246,24 +476,43 @@
                   class="grammar-card"
                 >
                   <h4>{{ gp.name }}</h4>
-                  <p class="grammar-description">{{ gp.description }}</p>
-                  <div v-if="gp.rule" class="grammar-rule">
+                  <p class="grammar-description">
+                    {{ gp.description }}
+                  </p>
+                  <div
+                    v-if="gp.rule"
+                    class="grammar-rule"
+                  >
                     <strong>规则：</strong>{{ gp.rule }}
                   </div>
-                  <div v-if="gp.examples?.length" class="grammar-examples">
+                  <div
+                    v-if="gp.examples?.length"
+                    class="grammar-examples"
+                  >
                     <strong>例句：</strong>
                     <ul>
-                      <li v-for="(ex, i) in gp.examples" :key="i">{{ ex }}</li>
+                      <li
+                        v-for="(ex, i) in gp.examples"
+                        :key="i"
+                      >
+                        {{ ex }}
+                      </li>
                     </ul>
                   </div>
                 </div>
               </div>
-              <el-empty v-else description="暂无语法点数据" />
+              <el-empty
+                v-else
+                description="暂无语法点数据"
+              />
             </div>
           </el-tab-pane>
 
           <!-- 教学流程 -->
-          <el-tab-pane label="教学流程" name="structure">
+          <el-tab-pane
+            label="教学流程"
+            name="structure"
+          >
             <div class="tab-content">
               <div v-if="currentLesson.structure?.length">
                 <el-timeline class="lesson-timeline">
@@ -276,10 +525,18 @@
                   >
                     <div class="timeline-content">
                       <h4>{{ phase.title }}</h4>
-                      <p v-if="phase.description" class="phase-description">{{ phase.description }}</p>
+                      <p
+                        v-if="phase.description"
+                        class="phase-description"
+                      >
+                        {{ phase.description }}
+                      </p>
 
                       <!-- 活动 -->
-                      <div v-if="phase.activities?.length" class="phase-activities">
+                      <div
+                        v-if="phase.activities?.length"
+                        class="phase-activities"
+                      >
                         <div
                           v-for="(activity, actIndex) in phase.activities"
                           :key="actIndex"
@@ -291,7 +548,10 @@
                       </div>
 
                       <!-- 提示 -->
-                      <div v-if="phase.tips?.length" class="phase-tips">
+                      <div
+                        v-if="phase.tips?.length"
+                        class="phase-tips"
+                      >
                         <div
                           v-for="(tip, tipIndex) in phase.tips"
                           :key="tipIndex"
@@ -305,12 +565,18 @@
                   </el-timeline-item>
                 </el-timeline>
               </div>
-              <el-empty v-else description="暂无教学流程数据" />
+              <el-empty
+                v-else
+                description="暂无教学流程数据"
+              />
             </div>
           </el-tab-pane>
 
           <!-- 教学材料 -->
-          <el-tab-pane label="教学材料" name="materials">
+          <el-tab-pane
+            label="教学材料"
+            name="materials"
+          >
             <div class="tab-content">
               <div v-if="currentLesson.materials?.length">
                 <div class="materials-grid">
@@ -325,7 +591,9 @@
                       </el-icon>
                     </div>
                     <h4>{{ material.title }}</h4>
-                    <p class="material-desc">{{ material.description }}</p>
+                    <p class="material-desc">
+                      {{ material.description }}
+                    </p>
                     <el-button
                       type="primary"
                       link
@@ -337,14 +605,25 @@
                   </div>
                 </div>
               </div>
-              <el-empty v-else description="暂无教学材料">
-                <el-button type="primary" :icon="Plus">添加教学材料</el-button>
+              <el-empty
+                v-else
+                description="暂无教学材料"
+              >
+                <el-button
+                  type="primary"
+                  :icon="Plus"
+                >
+                  添加教学材料
+                </el-button>
               </el-empty>
             </div>
           </el-tab-pane>
 
           <!-- PPT 预览 -->
-          <el-tab-pane label="PPT 预览" name="ppt">
+          <el-tab-pane
+            label="PPT 预览"
+            name="ppt"
+          >
             <div class="tab-content ppt-preview-content">
               <PPTPreview
                 v-if="currentLesson.ppt_outline && currentLesson.ppt_outline.length > 0"
@@ -354,14 +633,25 @@
                 @change="handleSlideChange"
                 @export="handleExportSlide"
               />
-              <el-empty v-else description="暂无 PPT 内容">
-                <el-button type="primary" @click="goToAIPlanning">使用 AI 生成 PPT</el-button>
+              <el-empty
+                v-else
+                description="暂无 PPT 内容"
+              >
+                <el-button
+                  type="primary"
+                  @click="goToAIPlanning"
+                >
+                  使用 AI 生成 PPT
+                </el-button>
               </el-empty>
             </div>
           </el-tab-pane>
 
           <!-- 在线编辑 -->
-          <el-tab-pane label="在线编辑" name="edit">
+          <el-tab-pane
+            label="在线编辑"
+            name="edit"
+          >
             <div class="tab-content edit-content">
               <div class="edit-toolbar">
                 <el-button-group>
@@ -430,8 +720,16 @@
               ></div>
 
               <div class="edit-footer">
-                <el-button @click="resetEdit">重置</el-button>
-                <el-button type="primary" @click="saveEdit" :loading="saving">保存修改</el-button>
+                <el-button @click="resetEdit">
+                  重置
+                </el-button>
+                <el-button
+                  type="primary"
+                  :loading="saving"
+                  @click="saveEdit"
+                >
+                  保存修改
+                </el-button>
               </div>
             </div>
           </el-tab-pane>
@@ -440,30 +738,60 @@
     </el-drawer>
 
     <!-- 导出对话框 -->
-    <el-dialog v-model="showExportDialog" title="导出教案" width="500px">
+    <el-dialog
+      v-model="showExportDialog"
+      title="导出教案"
+      width="500px"
+    >
       <el-form label-width="100px">
         <el-form-item label="导出格式">
           <el-radio-group v-model="exportFormat">
-            <el-radio label="word">Word 文档</el-radio>
-            <el-radio label="pdf">PDF 文档</el-radio>
-            <el-radio label="markdown">Markdown</el-radio>
+            <el-radio label="word">
+              Word 文档
+            </el-radio>
+            <el-radio label="pdf">
+              PDF 文档
+            </el-radio>
+            <el-radio label="markdown">
+              Markdown
+            </el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="包含内容">
           <el-checkbox-group v-model="exportSections">
-            <el-checkbox label="overview">概览信息</el-checkbox>
-            <el-checkbox label="objectives">教学目标</el-checkbox>
-            <el-checkbox label="vocabulary">核心词汇</el-checkbox>
-            <el-checkbox label="grammar">语法点</el-checkbox>
-            <el-checkbox label="structure">教学流程</el-checkbox>
-            <el-checkbox label="materials">教学材料</el-checkbox>
+            <el-checkbox label="overview">
+              概览信息
+            </el-checkbox>
+            <el-checkbox label="objectives">
+              教学目标
+            </el-checkbox>
+            <el-checkbox label="vocabulary">
+              核心词汇
+            </el-checkbox>
+            <el-checkbox label="grammar">
+              语法点
+            </el-checkbox>
+            <el-checkbox label="structure">
+              教学流程
+            </el-checkbox>
+            <el-checkbox label="materials">
+              教学材料
+            </el-checkbox>
           </el-checkbox-group>
         </el-form-item>
       </el-form>
 
       <template #footer>
-        <el-button @click="showExportDialog = false">取消</el-button>
-        <el-button type="primary" @click="doExport" :loading="exporting">导出</el-button>
+        <el-button @click="showExportDialog = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="exporting"
+          @click="doExport"
+        >
+          导出
+        </el-button>
       </template>
     </el-dialog>
 

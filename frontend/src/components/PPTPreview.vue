@@ -50,7 +50,10 @@
     <div class="preview-body">
       <!-- 缩略图侧边栏 -->
       <transition name="slide-left">
-        <div v-show="showThumbnails" class="thumbnail-sidebar">
+        <div
+          v-show="showThumbnails"
+          class="thumbnail-sidebar"
+        >
           <div class="thumbnail-list">
             <SlideThumbnail
               v-for="(slide, index) in slides"
@@ -76,7 +79,10 @@
             :show-notes="showNotes"
             :slide-number="currentIndex + 1"
           />
-          <div v-else class="slide-empty">
+          <div
+            v-else
+            class="slide-empty"
+          >
             <el-empty description="暂无幻灯片" />
           </div>
         </div>
@@ -84,7 +90,10 @@
     </div>
 
     <!-- 底部快捷键提示 -->
-    <div v-if="showKeyboardHints" class="keyboard-hints">
+    <div
+      v-if="showKeyboardHints"
+      class="keyboard-hints"
+    >
       <el-space :size="16">
         <span class="hint-item"><kbd>←</kbd> <kbd>→</kbd> 切换</span>
         <span class="hint-item"><kbd>+</kbd> <kbd>-</kbd> 缩放</span>

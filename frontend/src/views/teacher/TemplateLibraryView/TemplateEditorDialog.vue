@@ -16,7 +16,10 @@
       :rules="formRules"
       label-width="100px"
     >
-      <el-form-item label="模板名称" prop="name">
+      <el-form-item
+        label="模板名称"
+        prop="name"
+      >
         <el-input
           v-model="formData.name"
           placeholder="请输入模板名称"
@@ -25,30 +28,84 @@
         />
       </el-form-item>
 
-      <el-form-item label="分类" prop="category_key">
-        <el-select v-model="formData.category_key" placeholder="请选择分类">
-          <el-option label="口语课" value="speaking" />
-          <el-option label="听力课" value="listening" />
-          <el-option label="阅读课" value="reading" />
-          <el-option label="写作课" value="writing" />
-          <el-option label="语法课" value="grammar" />
-          <el-option label="词汇课" value="vocabulary" />
-          <el-option label="综合课" value="comprehensive" />
+      <el-form-item
+        label="分类"
+        prop="category_key"
+      >
+        <el-select
+          v-model="formData.category_key"
+          placeholder="请选择分类"
+        >
+          <el-option
+            label="口语课"
+            value="speaking"
+          />
+          <el-option
+            label="听力课"
+            value="listening"
+          />
+          <el-option
+            label="阅读课"
+            value="reading"
+          />
+          <el-option
+            label="写作课"
+            value="writing"
+          />
+          <el-option
+            label="语法课"
+            value="grammar"
+          />
+          <el-option
+            label="词汇课"
+            value="vocabulary"
+          />
+          <el-option
+            label="综合课"
+            value="comprehensive"
+          />
         </el-select>
       </el-form-item>
 
-      <el-form-item label="难度级别" prop="level">
-        <el-select v-model="formData.level" placeholder="请选择级别">
-          <el-option label="A1" value="A1" />
-          <el-option label="A2" value="A2" />
-          <el-option label="B1" value="B1" />
-          <el-option label="B2" value="B2" />
-          <el-option label="C1" value="C1" />
-          <el-option label="C2" value="C2" />
+      <el-form-item
+        label="难度级别"
+        prop="level"
+      >
+        <el-select
+          v-model="formData.level"
+          placeholder="请选择级别"
+        >
+          <el-option
+            label="A1"
+            value="A1"
+          />
+          <el-option
+            label="A2"
+            value="A2"
+          />
+          <el-option
+            label="B1"
+            value="B1"
+          />
+          <el-option
+            label="B2"
+            value="B2"
+          />
+          <el-option
+            label="C1"
+            value="C1"
+          />
+          <el-option
+            label="C2"
+            value="C2"
+          />
         </el-select>
       </el-form-item>
 
-      <el-form-item label="建议时长" prop="duration">
+      <el-form-item
+        label="建议时长"
+        prop="duration"
+      >
         <el-input-number
           v-model="formData.duration"
           :min="15"
@@ -59,7 +116,10 @@
         <span style="margin-left: 8px">分钟</span>
       </el-form-item>
 
-      <el-form-item label="描述" prop="description">
+      <el-form-item
+        label="描述"
+        prop="description"
+      >
         <el-input
           v-model="formData.description"
           type="textarea"
@@ -86,7 +146,10 @@
           show-icon
         />
         <div style="margin-top: 12px">
-          <el-text size="small" type="info">
+          <el-text
+            size="small"
+            type="info"
+          >
             当前使用默认教学结构，后续版本将支持自定义结构配置
           </el-text>
         </div>
@@ -94,8 +157,14 @@
     </el-form>
 
     <template #footer>
-      <el-button @click="handleClose">取消</el-button>
-      <el-button type="primary" @click="handleSubmit" :loading="submitting">
+      <el-button @click="handleClose">
+        取消
+      </el-button>
+      <el-button
+        type="primary"
+        :loading="submitting"
+        @click="handleSubmit"
+      >
         {{ template ? '保存' : '创建' }}
       </el-button>
     </template>

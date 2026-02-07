@@ -7,7 +7,10 @@
     <!-- 导航按钮组 -->
     <div class="navigation-group">
       <el-button-group>
-        <el-tooltip content="上一页 (←)" placement="top">
+        <el-tooltip
+          content="上一页 (←)"
+          placement="top"
+        >
           <el-button
             :disabled="currentIndex === 0"
             @click="handlePrevious"
@@ -16,7 +19,10 @@
           </el-button>
         </el-tooltip>
 
-        <el-tooltip content="下一页 (→)" placement="top">
+        <el-tooltip
+          content="下一页 (→)"
+          placement="top"
+        >
           <el-button
             :disabled="currentIndex === totalSlides - 1"
             @click="handleNext"
@@ -37,7 +43,10 @@
     <!-- 缩放控制组 -->
     <div class="zoom-group">
       <el-button-group>
-        <el-tooltip content="缩小 (-)" placement="top">
+        <el-tooltip
+          content="缩小 (-)"
+          placement="top"
+        >
           <el-button
             :disabled="scale <= minScale"
             @click="handleZoomOut"
@@ -46,11 +55,17 @@
           </el-button>
         </el-tooltip>
 
-        <el-button disabled class="scale-display">
+        <el-button
+          disabled
+          class="scale-display"
+        >
           {{ Math.round(scale * 100) }}%
         </el-button>
 
-        <el-tooltip content="放大 (+)" placement="top">
+        <el-tooltip
+          content="放大 (+)"
+          placement="top"
+        >
           <el-button
             :disabled="scale >= maxScale"
             @click="handleZoomIn"
@@ -59,7 +74,10 @@
           </el-button>
         </el-tooltip>
 
-        <el-tooltip content="重置 (R)" placement="top">
+        <el-tooltip
+          content="重置 (R)"
+          placement="top"
+        >
           <el-button @click="handleResetZoom">
             <el-icon><RefreshRight /></el-icon>
           </el-button>
@@ -70,7 +88,10 @@
     <!-- 功能按钮组 -->
     <div class="action-group">
       <el-button-group>
-        <el-tooltip :content="isFullscreen ? '退出全屏 (Esc)' : '全屏 (F)'" placement="top">
+        <el-tooltip
+          :content="isFullscreen ? '退出全屏 (Esc)' : '全屏 (F)'"
+          placement="top"
+        >
           <el-button @click="handleToggleFullscreen">
             <el-icon>
               <component :is="isFullscreen ? 'FullScreen' : 'FullScreen'" />
@@ -78,25 +99,38 @@
           </el-button>
         </el-tooltip>
 
-        <el-tooltip :content="showThumbnails ? '隐藏缩略图' : '显示缩略图'" placement="top">
+        <el-tooltip
+          :content="showThumbnails ? '隐藏缩略图' : '显示缩略图'"
+          placement="top"
+        >
           <el-button @click="handleToggleThumbnails">
             <el-icon><Grid /></el-icon>
           </el-button>
         </el-tooltip>
 
-        <el-tooltip :content="showNotes ? '隐藏备注' : '显示备注'" placement="top">
+        <el-tooltip
+          :content="showNotes ? '隐藏备注' : '显示备注'"
+          placement="top"
+        >
           <el-button @click="handleToggleNotes">
             <el-icon><Document /></el-icon>
           </el-button>
         </el-tooltip>
 
-        <el-tooltip content="导出当前页" placement="top">
+        <el-tooltip
+          content="导出当前页"
+          placement="top"
+        >
           <el-button @click="handleExport">
             <el-icon><Download /></el-icon>
           </el-button>
         </el-tooltip>
 
-        <el-tooltip v-if="autoplay" :content="isPlaying ? '暂停' : '播放'" placement="top">
+        <el-tooltip
+          v-if="autoplay"
+          :content="isPlaying ? '暂停' : '播放'"
+          placement="top"
+        >
           <el-button @click="handleTogglePlay">
             <el-icon>
               <component :is="isPlaying ? 'VideoPause' : 'VideoPlay'" />

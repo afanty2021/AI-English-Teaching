@@ -10,11 +10,24 @@
             :ellipsis="false"
             router
           >
-            <el-menu-item index="/student">仪表板</el-menu-item>
-            <el-menu-item index="/student/learning">学习内容</el-menu-item>
-            <el-menu-item index="/student/speaking">口语练习</el-menu-item>
-            <el-menu-item index="/student/progress">学习进度</el-menu-item>
-            <el-menu-item index="/" @click="handleLogout">退出</el-menu-item>
+            <el-menu-item index="/student">
+              仪表板
+            </el-menu-item>
+            <el-menu-item index="/student/learning">
+              学习内容
+            </el-menu-item>
+            <el-menu-item index="/student/speaking">
+              口语练习
+            </el-menu-item>
+            <el-menu-item index="/student/progress">
+              学习进度
+            </el-menu-item>
+            <el-menu-item
+              index="/"
+              @click="handleLogout"
+            >
+              退出
+            </el-menu-item>
           </el-menu>
         </div>
       </el-header>
@@ -25,17 +38,30 @@
           <template #header>
             <div class="card-header">
               <h3>今日推荐阅读</h3>
-              <el-button type="primary" link @click="loadRecommendations">
+              <el-button
+                type="primary"
+                link
+                @click="loadRecommendations"
+              >
                 <el-icon><Refresh /></el-icon>
                 刷新
               </el-button>
             </div>
           </template>
 
-          <el-empty v-if="loading" description="加载中..." />
-          <el-empty v-else-if="recommendations.length === 0" description="暂无推荐内容" />
+          <el-empty
+            v-if="loading"
+            description="加载中..."
+          />
+          <el-empty
+            v-else-if="recommendations.length === 0"
+            description="暂无推荐内容"
+          />
 
-          <div v-else class="content-list">
+          <div
+            v-else
+            class="content-list"
+          >
             <el-card
               v-for="item in recommendations"
               :key="item.id"
@@ -45,14 +71,19 @@
             >
               <div class="content-header">
                 <div class="content-info">
-                  <el-tag :type="getLevelType(item.difficulty_level)" size="small">
+                  <el-tag
+                    :type="getLevelType(item.difficulty_level)"
+                    size="small"
+                  >
                     {{ item.difficulty_level }}
                   </el-tag>
                   <span class="content-title">{{ item.title }}</span>
                 </div>
                 <span class="content-meta">{{ item.word_count }} 词</span>
               </div>
-              <p class="content-desc">{{ item.description }}</p>
+              <p class="content-desc">
+                {{ item.description }}
+              </p>
               <div class="content-tags">
                 <el-tag
                   v-for="tag in item.tags?.slice(0, 3)"
@@ -73,7 +104,10 @@
             <h3>最近学习</h3>
           </template>
 
-          <el-empty v-if="recentContents.length === 0" description="暂无学习记录" />
+          <el-empty
+            v-if="recentContents.length === 0"
+            description="暂无学习记录"
+          />
 
           <el-timeline v-else>
             <el-timeline-item
@@ -82,11 +116,19 @@
               :timestamp="formatDate(item.completed_at)"
               placement="top"
             >
-              <el-card class="recent-card" @click="viewContent(item)">
+              <el-card
+                class="recent-card"
+                @click="viewContent(item)"
+              >
                 <h4>{{ item.title }}</h4>
                 <p>{{ item.description }}</p>
                 <div class="completion-info">
-                  <el-tag type="success" size="small">已完成</el-tag>
+                  <el-tag
+                    type="success"
+                    size="small"
+                  >
+                    已完成
+                  </el-tag>
                   <span class="points">+{{ item.points }} 积分</span>
                 </div>
               </el-card>
@@ -103,20 +145,30 @@
       width="800px"
       :close-on-click-modal="false"
     >
-      <div v-if="selectedContent" class="content-detail">
+      <div
+        v-if="selectedContent"
+        class="content-detail"
+      >
         <div class="detail-meta">
           <el-tag :type="getLevelType(selectedContent.difficulty_level)">
             {{ selectedContent.difficulty_level }}
           </el-tag>
-          <el-tag type="info">{{ selectedContent.content_type }}</el-tag>
+          <el-tag type="info">
+            {{ selectedContent.content_type }}
+          </el-tag>
           <span>{{ selectedContent.word_count }} 词</span>
         </div>
 
         <div class="detail-body">
-          <p class="detail-text">{{ selectedContent.content_text }}</p>
+          <p class="detail-text">
+            {{ selectedContent.content_text }}
+          </p>
         </div>
 
-        <div v-if="selectedContent.knowledge_points?.length" class="detail-section">
+        <div
+          v-if="selectedContent.knowledge_points?.length"
+          class="detail-section"
+        >
           <h4>知识点</h4>
           <el-tag
             v-for="kp in selectedContent.knowledge_points"
@@ -129,8 +181,13 @@
       </div>
 
       <template #footer>
-        <el-button @click="contentDialogVisible = false">关闭</el-button>
-        <el-button type="primary" @click="markAsCompleted">
+        <el-button @click="contentDialogVisible = false">
+          关闭
+        </el-button>
+        <el-button
+          type="primary"
+          @click="markAsCompleted"
+        >
           标记为已完成
         </el-button>
       </template>

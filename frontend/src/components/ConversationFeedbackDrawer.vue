@@ -9,7 +9,10 @@
     <!-- 抽屉内容 -->
     <div class="feedback-drawer-content">
       <!-- 整体评分卡片 -->
-      <div v-if="scores" class="overall-score-card">
+      <div
+        v-if="scores"
+        class="overall-score-card"
+      >
         <div class="score-circle-wrapper">
           <el-progress
             type="circle"
@@ -24,12 +27,17 @@
         </div>
         <div class="score-info">
           <h3>总体评分</h3>
-          <p class="score-description">{{ scoreDescription }}</p>
+          <p class="score-description">
+            {{ scoreDescription }}
+          </p>
         </div>
       </div>
 
       <!-- 分项评分 -->
-      <div v-if="scores" class="detailed-scores">
+      <div
+        v-if="scores"
+        class="detailed-scores"
+      >
         <h4>分项评分</h4>
         <div class="score-list">
           <div
@@ -49,10 +57,16 @@
               :stroke-width="8"
               :show-text="true"
             />
-            <div v-if="dimension.feedback" class="dimension-feedback">
+            <div
+              v-if="dimension.feedback"
+              class="dimension-feedback"
+            >
               {{ dimension.feedback }}
             </div>
-            <div v-if="dimension.suggestions && dimension.suggestions.length > 0" class="dimension-suggestions">
+            <div
+              v-if="dimension.suggestions && dimension.suggestions.length > 0"
+              class="dimension-suggestions"
+            >
               <div
                 v-for="(suggestion, index) in dimension.suggestions"
                 :key="index"
@@ -67,7 +81,10 @@
       </div>
 
       <!-- 改进建议 -->
-      <div v-if="scores && scores.suggestions && scores.suggestions.length > 0" class="suggestions-section">
+      <div
+        v-if="scores && scores.suggestions && scores.suggestions.length > 0"
+        class="suggestions-section"
+      >
         <h4>改进建议</h4>
         <div class="suggestions-list">
           <div
@@ -75,14 +92,19 @@
             :key="index"
             class="main-suggestion-item"
           >
-            <el-icon class="suggestion-icon"><Star /></el-icon>
+            <el-icon class="suggestion-icon">
+              <Star />
+            </el-icon>
             <span>{{ suggestion }}</span>
           </div>
         </div>
       </div>
 
       <!-- 关键词学习 -->
-      <div v-if="keyWords.length > 0" class="key-words-section">
+      <div
+        v-if="keyWords.length > 0"
+        class="key-words-section"
+      >
         <h4>关键词</h4>
         <div class="key-words-list">
           <el-tag
@@ -99,9 +121,14 @@
 
       <!-- 操作按钮 -->
       <div class="drawer-actions">
-        <el-button type="primary" @click="handleContinue">
+        <el-button
+          type="primary"
+          @click="handleContinue"
+        >
           继续练习
-          <el-icon class="el-icon--right"><Right /></el-icon>
+          <el-icon class="el-icon--right">
+            <Right />
+          </el-icon>
         </el-button>
         <el-button @click="handleViewReport">
           查看详细报告

@@ -9,8 +9,15 @@
     </div>
 
     <!-- 筛选器 -->
-    <el-card class="filter-card" shadow="never">
-      <el-form :inline="true" :model="filters" @submit.prevent="loadClassSummary">
+    <el-card
+      class="filter-card"
+      shadow="never"
+    >
+      <el-form
+        :inline="true"
+        :model="filters"
+        @submit.prevent="loadClassSummary"
+      >
         <el-form-item label="班级">
           <el-select
             v-model="filters.classId"
@@ -42,14 +49,25 @@
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" @click="loadClassSummary">查询</el-button>
-          <el-button @click="resetFilters">重置</el-button>
+          <el-button
+            type="primary"
+            @click="loadClassSummary"
+          >
+            查询
+          </el-button>
+          <el-button @click="resetFilters">
+            重置
+          </el-button>
         </el-form-item>
       </el-form>
     </el-card>
 
     <!-- 班级概况 -->
-    <el-card v-if="summary" class="overview-card" shadow="never">
+    <el-card
+      v-if="summary"
+      class="overview-card"
+      shadow="never"
+    >
       <template #header>
         <div class="card-header">
           <h3>{{ summary.class_name }}</h3>
@@ -61,68 +79,115 @@
 
       <div class="overview-grid">
         <div class="overview-item">
-          <div class="item-icon" style="background-color: #409EFF;">
+          <div
+            class="item-icon"
+            style="background-color: #409EFF;"
+          >
             <el-icon><User /></el-icon>
           </div>
           <div class="item-content">
-            <div class="item-value">{{ summary.total_students }}</div>
-            <div class="item-label">班级总人数</div>
+            <div class="item-value">
+              {{ summary.total_students }}
+            </div>
+            <div class="item-label">
+              班级总人数
+            </div>
           </div>
         </div>
 
         <div class="overview-item">
-          <div class="item-icon" style="background-color: #67C23A;">
+          <div
+            class="item-icon"
+            style="background-color: #67C23A;"
+          >
             <el-icon><TrendCharts /></el-icon>
           </div>
           <div class="item-content">
-            <div class="item-value">{{ summary.active_students }}</div>
-            <div class="item-label">活跃学生数</div>
+            <div class="item-value">
+              {{ summary.active_students }}
+            </div>
+            <div class="item-label">
+              活跃学生数
+            </div>
           </div>
         </div>
 
         <div class="overview-item">
-          <div class="item-icon" style="background-color: #E6A23C;">
+          <div
+            class="item-icon"
+            style="background-color: #E6A23C;"
+          >
             <el-icon><Clock /></el-icon>
           </div>
           <div class="item-content">
-            <div class="item-value">{{ summary.overall_stats.total_study_hours.toFixed(1) }}h</div>
-            <div class="item-label">总学习时长</div>
+            <div class="item-value">
+              {{ summary.overall_stats.total_study_hours.toFixed(1) }}h
+            </div>
+            <div class="item-label">
+              总学习时长
+            </div>
           </div>
         </div>
 
         <div class="overview-item">
-          <div class="item-icon" style="background-color: #F56C6C;">
+          <div
+            class="item-icon"
+            style="background-color: #F56C6C;"
+          >
             <el-icon><Trophy /></el-icon>
           </div>
           <div class="item-content">
-            <div class="item-value">{{ (summary.overall_stats.avg_completion_rate * 100).toFixed(1) }}%</div>
-            <div class="item-label">平均完成率</div>
+            <div class="item-value">
+              {{ (summary.overall_stats.avg_completion_rate * 100).toFixed(1) }}%
+            </div>
+            <div class="item-label">
+              平均完成率
+            </div>
           </div>
         </div>
       </div>
     </el-card>
 
     <!-- 图表区域 -->
-    <div v-if="summary" class="charts-container">
+    <div
+      v-if="summary"
+      class="charts-container"
+    >
       <!-- 能力分布雷达图 -->
-      <el-card class="chart-card" shadow="never">
+      <el-card
+        class="chart-card"
+        shadow="never"
+      >
         <template #header>
           <h3><el-icon><PieChart /></el-icon> 班级能力分布</h3>
         </template>
-        <div ref="radarChartRef" class="chart"></div>
+        <div
+          ref="radarChartRef"
+          class="chart"
+        ></div>
       </el-card>
 
       <!-- 学习完成率柱状图 -->
-      <el-card class="chart-card" shadow="never">
+      <el-card
+        class="chart-card"
+        shadow="never"
+      >
         <template #header>
           <h3><el-icon><BarChart /></el-icon> 学习完成率分布</h3>
         </template>
-        <div ref="barChartRef" class="chart"></div>
+        <div
+          ref="barChartRef"
+          class="chart"
+        ></div>
       </el-card>
     </div>
 
     <!-- 薄弱知识点 -->
-    <el-card v-if="summary?.top_weak_points?.length" class="weak-points-card" shadow="never">
+    <el-card
+      v-if="summary?.top_weak_points?.length"
+      class="weak-points-card"
+      shadow="never"
+    >
       <template #header>
         <h3><el-icon><Warning /></el-icon> 班级薄弱知识点汇总</h3>
       </template>
@@ -152,12 +217,21 @@
     </el-card>
 
     <!-- 加载状态 -->
-    <div v-else-if="loading" class="loading">
-      <el-skeleton :rows="8" animated />
+    <div
+      v-else-if="loading"
+      class="loading"
+    >
+      <el-skeleton
+        :rows="8"
+        animated
+      />
     </div>
 
     <!-- 空状态 -->
-    <el-empty v-else description="请选择班级查看学习状况" />
+    <el-empty
+      v-else
+      description="请选择班级查看学习状况"
+    />
   </div>
 </template>
 

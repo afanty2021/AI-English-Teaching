@@ -10,10 +10,16 @@
         <div class="page-header">
           <div class="header-left">
             <h1>模板库</h1>
-            <p class="page-description">使用预设模板快速创建教案，提高备课效率</p>
+            <p class="page-description">
+              使用预设模板快速创建教案，提高备课效率
+            </p>
           </div>
           <div class="header-actions">
-            <el-button type="primary" :icon="Plus" @click="showCreateDialog = true">
+            <el-button
+              type="primary"
+              :icon="Plus"
+              @click="showCreateDialog = true"
+            >
               创建模板
             </el-button>
           </div>
@@ -41,12 +47,30 @@
                 style="width: 100px"
                 @change="loadTemplates"
               >
-                <el-option label="A1" value="A1" />
-                <el-option label="A2" value="A2" />
-                <el-option label="B1" value="B1" />
-                <el-option label="B2" value="B2" />
-                <el-option label="C1" value="C1" />
-                <el-option label="C2" value="C2" />
+                <el-option
+                  label="A1"
+                  value="A1"
+                />
+                <el-option
+                  label="A2"
+                  value="A2"
+                />
+                <el-option
+                  label="B1"
+                  value="B1"
+                />
+                <el-option
+                  label="B2"
+                  value="B2"
+                />
+                <el-option
+                  label="C1"
+                  value="C1"
+                />
+                <el-option
+                  label="C2"
+                  value="C2"
+                />
               </el-select>
 
               <el-select
@@ -69,13 +93,28 @@
                 style="width: 120px"
                 @change="loadTemplates"
               >
-                <el-option label="最新" value="created_at" />
-                <el-option label="最热" value="usage_count" />
-                <el-option label="评分" value="rating" />
-                <el-option label="名称" value="name" />
+                <el-option
+                  label="最新"
+                  value="created_at"
+                />
+                <el-option
+                  label="最热"
+                  value="usage_count"
+                />
+                <el-option
+                  label="评分"
+                  value="rating"
+                />
+                <el-option
+                  label="名称"
+                  value="name"
+                />
               </el-select>
 
-              <el-radio-group v-model="viewMode" class="view-toggle">
+              <el-radio-group
+                v-model="viewMode"
+                class="view-toggle"
+              >
                 <el-radio-button value="grid">
                   <el-icon><Grid /></el-icon>
                 </el-radio-button>
@@ -96,13 +135,19 @@
             v-if="!isLoading && filteredTemplates.length === 0"
             description="暂无模板"
           >
-            <el-button type="primary" @click="showCreateDialog = true">
+            <el-button
+              type="primary"
+              @click="showCreateDialog = true"
+            >
               创建第一个模板
             </el-button>
           </el-empty>
 
           <!-- 网格视图 -->
-          <div v-else-if="viewMode === 'grid'" class="templates-grid">
+          <div
+            v-else-if="viewMode === 'grid'"
+            class="templates-grid"
+          >
             <TemplateCard
               v-for="template in filteredTemplates"
               :key="template.id"
@@ -119,23 +164,55 @@
           </div>
 
           <!-- 列表视图 -->
-          <el-table v-else :data="filteredTemplates" stripe @row-click="handleViewTemplate">
-            <el-table-column prop="name" label="名称" min-width="200" />
-            <el-table-column prop="category_label" label="分类" width="120" />
-            <el-table-column label="级别" width="80">
+          <el-table
+            v-else
+            :data="filteredTemplates"
+            stripe
+            @row-click="handleViewTemplate"
+          >
+            <el-table-column
+              prop="name"
+              label="名称"
+              min-width="200"
+            />
+            <el-table-column
+              prop="category_label"
+              label="分类"
+              width="120"
+            />
+            <el-table-column
+              label="级别"
+              width="80"
+            >
               <template #default="{ row }">
-                <el-tag size="small" :type="getLevelType(row.level)">
+                <el-tag
+                  size="small"
+                  :type="getLevelType(row.level)"
+                >
                   {{ row.level }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="duration" label="时长" width="80">
+            <el-table-column
+              prop="duration"
+              label="时长"
+              width="80"
+            >
               <template #default="{ row }">
                 {{ row.duration }} 分钟
               </template>
             </el-table-column>
-            <el-table-column prop="usage_count" label="使用次数" width="90" align="center" />
-            <el-table-column label="评分" width="90" align="center">
+            <el-table-column
+              prop="usage_count"
+              label="使用次数"
+              width="90"
+              align="center"
+            />
+            <el-table-column
+              label="评分"
+              width="90"
+              align="center"
+            >
               <template #default="{ row }">
                 <span v-if="row.rating > 0">
                   <el-icon><StarFilled /></el-icon>
@@ -144,7 +221,11 @@
                 <span v-else>-</span>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="220" fixed="right">
+            <el-table-column
+              label="操作"
+              width="220"
+              fixed="right"
+            >
               <template #default="{ row }">
                 <el-button
                   link
@@ -154,7 +235,10 @@
                 >
                   应用
                 </el-button>
-                <el-button link @click.stop="handlePreviewTemplate(row)">
+                <el-button
+                  link
+                  @click.stop="handlePreviewTemplate(row)"
+                >
                   预览
                 </el-button>
                 <el-dropdown @click.stop>
@@ -189,7 +273,10 @@
           </el-table>
 
           <!-- 分页 -->
-          <div v-if="total > pageSize" class="pagination">
+          <div
+            v-if="total > pageSize"
+            class="pagination"
+          >
             <el-pagination
               v-model:current-page="currentPage"
               v-model:page-size="pageSize"

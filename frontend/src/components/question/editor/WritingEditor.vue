@@ -2,7 +2,9 @@
   <div class="writing-editor">
     <div class="section-header">
       <h4>{{ title }}参考答案</h4>
-      <el-tag size="small">{{ charCount }} 字符</el-tag>
+      <el-tag size="small">
+        {{ charCount }} 字符
+      </el-tag>
     </div>
 
     <el-input

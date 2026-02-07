@@ -5,34 +5,80 @@
         <h2>{{ bank?.name || '题库详情' }}</h2>
       </template>
       <template #extra>
-        <el-button :icon="Edit" @click="handleEditBank">编辑题库</el-button>
-        <el-button type="primary" :icon="Plus" @click="showCreateQuestion = true">新建题目</el-button>
+        <el-button
+          :icon="Edit"
+          @click="handleEditBank"
+        >
+          编辑题库
+        </el-button>
+        <el-button
+          type="primary"
+          :icon="Plus"
+          @click="showCreateQuestion = true"
+        >
+          新建题目
+        </el-button>
       </template>
     </el-page-header>
 
-    <el-card v-loading="loading" class="bank-info">
-      <el-empty v-if="!bank && !loading" description="题库不存在" />
+    <el-card
+      v-loading="loading"
+      class="bank-info"
+    >
+      <el-empty
+        v-if="!bank && !loading"
+        description="题库不存在"
+      />
 
-      <el-descriptions v-else :column="3" border>
-        <el-descriptions-item label="题库名称">{{ bank?.name }}</el-descriptions-item>
+      <el-descriptions
+        v-else
+        :column="3"
+        border
+      >
+        <el-descriptions-item label="题库名称">
+          {{ bank?.name }}
+        </el-descriptions-item>
         <el-descriptions-item label="练习类型">
-          <el-tag v-if="bank" :type="getTypeTagType(bank.practice_type)">
+          <el-tag
+            v-if="bank"
+            :type="getTypeTagType(bank.practice_type)"
+          >
             {{ getTypeLabel(bank.practice_type) }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="难度等级">{{ bank?.difficulty_level || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="题目数量">{{ bank?.question_count }}</el-descriptions-item>
+        <el-descriptions-item label="难度等级">
+          {{ bank?.difficulty_level || '-' }}
+        </el-descriptions-item>
+        <el-descriptions-item label="题目数量">
+          {{ bank?.question_count }}
+        </el-descriptions-item>
         <el-descriptions-item label="是否公开">
-          <el-tag v-if="bank" :type="bank.is_public ? 'success' : 'info'">
+          <el-tag
+            v-if="bank"
+            :type="bank.is_public ? 'success' : 'info'"
+          >
             {{ bank.is_public ? '公开' : '私有' }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="创建时间">{{ bank ? formatDate(bank.created_at) : '' }}</el-descriptions-item>
-        <el-descriptions-item label="描述" :span="3">
+        <el-descriptions-item label="创建时间">
+          {{ bank ? formatDate(bank.created_at) : '' }}
+        </el-descriptions-item>
+        <el-descriptions-item
+          label="描述"
+          :span="3"
+        >
           {{ bank?.description || '暂无描述' }}
         </el-descriptions-item>
-        <el-descriptions-item v-if="bank?.tags?.length" label="标签" :span="3">
-          <el-tag v-for="tag in bank?.tags" :key="tag" style="margin-right: 8px">
+        <el-descriptions-item
+          v-if="bank?.tags?.length"
+          label="标签"
+          :span="3"
+        >
+          <el-tag
+            v-for="tag in bank?.tags"
+            :key="tag"
+            style="margin-right: 8px"
+          >
             {{ tag }}
           </el-tag>
         </el-descriptions-item>
@@ -40,45 +86,110 @@
     </el-card>
 
     <!-- 题目列表 -->
-    <el-card v-loading="questionsLoading" class="questions-section">
+    <el-card
+      v-loading="questionsLoading"
+      class="questions-section"
+    >
       <template #header>
         <div class="section-header">
           <h3>题目列表 ({{ totalQuestions }})</h3>
-          <el-button link :icon="Refresh" @click="loadQuestions">刷新</el-button>
+          <el-button
+            link
+            :icon="Refresh"
+            @click="loadQuestions"
+          >
+            刷新
+          </el-button>
         </div>
       </template>
 
-      <el-empty v-if="!questions.length && !questionsLoading" description="暂无题目，点击&#34;添加题目&#34;开始创建" />
+      <el-empty
+        v-if="!questions.length && !questionsLoading"
+        description="暂无题目，点击&#34;添加题目&#34;开始创建"
+      />
 
-      <el-table v-else :data="questions" stripe>
-        <el-table-column type="index" label="序号" width="60" />
-        <el-table-column prop="content_text" label="题目内容" min-width="300">
+      <el-table
+        v-else
+        :data="questions"
+        stripe
+      >
+        <el-table-column
+          type="index"
+          label="序号"
+          width="60"
+        />
+        <el-table-column
+          prop="content_text"
+          label="题目内容"
+          min-width="300"
+        >
           <template #default="{ row }">
-            <div class="question-content">{{ row.content_text }}</div>
+            <div class="question-content">
+              {{ row.content_text }}
+            </div>
           </template>
         </el-table-column>
-        <el-table-column prop="question_type" label="类型" width="100">
+        <el-table-column
+          prop="question_type"
+          label="类型"
+          width="100"
+        >
           <template #default="{ row }">
-            <el-tag size="small">{{ getQuestionTypeLabel(row.question_type) }}</el-tag>
+            <el-tag size="small">
+              {{ getQuestionTypeLabel(row.question_type) }}
+            </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="difficulty_level" label="难度" width="80">
+        <el-table-column
+          prop="difficulty_level"
+          label="难度"
+          width="80"
+        >
           <template #default="{ row }">
             {{ row.difficulty_level || '-' }}
           </template>
         </el-table-column>
-        <el-table-column prop="order_index" label="排序" width="80" align="center" />
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column
+          prop="order_index"
+          label="排序"
+          width="80"
+          align="center"
+        />
+        <el-table-column
+          label="操作"
+          width="200"
+          fixed="right"
+        >
           <template #default="{ row }">
-            <el-button link type="primary" @click="handleEditQuestion(row)">编辑</el-button>
-            <el-button link @click="handleViewQuestion(row)">查看</el-button>
-            <el-button link type="danger" @click="handleRemoveQuestion(row)">移除</el-button>
+            <el-button
+              link
+              type="primary"
+              @click="handleEditQuestion(row)"
+            >
+              编辑
+            </el-button>
+            <el-button
+              link
+              @click="handleViewQuestion(row)"
+            >
+              查看
+            </el-button>
+            <el-button
+              link
+              type="danger"
+              @click="handleRemoveQuestion(row)"
+            >
+              移除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
 
       <!-- 分页 -->
-      <div v-if="totalQuestions > 0" class="pagination">
+      <div
+        v-if="totalQuestions > 0"
+        class="pagination"
+      >
         <el-pagination
           v-model:current-page="questionPagination.page"
           v-model:page-size="questionPagination.size"

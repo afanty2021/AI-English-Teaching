@@ -1,65 +1,113 @@
 <template>
   <div class="mistake-book-page">
     <!-- 页面头部 -->
-    <el-page-header @back="$router.go(-1)" class="mb-4">
+    <el-page-header
+      class="mb-4"
+      @back="$router.go(-1)"
+    >
       <template #content>
         <div class="flex items-center">
-          <el-icon class="mr-2"><Document /></el-icon>
+          <el-icon class="mr-2">
+            <Document />
+          </el-icon>
           <span class="text-lg font-medium">我的错题本</span>
         </div>
       </template>
     </el-page-header>
 
     <!-- 统计卡片 -->
-    <el-row :gutter="20" class="mb-6">
-      <el-col :xs="12" :sm="6">
-        <el-card shadow="hover" class="stat-card">
+    <el-row
+      :gutter="20"
+      class="mb-6"
+    >
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
+        <el-card
+          shadow="hover"
+          class="stat-card"
+        >
           <div class="stat-content">
             <div class="stat-icon total">
               <el-icon><Collection /></el-icon>
             </div>
             <div class="stat-text">
-              <div class="stat-value">{{ statistics.total_mistakes }}</div>
-              <div class="stat-label">总错题数</div>
+              <div class="stat-value">
+                {{ statistics.total_mistakes }}
+              </div>
+              <div class="stat-label">
+                总错题数
+              </div>
             </div>
           </div>
         </el-card>
       </el-col>
-      <el-col :xs="12" :sm="6">
-        <el-card shadow="hover" class="stat-card">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
+        <el-card
+          shadow="hover"
+          class="stat-card"
+        >
           <div class="stat-content">
             <div class="stat-icon pending">
               <el-icon><Clock /></el-icon>
             </div>
             <div class="stat-text">
-              <div class="stat-value">{{ statistics.need_review_count }}</div>
-              <div class="stat-label">待复习</div>
+              <div class="stat-value">
+                {{ statistics.need_review_count }}
+              </div>
+              <div class="stat-label">
+                待复习
+              </div>
             </div>
           </div>
         </el-card>
       </el-col>
-      <el-col :xs="12" :sm="6">
-        <el-card shadow="hover" class="stat-card">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
+        <el-card
+          shadow="hover"
+          class="stat-card"
+        >
           <div class="stat-content">
             <div class="stat-icon mastered">
               <el-icon><CircleCheck /></el-icon>
             </div>
             <div class="stat-text">
-              <div class="stat-value">{{ Math.round(statistics.mastery_rate * 100) }}%</div>
-              <div class="stat-label">掌握率</div>
+              <div class="stat-value">
+                {{ Math.round(statistics.mastery_rate * 100) }}%
+              </div>
+              <div class="stat-label">
+                掌握率
+              </div>
             </div>
           </div>
         </el-card>
       </el-col>
-      <el-col :xs="12" :sm="6">
-        <el-card shadow="hover" class="stat-card">
+      <el-col
+        :xs="12"
+        :sm="6"
+      >
+        <el-card
+          shadow="hover"
+          class="stat-card"
+        >
           <div class="stat-content">
             <div class="stat-icon frequent">
               <el-icon><Warning /></el-icon>
             </div>
             <div class="stat-text">
-              <div class="stat-value">{{ statistics.frequent_mistakes_count }}</div>
-              <div class="stat-label">高频错题</div>
+              <div class="stat-value">
+                {{ statistics.frequent_mistakes_count }}
+              </div>
+              <div class="stat-label">
+                高频错题
+              </div>
             </div>
           </div>
         </el-card>
@@ -67,54 +115,104 @@
     </el-row>
 
     <!-- 智能复习提醒卡片 -->
-    <el-row :gutter="20" class="mb-6" v-if="todayReviewData">
+    <el-row
+      v-if="todayReviewData"
+      :gutter="20"
+      class="mb-6"
+    >
       <el-col :span="24">
-        <el-card shadow="hover" class="review-reminder-card">
+        <el-card
+          shadow="hover"
+          class="review-reminder-card"
+        >
           <template #header>
             <div class="review-header">
               <div class="review-title">
-                <el-icon class="mr-2"><Clock /></el-icon>
+                <el-icon class="mr-2">
+                  <Clock />
+                </el-icon>
                 <span>今日智能复习提醒</span>
               </div>
-              <el-tag :type="todayReviewData.overdue_count > 0 ? 'danger' : 'success'" size="small">
+              <el-tag
+                :type="todayReviewData.overdue_count > 0 ? 'danger' : 'success'"
+                size="small"
+              >
                 {{ todayReviewData.overdue_count }}道已过期
               </el-tag>
             </div>
           </template>
           <el-row :gutter="16">
-            <el-col :xs="8" :sm="4" class="text-center">
+            <el-col
+              :xs="8"
+              :sm="4"
+              class="text-center"
+            >
               <div class="review-count overdue">
-                <div class="count-value">{{ todayReviewData.overdue_count }}</div>
-                <div class="count-label">已过期</div>
+                <div class="count-value">
+                  {{ todayReviewData.overdue_count }}
+                </div>
+                <div class="count-label">
+                  已过期
+                </div>
               </div>
             </el-col>
-            <el-col :xs="8" :sm="4" class="text-center">
+            <el-col
+              :xs="8"
+              :sm="4"
+              class="text-center"
+            >
               <div class="review-count urgent">
-                <div class="count-value">{{ todayReviewData.urgent_count }}</div>
-                <div class="count-label">即将过期</div>
+                <div class="count-value">
+                  {{ todayReviewData.urgent_count }}
+                </div>
+                <div class="count-label">
+                  即将过期
+                </div>
               </div>
             </el-col>
-            <el-col :xs="8" :sm="4" class="text-center">
+            <el-col
+              :xs="8"
+              :sm="4"
+              class="text-center"
+            >
               <div class="review-count today">
-                <div class="count-value">{{ todayReviewData.today_count }}</div>
-                <div class="count-label">今日复习</div>
+                <div class="count-value">
+                  {{ todayReviewData.today_count }}
+                </div>
+                <div class="count-label">
+                  今日复习
+                </div>
               </div>
             </el-col>
-            <el-col :xs="12" :sm="6">
+            <el-col
+              :xs="12"
+              :sm="6"
+            >
               <el-progress
                 type="circle"
                 :percentage="Math.round((todayReviewData.today_count / Math.max(todayReviewData.total_count, 1)) * 100)"
                 :width="80"
               >
                 <div class="progress-text">
-                  <div class="progress-value">{{ todayReviewData.today_count }}</div>
-                  <div class="progress-label">今日任务</div>
+                  <div class="progress-value">
+                    {{ todayReviewData.today_count }}
+                  </div>
+                  <div class="progress-label">
+                    今日任务
+                  </div>
                 </div>
               </el-progress>
             </el-col>
-            <el-col :xs="12" :sm="6" class="flex items-center">
+            <el-col
+              :xs="12"
+              :sm="6"
+              class="flex items-center"
+            >
               <div class="review-actions">
-                <el-button type="primary" @click="showSmartReview = true">
+                <el-button
+                  type="primary"
+                  @click="showSmartReview = true"
+                >
                   <el-icon><MagicStick /></el-icon>
                   开始复习
                 </el-button>
@@ -131,38 +229,80 @@
 
     <!-- 筛选和操作栏 -->
     <el-card class="mb-4">
-      <el-row :gutter="16" align="middle">
-        <el-col :xs="24" :sm="6">
+      <el-row
+        :gutter="16"
+        align="middle"
+      >
+        <el-col
+          :xs="24"
+          :sm="6"
+        >
           <el-select
             v-model="filters.status"
             placeholder="状态筛选"
             clearable
-            @change="loadMistakes"
             class="w-full"
+            @change="loadMistakes"
           >
-            <el-option label="待复习" value="pending" />
-            <el-option label="复习中" value="reviewing" />
-            <el-option label="已掌握" value="mastered" />
-            <el-option label="已忽略" value="ignored" />
+            <el-option
+              label="待复习"
+              value="pending"
+            />
+            <el-option
+              label="复习中"
+              value="reviewing"
+            />
+            <el-option
+              label="已掌握"
+              value="mastered"
+            />
+            <el-option
+              label="已忽略"
+              value="ignored"
+            />
           </el-select>
         </el-col>
-        <el-col :xs="24" :sm="6">
+        <el-col
+          :xs="24"
+          :sm="6"
+        >
           <el-select
             v-model="filters.mistake_type"
             placeholder="类型筛选"
             clearable
-            @change="loadMistakes"
             class="w-full"
+            @change="loadMistakes"
           >
-            <el-option label="语法" value="grammar" />
-            <el-option label="词汇" value="vocabulary" />
-            <el-option label="阅读" value="reading" />
-            <el-option label="听力" value="listening" />
-            <el-option label="写作" value="writing" />
-            <el-option label="口语" value="speaking" />
+            <el-option
+              label="语法"
+              value="grammar"
+            />
+            <el-option
+              label="词汇"
+              value="vocabulary"
+            />
+            <el-option
+              label="阅读"
+              value="reading"
+            />
+            <el-option
+              label="听力"
+              value="listening"
+            />
+            <el-option
+              label="写作"
+              value="writing"
+            />
+            <el-option
+              label="口语"
+              value="speaking"
+            />
           </el-select>
         </el-col>
-        <el-col :xs="24" :sm="6">
+        <el-col
+          :xs="24"
+          :sm="6"
+        >
           <el-input
             v-model="filters.topic"
             placeholder="主题筛选"
@@ -174,28 +314,52 @@
             </template>
           </el-input>
         </el-col>
-        <el-col :xs="24" :sm="6">
+        <el-col
+          :xs="24"
+          :sm="6"
+        >
           <el-button-group class="w-full">
-            <el-button @click="showReviewPlan = true" class="flex-1">
-              <el-icon class="mr-1"><Calendar /></el-icon>
+            <el-button
+              class="flex-1"
+              @click="showReviewPlan = true"
+            >
+              <el-icon class="mr-1">
+                <Calendar />
+              </el-icon>
               复习计划
             </el-button>
-            <el-button @click="handleCollectFromPractice" class="flex-1">
-              <el-icon class="mr-1"><Download /></el-icon>
+            <el-button
+              class="flex-1"
+              @click="handleCollectFromPractice"
+            >
+              <el-icon class="mr-1">
+                <Download />
+              </el-icon>
               收集错题
             </el-button>
           </el-button-group>
         </el-col>
-        <el-col :xs="24" :sm="6" class="text-right">
-          <el-dropdown @command="handleBatchAction" class="mr-2">
+        <el-col
+          :xs="24"
+          :sm="6"
+          class="text-right"
+        >
+          <el-dropdown
+            class="mr-2"
+            @command="handleBatchAction"
+          >
             <el-button
               type="primary"
               :loading="batchAnalyzing"
               :disabled="statistics.need_review_count === 0"
             >
-              <el-icon class="mr-1"><MagicStick /></el-icon>
+              <el-icon class="mr-1">
+                <MagicStick />
+              </el-icon>
               AI批量分析
-              <el-icon class="ml-1"><ArrowDown /></el-icon>
+              <el-icon class="ml-1">
+                <ArrowDown />
+              </el-icon>
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
@@ -203,7 +367,10 @@
                   <el-icon><MagicStick /></el-icon>
                   批量AI分析
                 </el-dropdown-item>
-                <el-dropdown-item divided command="export_markdown">
+                <el-dropdown-item
+                  divided
+                  command="export_markdown"
+                >
                   <el-icon><Document /></el-icon>
                   导出为Markdown
                 </el-dropdown-item>
@@ -226,23 +393,45 @@
     <el-card v-loading="loading">
       <template v-if="mistakes.length === 0 && !loading">
         <el-empty description="暂无错题记录">
-          <el-button type="primary" @click="handleCollectFromPractice">
+          <el-button
+            type="primary"
+            @click="handleCollectFromPractice"
+          >
             从练习中收集错题
           </el-button>
         </el-empty>
       </template>
       <template v-else>
-        <div v-for="mistake in mistakes" :key="mistake.id" class="mistake-item">
-          <el-card shadow="hover" class="mistake-card">
+        <div
+          v-for="mistake in mistakes"
+          :key="mistake.id"
+          class="mistake-item"
+        >
+          <el-card
+            shadow="hover"
+            class="mistake-card"
+          >
             <div class="mistake-header">
               <div class="mistake-badges">
-                <el-tag :type="getStatusType(mistake.status)" size="small">
+                <el-tag
+                  :type="getStatusType(mistake.status)"
+                  size="small"
+                >
                   {{ getStatusText(mistake.status) }}
                 </el-tag>
-                <el-tag :type="getTypeTagType(mistake.mistake_type)" size="small" class="ml-2">
+                <el-tag
+                  :type="getTypeTagType(mistake.mistake_type)"
+                  size="small"
+                  class="ml-2"
+                >
                   {{ getTypeText(mistake.mistake_type) }}
                 </el-tag>
-                <el-tag v-if="mistake.topic" type="info" size="small" class="ml-2">
+                <el-tag
+                  v-if="mistake.topic"
+                  type="info"
+                  size="small"
+                  class="ml-2"
+                >
                   {{ mistake.topic }}
                 </el-tag>
               </div>
@@ -258,10 +447,12 @@
                   v-if="!mistake.ai_suggestion"
                   link
                   type="warning"
-                  @click="handleAnalyze(mistake)"
                   :loading="analyzingMistakeId === mistake.id"
+                  @click="handleAnalyze(mistake)"
                 >
-                  <el-icon class="mr-1"><MagicStick /></el-icon>
+                  <el-icon class="mr-1">
+                    <MagicStick />
+                  </el-icon>
                   AI分析
                 </el-button>
                 <el-button
@@ -275,36 +466,56 @@
             </div>
 
             <div class="mistake-question mt-3">
-              <div class="question-label">题目：</div>
-              <div class="question-content">{{ mistake.question }}</div>
+              <div class="question-label">
+                题目：
+              </div>
+              <div class="question-content">
+                {{ mistake.question }}
+              </div>
             </div>
 
             <div class="mistake-answers mt-3">
               <el-row :gutter="16">
                 <el-col :span="12">
                   <div class="answer-item wrong">
-                    <div class="answer-label">我的答案：</div>
-                    <div class="answer-content">{{ mistake.wrong_answer }}</div>
+                    <div class="answer-label">
+                      我的答案：
+                    </div>
+                    <div class="answer-content">
+                      {{ mistake.wrong_answer }}
+                    </div>
                   </div>
                 </el-col>
                 <el-col :span="12">
                   <div class="answer-item correct">
-                    <div class="answer-label">正确答案：</div>
-                    <div class="answer-content">{{ mistake.correct_answer }}</div>
+                    <div class="answer-label">
+                      正确答案：
+                    </div>
+                    <div class="answer-content">
+                      {{ mistake.correct_answer }}
+                    </div>
                   </div>
                 </el-col>
               </el-row>
             </div>
 
-            <div v-if="mistake.explanation" class="mistake-explanation mt-3">
-              <el-alert type="info" :closable="false">
+            <div
+              v-if="mistake.explanation"
+              class="mistake-explanation mt-3"
+            >
+              <el-alert
+                type="info"
+                :closable="false"
+              >
                 <template #title>
                   <div class="explanation-title">
                     <el-icon><InfoFilled /></el-icon>
                     <span>解析</span>
                   </div>
                 </template>
-                <div class="explanation-content">{{ mistake.explanation }}</div>
+                <div class="explanation-content">
+                  {{ mistake.explanation }}
+                </div>
               </el-alert>
             </div>
 
@@ -354,7 +565,9 @@
       <div v-if="currentMistake">
         <div class="detail-section">
           <h4>题目</h4>
-          <p class="detail-content">{{ currentMistake.question }}</p>
+          <p class="detail-content">
+            {{ currentMistake.question }}
+          </p>
         </div>
 
         <div class="detail-section">
@@ -362,25 +575,41 @@
           <el-row :gutter="16">
             <el-col :span="12">
               <div class="answer-comparison wrong">
-                <div class="label">我的答案</div>
-                <div class="content">{{ currentMistake.wrong_answer }}</div>
+                <div class="label">
+                  我的答案
+                </div>
+                <div class="content">
+                  {{ currentMistake.wrong_answer }}
+                </div>
               </div>
             </el-col>
             <el-col :span="12">
               <div class="answer-comparison correct">
-                <div class="label">正确答案</div>
-                <div class="content">{{ currentMistake.correct_answer }}</div>
+                <div class="label">
+                  正确答案
+                </div>
+                <div class="content">
+                  {{ currentMistake.correct_answer }}
+                </div>
               </div>
             </el-col>
           </el-row>
         </div>
 
-        <div v-if="currentMistake.explanation" class="detail-section">
+        <div
+          v-if="currentMistake.explanation"
+          class="detail-section"
+        >
           <h4>解析</h4>
-          <p class="detail-content">{{ currentMistake.explanation }}</p>
+          <p class="detail-content">
+            {{ currentMistake.explanation }}
+          </p>
         </div>
 
-        <div v-if="currentMistake.knowledge_points?.length" class="detail-section">
+        <div
+          v-if="currentMistake.knowledge_points?.length"
+          class="detail-section"
+        >
           <h4>知识点</h4>
           <div class="knowledge-points">
             <el-tag
@@ -395,15 +624,23 @@
           </div>
         </div>
 
-        <div v-if="currentMistake.ai_suggestion" class="detail-section">
+        <div
+          v-if="currentMistake.ai_suggestion"
+          class="detail-section"
+        >
           <h4>
-            <el-icon class="mr-1"><MagicStick /></el-icon>
+            <el-icon class="mr-1">
+              <MagicStick />
+            </el-icon>
             AI 学习建议
           </h4>
 
           <!-- AI鼓励语 -->
           <div class="ai-encouragement mb-4">
-            <el-alert type="success" :closable="false">
+            <el-alert
+              type="success"
+              :closable="false"
+            >
               <template #title>
                 <span class="encouragement-text">{{ currentMistake.ai_suggestion.split('\n')[0] }}</span>
               </template>
@@ -411,33 +648,60 @@
           </div>
 
           <!-- AI详细分析 -->
-          <div v-if="currentMistake.ai_analysis && Object.keys(currentMistake.ai_analysis).length > 0" class="ai-analysis-details">
+          <div
+            v-if="currentMistake.ai_analysis && Object.keys(currentMistake.ai_analysis).length > 0"
+            class="ai-analysis-details"
+          >
             <!-- 错误分类和严重程度 -->
             <div class="analysis-item mb-3">
-              <div class="analysis-label">错误分类：</div>
+              <div class="analysis-label">
+                错误分类：
+              </div>
               <el-tag :type="getSeverityTagType(String(currentMistake.ai_analysis?.severity || ''))">
                 {{ currentMistake.ai_analysis?.mistake_category || '-' }}
               </el-tag>
-              <el-tag type="info" class="ml-2">
+              <el-tag
+                type="info"
+                class="ml-2"
+              >
                 {{ getSeverityText(String(currentMistake.ai_analysis?.severity || '')) }}
               </el-tag>
             </div>
 
             <!-- 详细解释 -->
-            <div v-if="currentMistake.ai_analysis.explanation" class="analysis-item mb-3">
-              <div class="analysis-label">错误解释：</div>
-              <div class="analysis-content">{{ currentMistake.ai_analysis.explanation }}</div>
+            <div
+              v-if="currentMistake.ai_analysis.explanation"
+              class="analysis-item mb-3"
+            >
+              <div class="analysis-label">
+                错误解释：
+              </div>
+              <div class="analysis-content">
+                {{ currentMistake.ai_analysis.explanation }}
+              </div>
             </div>
 
             <!-- 正确方法 -->
-            <div v-if="currentMistake.ai_analysis.correct_approach" class="analysis-item mb-3">
-              <div class="analysis-label">正确方法：</div>
-              <div class="analysis-content">{{ currentMistake.ai_analysis.correct_approach }}</div>
+            <div
+              v-if="currentMistake.ai_analysis.correct_approach"
+              class="analysis-item mb-3"
+            >
+              <div class="analysis-label">
+                正确方法：
+              </div>
+              <div class="analysis-content">
+                {{ currentMistake.ai_analysis.correct_approach }}
+              </div>
             </div>
 
             <!-- 学习建议列表 -->
-            <div v-if="currentMistake.ai_analysis.recommendations && currentMistake.ai_analysis.recommendations.length > 0" class="analysis-item mb-3">
-              <div class="analysis-label">学习建议：</div>
+            <div
+              v-if="currentMistake.ai_analysis.recommendations && currentMistake.ai_analysis.recommendations.length > 0"
+              class="analysis-item mb-3"
+            >
+              <div class="analysis-label">
+                学习建议：
+              </div>
               <div class="recommendations-list">
                 <div
                   v-for="(rec, idx) in currentMistake.ai_analysis.recommendations"
@@ -445,25 +709,50 @@
                   class="recommendation-item"
                 >
                   <div class="rec-priority">
-                    <el-tag :type="getPriorityTagType(rec.priority)" size="small">
+                    <el-tag
+                      :type="getPriorityTagType(rec.priority)"
+                      size="small"
+                    >
                       优先级 {{ rec.priority }}
                     </el-tag>
                     <span class="rec-category ml-2">{{ rec.category }}</span>
                   </div>
-                  <div class="rec-title">{{ rec.title }}</div>
-                  <div class="rec-description">{{ rec.description }}</div>
-                  <div v-if="rec.resources && rec.resources.length" class="rec-resources mt-2">
-                    <div class="resources-label">推荐资源：</div>
+                  <div class="rec-title">
+                    {{ rec.title }}
+                  </div>
+                  <div class="rec-description">
+                    {{ rec.description }}
+                  </div>
+                  <div
+                    v-if="rec.resources && rec.resources.length"
+                    class="rec-resources mt-2"
+                  >
+                    <div class="resources-label">
+                      推荐资源：
+                    </div>
                     <div class="resources-list">
-                      <div v-for="(res, ridx) in rec.resources" :key="ridx" class="resource-item">
+                      <div
+                        v-for="(res, ridx) in rec.resources"
+                        :key="ridx"
+                        class="resource-item"
+                      >
                         • {{ res }}
                       </div>
                     </div>
                   </div>
-                  <div v-if="rec.practice_exercises && rec.practice_exercises.length" class="rec-exercises mt-2">
-                    <div class="exercises-label">练习建议：</div>
+                  <div
+                    v-if="rec.practice_exercises && rec.practice_exercises.length"
+                    class="rec-exercises mt-2"
+                  >
+                    <div class="exercises-label">
+                      练习建议：
+                    </div>
                     <div class="exercises-list">
-                      <div v-for="(ex, eidx) in rec.practice_exercises" :key="eidx" class="exercise-item">
+                      <div
+                        v-for="(ex, eidx) in rec.practice_exercises"
+                        :key="eidx"
+                        class="exercise-item"
+                      >
                         • {{ ex }}
                       </div>
                     </div>
@@ -473,8 +762,13 @@
             </div>
 
             <!-- 复习计划 -->
-            <div v-if="currentMistake.ai_analysis.review_plan" class="analysis-item">
-              <div class="analysis-label">复习计划：</div>
+            <div
+              v-if="currentMistake.ai_analysis.review_plan"
+              class="analysis-item"
+            >
+              <div class="analysis-label">
+                复习计划：
+              </div>
               <div class="review-plan-details">
                 <div class="plan-item">
                   <span class="plan-label">复习频率：</span>
@@ -495,7 +789,10 @@
 
         <div class="detail-section">
           <h4>统计信息</h4>
-          <el-descriptions :column="2" border>
+          <el-descriptions
+            :column="2"
+            border
+          >
             <el-descriptions-item label="错误次数">
               {{ currentMistake.mistake_count }} 次
             </el-descriptions-item>
@@ -515,8 +812,14 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="showDetailDialog = false">关闭</el-button>
-          <el-dropdown @command="handleExportSingle" class="ml-2">
-            <el-button type="success" :loading="exporting">
+          <el-dropdown
+            class="ml-2"
+            @command="handleExportSingle"
+          >
+            <el-button
+              type="success"
+              :loading="exporting"
+            >
               <el-icon><Download /></el-icon>
               导出此题
               <el-icon class="ml-1"><ArrowDown /></el-icon>
@@ -538,7 +841,10 @@
               </el-dropdown-menu>
             </template>
           </el-dropdown>
-          <el-button type="primary" @click="handleRetry(currentMistake!)">
+          <el-button
+            type="primary"
+            @click="handleRetry(currentMistake!)"
+          >
             重做此题
           </el-button>
         </span>
@@ -557,7 +863,10 @@
           <p>{{ currentMistake.question }}</p>
         </div>
 
-        <el-form :model="retryForm" label-width="80px">
+        <el-form
+          :model="retryForm"
+          label-width="80px"
+        >
           <el-form-item label="你的答案">
             <el-input
               v-model="retryForm.user_answer"
@@ -570,8 +879,14 @@
       </div>
 
       <template #footer>
-        <el-button @click="showRetryDialog = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmitRetry" :loading="retryLoading">
+        <el-button @click="showRetryDialog = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="retryLoading"
+          @click="handleSubmitRetry"
+        >
           提交答案
         </el-button>
       </template>
@@ -584,67 +899,128 @@
       width="800px"
     >
       <div v-if="reviewPlan">
-        <el-alert type="warning" :closable="false" class="mb-4">
+        <el-alert
+          type="warning"
+          :closable="false"
+          class="mb-4"
+        >
           基于遗忘曲线和错题优先级为您生成的个性化复习计划
         </el-alert>
 
         <el-tabs v-model="activeReviewTab">
-          <el-tab-pane label="紧急复习" name="urgent">
-            <div v-if="reviewPlan.urgent.length === 0" class="text-center text-gray py-4">
+          <el-tab-pane
+            label="紧急复习"
+            name="urgent"
+          >
+            <div
+              v-if="reviewPlan.urgent.length === 0"
+              class="text-center text-gray py-4"
+            >
               暂无紧急复习的错题
             </div>
             <div v-else>
-              <div v-for="item in reviewPlan.urgent" :key="item.id" class="review-item">
+              <div
+                v-for="item in reviewPlan.urgent"
+                :key="item.id"
+                class="review-item"
+              >
                 <el-card shadow="hover">
-                  <div class="review-question">{{ item.question }}</div>
+                  <div class="review-question">
+                    {{ item.question }}
+                  </div>
                   <div class="review-meta">
-                    <el-tag size="small">{{ getTypeText(item.type) }}</el-tag>
+                    <el-tag size="small">
+                      {{ getTypeText(item.type) }}
+                    </el-tag>
                   </div>
                 </el-card>
               </div>
             </div>
           </el-tab-pane>
 
-          <el-tab-pane label="今日复习" name="today">
-            <div v-if="reviewPlan.today.length === 0" class="text-center text-gray py-4">
+          <el-tab-pane
+            label="今日复习"
+            name="today"
+          >
+            <div
+              v-if="reviewPlan.today.length === 0"
+              class="text-center text-gray py-4"
+            >
               今日已无待复习错题
             </div>
             <div v-else>
-              <div v-for="item in reviewPlan.today" :key="item.id" class="review-item">
+              <div
+                v-for="item in reviewPlan.today"
+                :key="item.id"
+                class="review-item"
+              >
                 <el-card shadow="hover">
-                  <div class="review-question">{{ item.question }}</div>
+                  <div class="review-question">
+                    {{ item.question }}
+                  </div>
                   <div class="review-meta">
-                    <el-tag size="small">{{ getTypeText(item.type) }}</el-tag>
+                    <el-tag size="small">
+                      {{ getTypeText(item.type) }}
+                    </el-tag>
                   </div>
                 </el-card>
               </div>
             </div>
           </el-tab-pane>
 
-          <el-tab-pane label="本周复习" name="week">
-            <div v-if="reviewPlan.week.length === 0" class="text-center text-gray py-4">
+          <el-tab-pane
+            label="本周复习"
+            name="week"
+          >
+            <div
+              v-if="reviewPlan.week.length === 0"
+              class="text-center text-gray py-4"
+            >
               本周暂无待复习错题
             </div>
             <div v-else>
-              <div v-for="item in reviewPlan.week" :key="item.id" class="review-item">
+              <div
+                v-for="item in reviewPlan.week"
+                :key="item.id"
+                class="review-item"
+              >
                 <el-card shadow="hover">
-                  <div class="review-question">{{ item.question }}</div>
+                  <div class="review-question">
+                    {{ item.question }}
+                  </div>
                   <div class="review-meta">
-                    <el-tag size="small">{{ getTypeText(item.type) }}</el-tag>
+                    <el-tag size="small">
+                      {{ getTypeText(item.type) }}
+                    </el-tag>
                   </div>
                 </el-card>
               </div>
             </div>
           </el-tab-pane>
 
-          <el-tab-pane label="重点知识点" name="knowledge">
-            <div v-if="reviewPlan.knowledge_points.length === 0" class="text-center text-gray py-4">
+          <el-tab-pane
+            label="重点知识点"
+            name="knowledge"
+          >
+            <div
+              v-if="reviewPlan.knowledge_points.length === 0"
+              class="text-center text-gray py-4"
+            >
               暂无知识点统计
             </div>
             <div v-else>
-              <div v-for="[point, count] in reviewPlan.knowledge_points" :key="point" class="knowledge-point-item">
-                <div class="point-name">{{ point }}</div>
-                <el-progress :percentage="Math.min(count * 10, 100)" :format="() => `${count}题`" />
+              <div
+                v-for="[point, count] in reviewPlan.knowledge_points"
+                :key="point"
+                class="knowledge-point-item"
+              >
+                <div class="point-name">
+                  {{ point }}
+                </div>
+                <el-progress
+                  :percentage="Math.min(count * 10, 100)"
+                  :format="() => `${count}题`"
+                />
               </div>
             </div>
           </el-tab-pane>
@@ -661,9 +1037,20 @@
       <div v-if="todayReviewData">
         <el-tabs v-model="smartReviewActiveTab">
           <!-- 紧急复习 -->
-          <el-tab-pane label="🔴 紧急复习" name="overdue">
-            <div v-if="todayReviewData.review_list.filter((r: any) => r.review_type === 'overdue').length === 0" class="text-center text-gray py-8">
-              <el-icon :size="48" class="mb-4"><CircleCheck /></el-icon>
+          <el-tab-pane
+            label="🔴 紧急复习"
+            name="overdue"
+          >
+            <div
+              v-if="todayReviewData.review_list.filter((r: any) => r.review_type === 'overdue').length === 0"
+              class="text-center text-gray py-8"
+            >
+              <el-icon
+                :size="48"
+                class="mb-4"
+              >
+                <CircleCheck />
+              </el-icon>
               <div>暂无紧急复习任务，继续保持！</div>
             </div>
             <div v-else>
@@ -672,22 +1059,46 @@
                 description="暂无紧急复习"
               />
               <div v-else>
-                <div v-for="item in todayReviewData.review_list.filter((r: any) => r.review_type === 'overdue')" :key="item.id" class="smart-review-item">
-                  <el-card shadow="hover" :class="{ 'overdue-item': item.is_overdue }">
+                <div
+                  v-for="item in todayReviewData.review_list.filter((r: any) => r.review_type === 'overdue')"
+                  :key="item.id"
+                  class="smart-review-item"
+                >
+                  <el-card
+                    shadow="hover"
+                    :class="{ 'overdue-item': item.is_overdue }"
+                  >
                     <div class="review-item-header">
-                      <el-tag type="danger" size="small">
+                      <el-tag
+                        type="danger"
+                        size="small"
+                      >
                         过期{{ item.overdue_hours }}小时
                       </el-tag>
-                      <el-tag size="small">{{ getTypeText(item.mistake_type) }}</el-tag>
-                      <el-tag v-if="item.topic" type="info" size="small">{{ item.topic }}</el-tag>
+                      <el-tag size="small">
+                        {{ getTypeText(item.mistake_type) }}
+                      </el-tag>
+                      <el-tag
+                        v-if="item.topic"
+                        type="info"
+                        size="small"
+                      >
+                        {{ item.topic }}
+                      </el-tag>
                     </div>
-                    <div class="review-item-content">{{ item.question_preview }}</div>
+                    <div class="review-item-content">
+                      {{ item.question_preview }}
+                    </div>
                     <div class="review-item-footer">
                       <span class="priority">
                         <el-icon><Top /></el-icon>
                         优先级: {{ Math.round(item.priority_score) }}分
                       </span>
-                      <el-button type="primary" size="small" @click="handleStartReview(item)">
+                      <el-button
+                        type="primary"
+                        size="small"
+                        @click="handleStartReview(item)"
+                      >
                         开始复习
                       </el-button>
                     </div>
@@ -698,25 +1109,53 @@
           </el-tab-pane>
 
           <!-- 即将过期 -->
-          <el-tab-pane label="🟡 即将过期" name="urgent">
-            <div v-if="todayReviewData.review_list.filter((r: any) => r.review_type === 'urgent').length === 0" class="text-center text-gray py-8">
-              <el-icon :size="48" class="mb-4"><CircleCheck /></el-icon>
+          <el-tab-pane
+            label="🟡 即将过期"
+            name="urgent"
+          >
+            <div
+              v-if="todayReviewData.review_list.filter((r: any) => r.review_type === 'urgent').length === 0"
+              class="text-center text-gray py-8"
+            >
+              <el-icon
+                :size="48"
+                class="mb-4"
+              >
+                <CircleCheck />
+              </el-icon>
               <div>暂无即将过期的复习任务！</div>
             </div>
             <div v-else>
-              <div v-for="item in todayReviewData.review_list.filter((r: any) => r.review_type === 'urgent')" :key="item.id" class="smart-review-item">
+              <div
+                v-for="item in todayReviewData.review_list.filter((r: any) => r.review_type === 'urgent')"
+                :key="item.id"
+                class="smart-review-item"
+              >
                 <el-card shadow="hover">
                   <div class="review-item-header">
-                    <el-tag type="warning" size="small">即将过期</el-tag>
-                    <el-tag size="small">{{ getTypeText(item.mistake_type) }}</el-tag>
+                    <el-tag
+                      type="warning"
+                      size="small"
+                    >
+                      即将过期
+                    </el-tag>
+                    <el-tag size="small">
+                      {{ getTypeText(item.mistake_type) }}
+                    </el-tag>
                   </div>
-                  <div class="review-item-content">{{ item.question_preview }}</div>
+                  <div class="review-item-content">
+                    {{ item.question_preview }}
+                  </div>
                   <div class="review-item-footer">
                     <span class="priority">
                       <el-icon><Top /></el-icon>
                       优先级: {{ Math.round(item.priority_score) }}分
                     </span>
-                    <el-button type="primary" size="small" @click="handleStartReview(item)">
+                    <el-button
+                      type="primary"
+                      size="small"
+                      @click="handleStartReview(item)"
+                    >
                       开始复习
                     </el-button>
                   </div>
@@ -726,12 +1165,22 @@
           </el-tab-pane>
 
           <!-- 推荐复习 -->
-          <el-tab-pane label="📚 推荐复习" name="recommend">
-            <div v-if="recommendData.recommendations.length === 0" class="text-center text-gray py-8">
+          <el-tab-pane
+            label="📚 推荐复习"
+            name="recommend"
+          >
+            <div
+              v-if="recommendData.recommendations.length === 0"
+              class="text-center text-gray py-8"
+            >
               <el-empty description="暂无推荐复习内容" />
             </div>
             <div v-else>
-              <div v-for="item in recommendData.recommendations" :key="item.id" class="smart-review-item">
+              <div
+                v-for="item in recommendData.recommendations"
+                :key="item.id"
+                class="smart-review-item"
+              >
                 <el-card shadow="hover">
                   <div class="review-item-header">
                     <el-progress
@@ -740,15 +1189,23 @@
                       :show-text="false"
                       style="width: 60px;"
                     />
-                    <el-tag size="small">{{ getTypeText(item.mistake_type) }}</el-tag>
+                    <el-tag size="small">
+                      {{ getTypeText(item.mistake_type) }}
+                    </el-tag>
                   </div>
-                  <div class="review-item-content">{{ item.question_preview }}</div>
+                  <div class="review-item-content">
+                    {{ item.question_preview }}
+                  </div>
                   <div class="review-item-footer">
                     <span class="priority">
                       <el-icon><Clock /></el-icon>
                       下次复习: {{ item.next_review_at }}
                     </span>
-                    <el-button type="success" size="small" @click="handleStartReview(item)">
+                    <el-button
+                      type="success"
+                      size="small"
+                      @click="handleStartReview(item)"
+                    >
                       立即复习
                     </el-button>
                   </div>
@@ -781,7 +1238,12 @@
 
         <div class="calendar-grid">
           <div class="calendar-weekday">
-            <div v-for="day in ['日', '一', '二', '三', '四', '五', '六']" :key="day">{{ day }}</div>
+            <div
+              v-for="day in ['日', '一', '二', '三', '四', '五', '六']"
+              :key="day"
+            >
+              {{ day }}
+            </div>
           </div>
           <div class="calendar-days">
             <div
@@ -793,9 +1255,19 @@
                 'has-tasks': day.tasks.length > 0
               }]"
             >
-              <div class="day-number">{{ day.date }}</div>
-              <div class="day-tasks" v-if="day.tasks.length > 0">
-                <el-tag type="warning" size="mini">{{ day.tasks.length }}题</el-tag>
+              <div class="day-number">
+                {{ day.date }}
+              </div>
+              <div
+                v-if="day.tasks.length > 0"
+                class="day-tasks"
+              >
+                <el-tag
+                  type="warning"
+                  size="mini"
+                >
+                  {{ day.tasks.length }}题
+                </el-tag>
               </div>
             </div>
           </div>
@@ -809,11 +1281,18 @@
       title="从练习中收集错题"
       width="500px"
     >
-      <el-alert type="info" :closable="false" class="mb-4">
+      <el-alert
+        type="info"
+        :closable="false"
+        class="mb-4"
+      >
         输入已完成的练习ID，系统将自动收集错题添加到错题本
       </el-alert>
 
-      <el-form :model="collectForm" label-width="100px">
+      <el-form
+        :model="collectForm"
+        label-width="100px"
+      >
         <el-form-item label="练习ID">
           <el-input
             v-model="collectForm.practice_id"
@@ -823,8 +1302,14 @@
       </el-form>
 
       <template #footer>
-        <el-button @click="showCollectDialog = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmitCollect" :loading="collectLoading">
+        <el-button @click="showCollectDialog = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="collectLoading"
+          @click="handleSubmitCollect"
+        >
           开始收集
         </el-button>
       </template>

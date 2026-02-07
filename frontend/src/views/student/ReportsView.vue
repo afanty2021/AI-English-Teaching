@@ -2,39 +2,82 @@
   <div class="reports-view">
     <div class="header">
       <h1>学习报告</h1>
-      <el-button type="primary" @click="showGenerateDialog = true">
+      <el-button
+        type="primary"
+        @click="showGenerateDialog = true"
+      >
         <el-icon><Document /></el-icon>
         生成新报告
       </el-button>
     </div>
 
     <!-- 筛选器 -->
-    <el-card class="filter-card" shadow="never">
-      <el-form :inline="true" :model="filters" @submit.prevent="loadReports">
+    <el-card
+      class="filter-card"
+      shadow="never"
+    >
+      <el-form
+        :inline="true"
+        :model="filters"
+        @submit.prevent="loadReports"
+      >
         <el-form-item label="报告类型">
-          <el-select v-model="filters.report_type" placeholder="全部" clearable style="width: 150px">
-            <el-option label="周报" value="weekly" />
-            <el-option label="月报" value="monthly" />
-            <el-option label="自定义" value="custom" />
+          <el-select
+            v-model="filters.report_type"
+            placeholder="全部"
+            clearable
+            style="width: 150px"
+          >
+            <el-option
+              label="周报"
+              value="weekly"
+            />
+            <el-option
+              label="月报"
+              value="monthly"
+            />
+            <el-option
+              label="自定义"
+              value="custom"
+            />
           </el-select>
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" @click="loadReports">查询</el-button>
-          <el-button @click="resetFilters">重置</el-button>
+          <el-button
+            type="primary"
+            @click="loadReports"
+          >
+            查询
+          </el-button>
+          <el-button @click="resetFilters">
+            重置
+          </el-button>
         </el-form-item>
       </el-form>
     </el-card>
 
     <!-- 报告列表 -->
-    <el-card class="report-list" shadow="never" v-loading="loading">
+    <el-card
+      v-loading="loading"
+      class="report-list"
+      shadow="never"
+    >
       <template v-if="reports.length === 0 && !loading">
         <el-empty description="暂无学习报告，点击上方按钮生成第一份报告">
-          <el-button type="primary" @click="showGenerateDialog = true">立即生成</el-button>
+          <el-button
+            type="primary"
+            @click="showGenerateDialog = true"
+          >
+            立即生成
+          </el-button>
         </el-empty>
       </template>
 
-      <div v-else class="report-cards">
+      <div
+        v-else
+        class="report-cards"
+      >
         <div
           v-for="report in reports"
           :key="report.id"
@@ -46,7 +89,13 @@
               {{ getReportTypeName(report.report_type) }}
             </el-tag>
             <span class="report-title">{{ report.title || formatDate(report.period_end) }}</span>
-            <el-tag v-if="report.status === 'completed'" type="success" size="small">已完成</el-tag>
+            <el-tag
+              v-if="report.status === 'completed'"
+              type="success"
+              size="small"
+            >
+              已完成
+            </el-tag>
           </div>
 
           <div class="card-body">
@@ -62,13 +111,16 @@
         </div>
       </div>
 
-      <div v-if="total > 0" class="pagination">
+      <div
+        v-if="total > 0"
+        class="pagination"
+      >
         <el-pagination
           :current-page="currentPage"
           :page-size="pageSize"
           :total="total"
-          @current-change="loadReports"
           layout="prev, pager, next"
+          @current-change="loadReports"
         />
       </div>
     </el-card>
@@ -80,16 +132,39 @@
       width="500px"
       :close-on-click-modal="false"
     >
-      <el-form :model="generateForm" :rules="generateRules" ref="generateFormRef" label-width="100px">
-        <el-form-item label="报告类型" prop="report_type">
-          <el-select v-model="generateForm.report_type" placeholder="请选择报告类型">
-            <el-option label="周报" value="weekly" />
-            <el-option label="月报" value="monthly" />
-            <el-option label="自定义" value="custom" />
+      <el-form
+        ref="generateFormRef"
+        :model="generateForm"
+        :rules="generateRules"
+        label-width="100px"
+      >
+        <el-form-item
+          label="报告类型"
+          prop="report_type"
+        >
+          <el-select
+            v-model="generateForm.report_type"
+            placeholder="请选择报告类型"
+          >
+            <el-option
+              label="周报"
+              value="weekly"
+            />
+            <el-option
+              label="月报"
+              value="monthly"
+            />
+            <el-option
+              label="自定义"
+              value="custom"
+            />
           </el-select>
         </el-form-item>
 
-        <el-form-item label="开始日期" prop="period_start">
+        <el-form-item
+          label="开始日期"
+          prop="period_start"
+        >
           <el-date-picker
             v-model="generateForm.period_start"
             type="date"
@@ -99,7 +174,10 @@
           />
         </el-form-item>
 
-        <el-form-item label="结束日期" prop="period_end">
+        <el-form-item
+          label="结束日期"
+          prop="period_end"
+        >
           <el-date-picker
             v-model="generateForm.period_end"
             type="date"
@@ -131,8 +209,14 @@
       </el-form>
 
       <template #footer>
-        <el-button @click="showGenerateDialog = false">取消</el-button>
-        <el-button type="primary" @click="generateReport" :loading="generating">
+        <el-button @click="showGenerateDialog = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="generating"
+          @click="generateReport"
+        >
           生成报告
         </el-button>
       </template>

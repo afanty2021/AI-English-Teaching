@@ -1,8 +1,14 @@
 <template>
   <div class="conversation-view">
     <!-- 场景选择界面 -->
-    <div v-if="currentStep === 'scenario'" class="scenario-selection">
-      <el-page-header @back="goBack" title="返回">
+    <div
+      v-if="currentStep === 'scenario'"
+      class="scenario-selection"
+    >
+      <el-page-header
+        title="返回"
+        @back="goBack"
+      >
         <template #content>
           <span class="page-title">选择对话场景</span>
         </template>
@@ -18,13 +24,21 @@
           ]"
           @click="selectScenario(scenario.value)"
         >
-          <el-icon :size="48" :color="getScenarioColor(scenario.value)">
+          <el-icon
+            :size="48"
+            :color="getScenarioColor(scenario.value)"
+          >
             <component :is="scenario.icon" />
           </el-icon>
           <h3>{{ scenario.label }}</h3>
           <p>{{ scenario.description }}</p>
           <div class="scenario-level">
-            <el-tag size="small" type="info">{{ scenario.level }}</el-tag>
+            <el-tag
+              size="small"
+              type="info"
+            >
+              {{ scenario.level }}
+            </el-tag>
           </div>
         </div>
       </div>
@@ -37,7 +51,9 @@
           @click="startConversation"
         >
           开始对话
-          <el-icon class="el-icon--right"><Right /></el-icon>
+          <el-icon class="el-icon--right">
+            <Right />
+          </el-icon>
         </el-button>
       </div>
     </div>
@@ -49,16 +65,25 @@
     >
       <!-- 顶部栏 -->
       <div class="conversation-header">
-        <el-button link @click="goBack">
+        <el-button
+          link
+          @click="goBack"
+        >
           <el-icon><ArrowLeft /></el-icon>
           返回
         </el-button>
         <div class="header-info">
           <h2>{{ getScenarioName(selectedScenario) }}</h2>
-          <el-tag size="small">{{ level || "A2" }}</el-tag>
+          <el-tag size="small">
+            {{ level || "A2" }}
+          </el-tag>
         </div>
         <div class="header-actions">
-          <el-button circle :icon="Setting" @click="showSettings = true" />
+          <el-button
+            circle
+            :icon="Setting"
+            @click="showSettings = true"
+          />
         </div>
       </div>
 
@@ -72,7 +97,10 @@
       </div>
 
       <!-- 消息列表 -->
-      <div ref="messagesContainer" class="messages-container">
+      <div
+        ref="messagesContainer"
+        class="messages-container"
+      >
         <div
           v-for="message in messages"
           :key="message.id"
@@ -111,8 +139,13 @@
         </div>
 
         <!-- AI 思考中占位符 -->
-        <div v-if="isAIThinking" class="thinking-indicator">
-          <el-icon class="is-loading"><Loading /></el-icon>
+        <div
+          v-if="isAIThinking"
+          class="thinking-indicator"
+        >
+          <el-icon class="is-loading">
+            <Loading />
+          </el-icon>
           <span>AI 正在思考...</span>
         </div>
       </div>
@@ -120,7 +153,10 @@
       <!-- 输入区域 -->
       <div class="input-area">
         <!-- 快捷回复 -->
-        <div v-if="quickReplies.length > 0" class="quick-replies">
+        <div
+          v-if="quickReplies.length > 0"
+          class="quick-replies"
+        >
           <el-button
             v-for="(reply, index) in quickReplies"
             :key="index"
@@ -152,7 +188,10 @@
             />
             <!-- 语音识别状态指示器 -->
             <transition name="fade">
-              <div v-if="isVoiceInput" class="voice-status-indicator">
+              <div
+                v-if="isVoiceInput"
+                class="voice-status-indicator"
+              >
                 <div class="voice-wave">
                   <span></span>
                   <span></span>
@@ -175,8 +214,14 @@
         </div>
 
         <!-- 完成对话按钮 -->
-        <div v-if="canComplete" class="complete-action">
-          <el-button type="success" @click="handleComplete">
+        <div
+          v-if="canComplete"
+          class="complete-action"
+        >
+          <el-button
+            type="success"
+            @click="handleComplete"
+          >
             <el-icon><CircleCheck /></el-icon>
             完成对话并查看评分
           </el-button>
@@ -203,19 +248,45 @@
     </ConversationFeedbackDrawer>
 
     <!-- 设置对话框 -->
-    <el-dialog v-model="showSettings" title="对话设置" width="500px">
+    <el-dialog
+      v-model="showSettings"
+      title="对话设置"
+      width="500px"
+    >
       <el-form label-width="120px">
         <el-form-item label="难度级别">
-          <el-select v-model="level" placeholder="选择难度">
-            <el-option label="A1 - 入门" value="A1" />
-            <el-option label="A2 - 初级" value="A2" />
-            <el-option label="B1 - 中级" value="B1" />
-            <el-option label="B2 - 中高级" value="B2" />
-            <el-option label="C1 - 高级" value="C1" />
+          <el-select
+            v-model="level"
+            placeholder="选择难度"
+          >
+            <el-option
+              label="A1 - 入门"
+              value="A1"
+            />
+            <el-option
+              label="A2 - 初级"
+              value="A2"
+            />
+            <el-option
+              label="B1 - 中级"
+              value="B1"
+            />
+            <el-option
+              label="B2 - 中高级"
+              value="B2"
+            />
+            <el-option
+              label="C1 - 高级"
+              value="C1"
+            />
           </el-select>
         </el-form-item>
         <el-form-item label="目标消息数">
-          <el-input-number v-model="targetMessages" :min="5" :max="20" />
+          <el-input-number
+            v-model="targetMessages"
+            :min="5"
+            :max="20"
+          />
         </el-form-item>
         <el-form-item label="AI自动发音">
           <el-switch v-model="autoPlayResponse" />
@@ -227,8 +298,15 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="showSettings = false">取消</el-button>
-        <el-button type="primary" @click="applySettings">应用设置</el-button>
+        <el-button @click="showSettings = false">
+          取消
+        </el-button>
+        <el-button
+          type="primary"
+          @click="applySettings"
+        >
+          应用设置
+        </el-button>
       </template>
     </el-dialog>
 
