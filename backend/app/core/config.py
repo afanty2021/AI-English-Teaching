@@ -3,6 +3,7 @@
 使用 pydantic-settings 管理配置
 """
 import os
+from pathlib import Path
 from typing import Optional
 
 from pydantic import Field, field_validator, model_validator
@@ -116,6 +117,14 @@ class Settings(BaseSettings):
     # 分页配置
     DEFAULT_PAGE_SIZE: int = 20
     MAX_PAGE_SIZE: int = 100
+
+    # 导出配置
+    EXPORT_DIR: Path = Path("exports")
+    EXPORT_MAX_FILE_SIZE: int = 50 * 1024 * 1024  # 50MB
+    EXPORT_FILE_RETENTION_DAYS: int = 30
+    EXPORT_TASK_RETENTION_DAYS: int = 7
+    MAX_CONCURRENT_EXPORTS: int = 5
+    EXPORT_TASK_TIMEOUT: int = 300  # 5 minutes
 
     model_config = SettingsConfigDict(
         env_file=".env",
