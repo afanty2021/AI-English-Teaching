@@ -585,6 +585,7 @@ class CloudSTTAdapter implements VoiceRecognitionBase {
   private cache: RecognitionLRUCache  // LRU 缓存
   private retryStrategy: RetryStrategy  // 重试策略
   private accuracyTracker: RecognitionAccuracyTracker  // 准确度跟踪器
+  private readonly MAX_DELAY = 30000  // 30秒最大重试延迟
 
   constructor(config: RecognitionConfig = {}) {
     this.config = {
@@ -789,11 +790,18 @@ class CloudSTTAdapter implements VoiceRecognitionBase {
   /**
    * 带重试的启动方法
    * 在遇到可重试错误时自动重试，使用指数退避策略
+   * @param timeoutMs 总超时时间，默认60000ms（60秒）
    */
-  async startWithRetry(): Promise<void> {
+  async startWithRetry(timeoutMs: number = 60000): Promise<void> {
+    const startTime = Date.now()
     let lastError: Error | null = null
 
     for (let attempt = 0; attempt <= this.retryStrategy.maxRetries; attempt++) {
+      // 检查超时
+      if (Date.now() - startTime > timeoutMs) {
+        throw new Error(`Retry timeout exceeded after ${timeoutMs}ms`)
+      }
+
       try {
         await this.start()
         // 启动成功，记录识别
@@ -837,9 +845,12 @@ class CloudSTTAdapter implements VoiceRecognitionBase {
 
   /**
    * 计算重试延迟（指数退避）
+   * 延迟会被限制在 MAX_DELAY (30000ms) 以内
    */
   private calculateRetryDelay(attempt: number): number {
-    return this.retryStrategy.retryDelay * Math.pow(this.retryStrategy.backoffMultiplier, attempt)
+    const delay = this.retryStrategy.retryDelay *
+                  Math.pow(this.retryStrategy.backoffMultiplier, attempt)
+    return Math.min(delay, this.MAX_DELAY)
   }
 
   /**

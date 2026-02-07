@@ -19,6 +19,7 @@ class MockCloudSTTAdapter {
   private startCallCount = 0
   private shouldFail = false
   private errorToThrow: Error | null = null
+  private readonly MAX_DELAY = 30000  // 30秒最大延迟
 
   constructor(config: any = {}) {
     this.config = config
@@ -34,10 +35,16 @@ class MockCloudSTTAdapter {
     }
   }
 
-  async startWithRetry(): Promise<void> {
+  async startWithRetry(timeoutMs: number = 60000): Promise<void> {
+    const startTime = Date.now()
     let lastError: Error | null = null
 
     for (let attempt = 0; attempt <= this.retryStrategy.maxRetries; attempt++) {
+      // 检查超时
+      if (Date.now() - startTime > timeoutMs) {
+        throw new Error(`Retry timeout exceeded after ${timeoutMs}ms`)
+      }
+
       try {
         await this.start()
         this.accuracyTracker.recordRecognition()
@@ -70,7 +77,8 @@ class MockCloudSTTAdapter {
   }
 
   private calculateRetryDelay(attempt: number): number {
-    return this.retryStrategy.retryDelay * Math.pow(this.retryStrategy.backoffMultiplier, attempt)
+    const delay = this.retryStrategy.retryDelay * Math.pow(this.retryStrategy.backoffMultiplier, attempt)
+    return Math.min(delay, this.MAX_DELAY)
   }
 
   private sleep(ms: number): Promise<void> {
@@ -590,7 +598,8 @@ describe('智能重试机制', () => {
       }
       const testAdapter = new MockCloudSTTAdapter({ retryStrategy: strategy })
 
-      expect(testAdapter['calculateRetryDelay'](2)).toBe(10000000) // 1000 * 100^2
+      // 由于 MAX_DELAY 限制，大的退避倍数会被限制在 30000ms
+      expect(testAdapter['calculateRetryDelay'](2)).toBe(30000) // 被限制在 MAX_DELAY
     })
 
     it('应该处理负数尝试次数', () => {
@@ -630,6 +639,134 @@ describe('智能重试机制', () => {
 
       const feedback = adapter.getRecentFeedback(1)[0]
       expect(feedback.transcript).toContain('<script>')
+    })
+  })
+
+  describe('MAX_DELAY 延迟上限保护', () => {
+    it('应该将重试延迟限制在 MAX_DELAY (30000ms)', () => {
+      const strategy: RetryStrategy = {
+        maxRetries: 10,
+        retryDelay: 1000,
+        backoffMultiplier: 10, // 大倍数会导致快速超过 MAX_DELAY
+        retryableErrors: new Set(['network'])
+      }
+      const testAdapter = new MockCloudSTTAdapter({ retryStrategy: strategy })
+
+      // 第0次重试: 1000ms
+      expect(testAdapter['calculateRetryDelay'](0)).toBe(1000)
+      // 第1次重试: 10000ms
+      expect(testAdapter['calculateRetryDelay'](1)).toBe(10000)
+      // 第2次重试: 100000ms，但应该被限制在 30000ms
+      expect(testAdapter['calculateRetryDelay'](2)).toBe(30000)
+      // 第3次重试: 1000000ms，也应该被限制在 30000ms
+      expect(testAdapter['calculateRetryDelay'](3)).toBe(30000)
+    })
+
+    it('应该在极端退避配置下也遵守 MAX_DELAY', () => {
+      const extremeStrategy: RetryStrategy = {
+        maxRetries: 5,
+        retryDelay: 10000,
+        backoffMultiplier: 1000,
+        retryableErrors: new Set(['network'])
+      }
+      const extremeAdapter = new MockCloudSTTAdapter({ retryStrategy: extremeStrategy })
+
+      // 即使初始延迟和倍数都很大，也应该被限制在 30000ms
+      expect(extremeAdapter['calculateRetryDelay'](1)).toBe(30000)
+      expect(extremeAdapter['calculateRetryDelay'](2)).toBe(30000)
+    })
+
+    it('应该正确处理边界值（刚好达到 MAX_DELAY）', () => {
+      const strategy: RetryStrategy = {
+        maxRetries: 3,
+        retryDelay: 30000,
+        backoffMultiplier: 2,
+        retryableErrors: new Set(['network'])
+      }
+      const testAdapter = new MockCloudSTTAdapter({ retryStrategy: strategy })
+
+      // 初始延迟就是 MAX_DELAY，不应该超过
+      expect(testAdapter['calculateRetryDelay'](0)).toBe(30000)
+      // 第二次重试会超过，但被限制
+      expect(testAdapter['calculateRetryDelay'](1)).toBe(30000)
+    })
+  })
+
+  describe('startWithRetry 超时保护', () => {
+    it('应该在默认超时时间 (60000ms) 后抛出错误', async () => {
+      const slowStrategy: RetryStrategy = {
+        maxRetries: 100, // 大量重试次数
+        retryDelay: 1000,
+        backoffMultiplier: 1.1, // 缓慢增长
+        retryableErrors: new Set(['network'])
+      }
+      const slowAdapter = new MockCloudSTTAdapter({ retryStrategy: slowStrategy })
+      slowAdapter.setShouldFail(true, new Error('network error'))
+
+      // 应该在超时前抛出错误
+      await expect(slowAdapter.startWithRetry()).rejects.toThrow('Retry timeout exceeded')
+    }, 65000) // 略长于默认超时时间
+
+    it('应该接受自定义超时时间', async () => {
+      const fastStrategy: RetryStrategy = {
+        maxRetries: 50,
+        retryDelay: 100,
+        backoffMultiplier: 1.5,
+        retryableErrors: new Set(['network'])
+      }
+      const fastAdapter = new MockCloudSTTAdapter({ retryStrategy: fastStrategy })
+      fastAdapter.setShouldFail(true, new Error('network error'))
+
+      // 使用较短的超时时间 (1000ms)
+      await expect(fastAdapter.startWithRetry(1000)).rejects.toThrow('Retry timeout exceeded')
+    }, 2000)
+
+    it('应该在超时错误中包含实际超时时间', async () => {
+      const strategy: RetryStrategy = {
+        maxRetries: 10,
+        retryDelay: 500,
+        backoffMultiplier: 2,
+        retryableErrors: new Set(['network'])
+      }
+      const testAdapter = new MockCloudSTTAdapter({ retryStrategy: strategy })
+      testAdapter.setShouldFail(true, new Error('network error'))
+
+      try {
+        await testAdapter.startWithRetry(5000)
+        expect.fail('应该抛出超时错误')
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error)
+        expect((error as Error).message).toContain('5000')
+      }
+    }, 10000) // 增加超时时间到 10 秒
+
+    it('应该在超时时停止重试', async () => {
+      const strategy: RetryStrategy = {
+        maxRetries: 20,
+        retryDelay: 200,
+        backoffMultiplier: 1.2,
+        retryableErrors: new Set(['network'])
+      }
+      const testAdapter = new MockCloudSTTAdapter({ retryStrategy: strategy })
+      testAdapter.setShouldFail(true, new Error('network error'))
+
+      const startTime = Date.now()
+      try {
+        await testAdapter.startWithRetry(2000)
+        expect.fail('应该抛出超时错误')
+      } catch (error) {
+        const elapsed = Date.now() - startTime
+        // 应该在超时时间附近停止（允许一些误差）
+        expect(elapsed).toBeGreaterThanOrEqual(2000)
+        expect(elapsed).toBeLessThan(3000)
+        expect((error as Error).message).toContain('timeout')
+      }
+    }, 4000)
+
+    it('应该在快速成功时不受超时限制影响', async () => {
+      // 正常情况：快速成功，不应该超时
+      await expect(adapter.startWithRetry(1000)).resolves.not.toThrow()
+      expect(adapter.getStartCallCount()).toBe(1)
     })
   })
 })
