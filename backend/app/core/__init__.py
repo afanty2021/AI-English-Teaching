@@ -5,6 +5,7 @@
 - security: 认证与安全
 - exceptions: 异常定义
 - constants: 业务常量
+- redis: Redis 连接管理
 """
 
 from .constants import (
@@ -28,6 +29,7 @@ __all__ = [
     "config",
     "security",
     "exceptions",
+    "redis",
     # 常量类
     "ABILITY_LEVELS",
     "ABILITY_RANGES",
