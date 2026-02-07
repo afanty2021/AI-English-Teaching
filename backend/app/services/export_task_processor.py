@@ -24,6 +24,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
+from app.metrics import (
+    record_export_task_started,
+    record_export_task_completed,
+    record_export_task_failed,
+)
 from app.models.export_task import ExportFormat, ExportTask, TaskStatus
 from app.models.export_template import ExportTemplate
 from app.models.lesson_plan import LessonPlan
@@ -33,6 +38,7 @@ from app.services.document_generators.pptx_generator import PPTXDocumentGenerato
 from app.services.document_generators.word_generator import WordDocumentGenerator
 from app.services.file_storage_service import FileStorageService
 from app.services.progress_notifier import ProgressNotifier
+from app.utils.concurrency import get_export_concurrency_controller
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +95,9 @@ class ExportTaskProcessor:
         self.notifier = notifier or ProgressNotifier()
         self.settings = get_settings()
 
+        # 初始化并发控制器
+        self.concurrency_controller = get_export_concurrency_controller()
+
         # 初始化生成器
         self.word_generator = WordDocumentGenerator()
         self.pdf_generator = PDFDocumentGenerator()
@@ -137,6 +146,8 @@ class ExportTaskProcessor:
             try:
                 export_format = ExportFormat(format)
             except ValueError:
+                # 记录验证失败指标
+                record_export_task_failed("validation", format)
                 await self._update_task_status(
                     task_id, TaskStatus.FAILED, 0, f"不支持的导出格式: {format}"
                 )
@@ -144,107 +155,158 @@ class ExportTaskProcessor:
                     status_code=status.HTTP_400_BAD_REQUEST, detail=f"不支持的导出格式: {format}"
                 )
 
-            # 3. 更新任务状态为处理中
-            await self._update_task_status(
-                task_id,
-                TaskStatus.PROCESSING,
-                self.PROGRESS_STAGES["loading"],
-                "正在加载教案数据...",
+            # 3. 获取并发槽位（在队列中等待）
+            controller_status = self.concurrency_controller.get_status()
+            logger.info(
+                f"导出任务等待获取槽位: {task_id}, "
+                f"当前状态: {controller_status['active_count']}/{controller_status['max_concurrent']} 活跃"
             )
 
-            # 4. 获取教案数据
-            lesson = await self._get_lesson_plan(lesson_plan_id)
-            if not lesson:
-                await self._update_task_status(task_id, TaskStatus.FAILED, 0, "教案不存在")
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, detail=f"教案不存在: {lesson_plan_id}"
-                )
-
-            # 5. 获取模板（如果指定）
-            template = None
-            template_vars = {}
-            if template_id:
-                template = await self._get_template(template_id)
-                if not template:
-                    await self._update_task_status(task_id, TaskStatus.FAILED, 0, "模板不存在")
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND, detail=f"模板不存在: {template_id}"
+            # 使用上下文管理器自动管理槽位的获取和释放
+            async with self.concurrency_controller.acquire(
+                task_id=str(task_id),
+                timeout=self.settings.EXPORT_TASK_TIMEOUT
+            ) as acquired:
+                if not acquired:
+                    # 超时未获得槽位
+                    # 记录超时失败指标
+                    record_export_task_failed("timeout", format)
+                    error_message = (
+                        f"服务器繁忙，当前有 {controller_status['active_count']} "
+                        f"个导出任务正在处理，请稍后重试"
                     )
-                # 验证模板格式匹配
-                if template.format != format:
+                    await self._update_task_status(task_id, TaskStatus.FAILED, 0, error_message)
+                    self.concurrency_controller.reject_task(str(task_id))
+                    raise HTTPException(
+                        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                        detail=error_message
+                    )
+
+                # 4. 成功获取槽位，使用指标上下文管理器包裹任务执行
+                async with record_export_task_started(format, str(task_id)):
+                    # 更新任务状态为处理中
                     await self._update_task_status(
                         task_id,
-                        TaskStatus.FAILED,
-                        0,
-                        f"模板格式({template.format})与请求格式({format})不匹配",
-                    )
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"模板格式({template.format})与请求格式({format})不匹配",
+                        TaskStatus.PROCESSING,
+                        self.PROGRESS_STAGES["loading"],
+                        "正在加载教案数据...",
                     )
 
-                # 从选项中获取模板变量
-                if options and "template_variables" in options:
-                    template_vars = options["template_variables"]
+                    logger.info(
+                        f"导出任务获得槽位开始处理: {task_id}, "
+                        f"活跃任务: {self.concurrency_controller.active_count}/"
+                        f"{self.concurrency_controller.max_concurrent}"
+                    )
 
-            # 6. 渲染内容
-            await self._notify_progress(
-                task_id, self.PROGRESS_STAGES["rendering"], "正在渲染教案内容..."
-            )
+                    try:
+                        # 5. 获取教案数据
+                        lesson = await self._get_lesson_plan(lesson_plan_id)
+                        if not lesson:
+                            await self._update_task_status(task_id, TaskStatus.FAILED, 0, "教案不存在")
+                            raise HTTPException(
+                                status_code=status.HTTP_404_NOT_FOUND,
+                                detail=f"教案不存在: {lesson_plan_id}"
+                            )
 
-            rendered_content = await self._render_content(lesson, template, options)
+                        # 6. 获取模板（如果指定）
+                        template = None
+                        template_vars = {}
+                        if template_id:
+                            template = await self._get_template(template_id)
+                            if not template:
+                                await self._update_task_status(task_id, TaskStatus.FAILED, 0, "模板不存在")
+                                raise HTTPException(
+                                    status_code=status.HTTP_404_NOT_FOUND,
+                                    detail=f"模板不存在: {template_id}"
+                                )
+                            # 验证模板格式匹配
+                            if template.format != format:
+                                await self._update_task_status(
+                                    task_id,
+                                    TaskStatus.FAILED,
+                                    0,
+                                    f"模板格式({template.format})与请求格式({format})不匹配",
+                                )
+                                raise HTTPException(
+                                    status_code=status.HTTP_400_BAD_REQUEST,
+                                    detail=f"模板格式({template.format})与请求格式({format})不匹配",
+                                )
 
-            # 7. 生成文档
-            await self._notify_progress(
-                task_id,
-                self.PROGRESS_STAGES["generating"],
-                f"正在生成{export_format.value.upper()}文档...",
-            )
+                            # 从选项中获取模板变量
+                            if options and "template_variables" in options:
+                                template_vars = options["template_variables"]
 
-            file_content = await self._execute_generation(
-                lesson, rendered_content, export_format, template_vars
-            )
+                        # 7. 渲染内容
+                        await self._notify_progress(
+                            task_id, self.PROGRESS_STAGES["rendering"], "正在渲染教案内容..."
+                        )
 
-            # 8. 保存文件
-            await self._notify_progress(task_id, self.PROGRESS_STAGES["saving"], "正在保存文件...")
+                        rendered_content = await self._render_content(lesson, template, options)
 
-            filename = self._generate_filename(lesson, export_format)
-            file_path, file_size = await self._save_file_to_storage(
-                file_content, filename, lesson_plan_id, user_id
-            )
+                        # 8. 生成文档
+                        await self._notify_progress(
+                            task_id,
+                            self.PROGRESS_STAGES["generating"],
+                            f"正在生成{export_format.value.upper()}文档...",
+                        )
 
-            # 9. 生成下载URL
-            download_url = self._generate_download_url(file_path)
+                        file_content = await self._execute_generation(
+                            lesson, rendered_content, export_format, template_vars
+                        )
 
-            # 10. 更新任务为完成状态
-            await self._update_task_status(
-                task_id,
-                TaskStatus.COMPLETED,
-                self.PROGRESS_STAGES["completed"],
-                None,
-                file_path=file_path,
-                file_size=file_size,
-                download_url=download_url,
-            )
+                        # 9. 保存文件
+                        await self._notify_progress(
+                            task_id, self.PROGRESS_STAGES["saving"], "正在保存文件..."
+                        )
 
-            # 11. 通知完成
-            await self.notifier.notify_complete(str(task_id), download_url)
+                        filename = self._generate_filename(lesson, export_format)
+                        file_path, file_size = await self._save_file_to_storage(
+                            file_content, filename, lesson_plan_id, user_id
+                        )
 
-            # 12. 更新模板使用次数
-            if template:
-                template.increment_usage()
-                await self.db.commit()
+                        # 10. 生成下载URL
+                        download_url = self._generate_download_url(file_path)
 
-            logger.info(
-                f"导出任务完成: {task_id}, "
-                f"格式: {format}, "
-                f"文件: {file_path}, "
-                f"大小: {file_size} bytes"
-            )
+                        # 11. 更新任务为完成状态
+                        await self._update_task_status(
+                            task_id,
+                            TaskStatus.COMPLETED,
+                            self.PROGRESS_STAGES["completed"],
+                            None,
+                            file_path=file_path,
+                            file_size=file_size,
+                            download_url=download_url,
+                        )
 
-            # 刷新并返回任务
-            await self.db.refresh(task)
-            return task
+                        # 12. 通知完成
+                        await self.notifier.notify_complete(str(task_id), download_url)
+
+                        # 13. 更新模板使用次数
+                        if template:
+                            template.increment_usage()
+                            await self.db.commit()
+
+                        logger.info(
+                            f"导出任务完成: {task_id}, "
+                            f"格式: {format}, "
+                            f"文件: {file_path}, "
+                            f"大小: {file_size} bytes"
+                        )
+
+                        # 记录任务完成指标
+                        record_export_task_completed(format, "completed")
+
+                        # 刷新并返回任务
+                        await self.db.refresh(task)
+                        return task
+
+                    except HTTPException:
+                        # HTTP异常特殊处理，重新抛出
+                        raise
+                    except Exception as e:
+                        # 记录生成失败指标
+                        record_export_task_failed("generation", format)
+                        raise
 
         except HTTPException as http_exc:
             # HTTP异常也记录错误并通知

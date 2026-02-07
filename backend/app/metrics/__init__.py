@@ -15,6 +15,8 @@ from app.metrics.export_metrics import (
     record_export_task_completed,
     record_export_task_failed,
     record_export_task_started,
+    set_queued_tasks,
+    update_storage_metrics,
 )
 
 __all__ = [
@@ -29,4 +31,6 @@ __all__ = [
     "record_export_task_failed",
     "increment_active_tasks",
     "decrement_active_tasks",
+    "set_queued_tasks",
+    "update_storage_metrics",
 ]
