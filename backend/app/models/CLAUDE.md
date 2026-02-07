@@ -19,4 +19,12 @@
 | #946 | 5:33 PM | 🔵 | Existing Notification Preference Model Found | ~334 |
 | #849 | 4:10 PM | 🟣 | 创建教案分享模型 | ~89 |
 | #843 | 4:05 PM | 🔵 | LessonsView.vue组件结构分析 | ~109 |
+
+### Feb 7, 2026
+
+| ID | Time | T | Title | Read |
+|----|------|---|-------|------|
+| #1712 | 8:01 PM | 🟣 | Template Service Implemented for Lesson Export | ~376 |
+| #1711 | " | 🔵 | LessonPlan Data Model Structure | ~353 |
+| #1700 | 8:00 PM | 🟣 | Document Generators Implemented for Lesson Export | ~364 |
 </claude-mem-context>
