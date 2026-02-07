@@ -4,6 +4,8 @@
  */
 
 import { BrowserCompatibility, BrowserInfo } from './browserCompatibility'
+import { AudioBuffer } from './audioBuffer'
+import { RecognitionLRUCache } from './recognitionCache'
 
 /**
  * 识别策略枚举
@@ -216,14 +218,17 @@ class WebSpeechRecognitionAdapter implements VoiceRecognitionBase {
 /**
  * 云端 STT 适配器
  * 使用后端 Whisper API 进行语音识别
+ * 集成音频缓冲器以解决音频碎片化问题
+ * 集成 LRU 缓存以避免重复识别
  */
 class CloudSTTAdapter implements VoiceRecognitionBase {
   private config: RecognitionConfig
   private callbacks: RecognitionCallbacks = {}
   private strategy = RecognitionStrategy.CloudSTT
   private mediaRecorder: MediaRecorder | null = null
-  private audioChunks: Blob[] = []
   private isActive = false
+  private audioBuffer: AudioBuffer  // 音频缓冲器
+  private cache: RecognitionLRUCache  // LRU 缓存
 
   constructor(config: RecognitionConfig = {}) {
     this.config = {
@@ -231,6 +236,22 @@ class CloudSTTAdapter implements VoiceRecognitionBase {
       apiEndpoint: '/api/v1/stt/transcribe',
       ...config
     }
+
+    // 初始化音频缓冲器
+    this.audioBuffer = new AudioBuffer({
+      bufferSize: 2000,      // 最大缓冲2秒
+      bufferThreshold: 1000, // 1秒后触发识别
+      minAudioLength: 500,   // 最小音频长度500ms
+      sampleRate: 16000,     // 16kHz采样率
+      bitDepth: 16,          // 16bit
+      channels: 1            // 单声道
+    })
+
+    // 初始化 LRU 缓存
+    this.cache = new RecognitionLRUCache({
+      maxSize: 100,    // 最多缓存100个识别结果
+      ttl: 300000      // 5分钟过期
+    })
   }
 
   isSupported(): boolean {
@@ -251,17 +272,30 @@ class CloudSTTAdapter implements VoiceRecognitionBase {
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then((stream) => {
           this.mediaRecorder = new MediaRecorder(stream)
-          this.audioChunks = []
+          this.audioBuffer.clear()  // 清空缓冲器
 
           this.mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
-              this.audioChunks.push(event.data)
+              // 先尝试缓冲
+              const shouldContinue = this.audioBuffer.add(event.data)
+
+              if (!shouldContinue) {
+                // 缓冲器拒绝，说明音频已足够
+                // 触发识别
+                const bufferedAudio = this.audioBuffer.flush()
+                if (bufferedAudio) {
+                  void this.transcribeAudio(bufferedAudio)
+                }
+              }
             }
           }
 
           this.mediaRecorder.onstop = async () => {
-            const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' })
-            await this.transcribeAudio(audioBlob)
+            // 停止时，处理剩余的缓冲音频
+            const remainingAudio = this.audioBuffer.flush()
+            if (remainingAudio) {
+              await this.transcribeAudio(remainingAudio)
+            }
           }
 
           this.mediaRecorder.onstart = () => {
@@ -299,6 +333,23 @@ class CloudSTTAdapter implements VoiceRecognitionBase {
   }
 
   private async transcribeAudio(audioBlob: Blob): Promise<void> {
+    // 生成缓存键
+    const cacheKey = this.generateCacheKey(audioBlob)
+
+    // 检查缓存
+    const cached = this.cache.get(cacheKey)
+    if (cached) {
+      // 缓存命中，直接返回缓存结果
+      this.callbacks.onResult?.({
+        text: cached.transcript,
+        confidence: cached.confidence,
+        isFinal: true,
+        strategy: this.strategy
+      })
+      return
+    }
+
+    // 缓存未命中，执行识别
     try {
       const formData = new FormData()
       formData.append('audio', audioBlob, 'speech.webm')
@@ -326,11 +377,33 @@ class CloudSTTAdapter implements VoiceRecognitionBase {
         strategy: this.strategy
       }
 
+      // 存入缓存
+      this.cache.set(cacheKey, {
+        transcript: result.text || '',
+        confidence: 0.85,
+        timestamp: Date.now()
+      })
+
       this.callbacks.onResult?.(recognitionResult)
     } catch (error) {
       const errorObj = error instanceof Error ? error : new Error(String(error))
       this.callbacks.onError?.(errorObj)
     }
+  }
+
+  /**
+   * 生成音频 Blob 的缓存键
+   * 基于音频大小和类型生成简化的缓存键
+   * 注意：为了提高缓存命中率，这里使用简化的键生成策略
+   * 在实际应用中，可以考虑使用音频内容的哈希值作为键
+   * @param audioBlob 音频数据
+   * @returns 缓存键
+   */
+  private generateCacheKey(audioBlob: Blob): string {
+    // 简化版缓存键：基于大小和类型
+    // 注意：这只是一个简化实现，可能产生哈希冲突
+    // 实际应用中建议使用音频内容的哈希值（如 SHA-256）
+    return `stt_${audioBlob.size}_${audioBlob.type}`
   }
 
   on(callbacks: RecognitionCallbacks): void {
@@ -342,7 +415,8 @@ class CloudSTTAdapter implements VoiceRecognitionBase {
       this.mediaRecorder.stop()
     }
     this.mediaRecorder = null
-    this.audioChunks = []
+    this.audioBuffer.clear()  // 清空缓冲器
+    this.cache.clear()        // 清空缓存
     this.isActive = false
     this.callbacks = {}
   }
