@@ -19,6 +19,31 @@ export default [
     languageOptions: {
       parserOptions: {
         parser: tseslint.parser
+      },
+      globals: {
+        window: 'readonly',
+        console: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        WebSocket: 'readonly',
+        File: 'readonly'
+      }
+    }
+  },
+  {
+    files: ['**/*.ts'],
+    languageOptions: {
+      globals: {
+        window: 'readonly',
+        console: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        WebSocket: 'readonly',
+        File: 'readonly'
       }
     }
   },

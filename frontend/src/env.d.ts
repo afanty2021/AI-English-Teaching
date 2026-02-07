@@ -54,3 +54,28 @@ declare module 'axios' {
   }
   export default axios
 }
+
+// 浏览器全局变量类型声明
+interface Window {
+  WebSocket: typeof WebSocket
+  setInterval: (handler: TimerHandler, timeout?: number) => number
+  clearInterval: (id: number) => void
+  setTimeout: (handler: TimerHandler, timeout?: number) => number
+  clearTimeout: (id: number) => void
+  location: Location
+}
+
+interface Console {
+  log(...args: any[]): void
+  error(...args: any[]): void
+  warn(...args: any[]): void
+  info(...args: any[]): void
+  debug(...args: any[]): void
+}
+
+declare const window: Window
+declare const console: Console
+declare const setInterval: (handler: TimerHandler, timeout?: number) => number
+declare const clearInterval: (id: number) => void
+declare const setTimeout: (handler: TimerHandler, timeout?: number) => number
+declare const clearTimeout: (id: number) => void
