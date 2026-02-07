@@ -231,6 +231,12 @@
         <el-button type="primary" @click="applySettings">应用设置</el-button>
       </template>
     </el-dialog>
+
+    <!-- 语音识别不支持提示对话框 -->
+    <VoiceRecognitionUnsupported
+      ref="unsupportedDialogRef"
+      @confirm="handleUnsupportedConfirm"
+    />
   </div>
 </template>
 
@@ -259,6 +265,7 @@ import ConversationMessageComponent from '@/components/ConversationMessage.vue'
 import ConversationStatusComponent from '@/components/ConversationStatus.vue'
 import ConversationFeedbackDrawer from '@/components/ConversationFeedbackDrawer.vue'
 import ConversationScoreCard from '@/components/ConversationScoreCard.vue'
+import VoiceRecognitionUnsupported from '@/components/VoiceRecognitionUnsupported.vue'
 import {
   createConversation,
   completeConversation,
@@ -279,6 +286,7 @@ import {
   type VoiceRecognition,
   VoiceRecognitionStatus
 } from '@/utils/voiceRecognition'
+import { BrowserCompatibility } from '@/utils/browserCompatibility'
 import {
   createTextToSpeech,
   type TextToSpeech,
@@ -408,6 +416,7 @@ const isComplete = ref(false)
 const highlightedMessageId = ref<string>('')
 const showSettings = ref(false)
 const messagesContainer = ref<HTMLElement>()
+const unsupportedDialogRef = ref<InstanceType<typeof VoiceRecognitionUnsupported>>()
 // messageInput reserved for future direct input handling
 // const messageInput = ref()
 
@@ -687,9 +696,18 @@ const handleEnterKey = (event: KeyboardEvent) => {
 
 // 切换语音输入
 const toggleVoiceInput = () => {
-  if (!isVoiceRecognitionSupported()) {
-    ElMessage.warning('您的浏览器不支持语音识别功能，请使用 Chrome 或 Edge 浏览器')
+  // 检查浏览器兼容性
+  const detection = BrowserCompatibility.detect()
+
+  if (!detection.webSpeechSupported) {
+    // 完全不支持，显示提示对话框
+    unsupportedDialogRef.value?.show(true)
     return
+  }
+
+  // Safari 部分支持，显示警告但允许使用
+  if (detection.engine === 'safari') {
+    ElMessage.warning('Safari 浏览器的语音识别功能可能不稳定，建议使用 Chrome 或 Edge')
   }
 
   isVoiceInput.value = !isVoiceInput.value
@@ -898,6 +916,13 @@ const applySettings = () => {
   if (conversationId.value) {
     // TODO: 调用 API 更新对话设置
   }
+}
+
+// 处理不支持提示对话框确认
+const handleUnsupportedConfirm = () => {
+  // 用户已确认不支持，继续使用文本输入
+  // 这里可以添加一些跟踪逻辑，例如记录用户选择
+  console.info('User confirmed to continue with text input only')
 }
 
 // 返回
