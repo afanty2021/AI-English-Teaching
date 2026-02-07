@@ -4,12 +4,14 @@
 """
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
+from fastapi import HTTPException
 
 from app.websocket.export_manager import ExportConnectionManager, export_manager
 from app.services.progress_notifier import ProgressNotifier, progress_notifier
 from app.models.export_task import TaskStatus
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class TestExportConnectionManager:
@@ -410,3 +412,113 @@ class TestGlobalSingletons:
 
         assert pn1 is pn2
         assert pn1.get_active_count() == 0
+
+
+class TestWebSocketAuthentication:
+    """测试 WebSocket 认证安全"""
+
+    @pytest.mark.asyncio
+    @patch("app.api.deps.check_token_not_revoked")
+    async def test_get_current_user_ws_with_revoked_token(self, mock_check_revoked):
+        """测试已撤销 token 被拒绝"""
+        from app.api.deps import get_current_user_ws
+        from app.core.security import create_access_token
+        from unittest.mock import AsyncMock, MagicMock
+        from uuid import uuid4
+
+        # 设置黑名单检查返回已撤销
+        mock_check_revoked.return_value = (False, "Token 已被撤销")
+
+        # 创建模拟用户
+        test_user_id = uuid4()
+
+        # 创建 token
+        token = create_access_token(test_user_id)
+
+        # 验证应该失败
+        with pytest.raises(HTTPException) as exc_info:
+            await get_current_user_ws(token, AsyncMock())
+
+        assert exc_info.value.status_code == 401
+        assert "Token 已被撤销" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    async def test_get_current_user_ws_with_invalid_token(self):
+        """测试无效 token 被拒绝"""
+        from app.api.deps import get_current_user_ws
+
+        # 无效 token
+        invalid_token = "invalid.jwt.token"
+
+        # 验证应该失败
+        with pytest.raises(HTTPException) as exc_info:
+            await get_current_user_ws(invalid_token, AsyncMock())
+
+        assert exc_info.value.status_code == 401
+        assert "无效的认证凭据" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    @patch("app.api.deps.check_token_not_revoked")
+    async def test_get_current_user_ws_with_inactive_user(self, mock_check_revoked):
+        """测试被禁用用户的 token 被拒绝"""
+        from app.api.deps import get_current_user_ws
+        from app.core.security import create_access_token
+        from unittest.mock import AsyncMock, MagicMock
+        from uuid import uuid4
+
+        # 设置黑名单检查通过
+        mock_check_revoked.return_value = (True, "")
+
+        # 创建被禁用的模拟用户
+        test_user_id = uuid4()
+        mock_user = MagicMock()
+        mock_user.id = test_user_id
+        mock_user.is_active = False  # 被禁用
+
+        # 模拟数据库会话
+        mock_db = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_user
+        mock_db.execute.return_value = mock_result
+
+        # 为被禁用用户创建 token
+        token = create_access_token(test_user_id)
+
+        # 验证应该失败
+        with pytest.raises(HTTPException) as exc_info:
+            await get_current_user_ws(token, mock_db)
+
+        assert exc_info.value.status_code == 403
+        assert "账户已被禁用" in exc_info.value.detail
+
+    @pytest.mark.asyncio
+    @patch("app.api.deps.check_token_not_revoked")
+    async def test_get_current_user_ws_valid_token_passes(self, mock_check_revoked):
+        """测试有效 token 通过认证（包含黑名单检查）"""
+        from app.api.deps import get_current_user_ws
+        from app.core.security import create_access_token
+        from unittest.mock import AsyncMock, MagicMock
+        from uuid import uuid4
+
+        # 设置黑名单检查通过
+        mock_check_revoked.return_value = (True, "")
+
+        # 创建有效的模拟用户
+        test_user_id = uuid4()
+        mock_user = MagicMock()
+        mock_user.id = test_user_id
+        mock_user.is_active = True
+
+        # 模拟数据库会话
+        mock_db = AsyncMock()
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none.return_value = mock_user
+        mock_db.execute.return_value = mock_result
+
+        # 创建有效 token
+        token = create_access_token(test_user_id)
+
+        # 验证应该成功
+        user = await get_current_user_ws(token, mock_db)
+        assert user.id == test_user_id
+        assert user.is_active

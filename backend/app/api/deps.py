@@ -446,6 +446,20 @@ async def get_current_user_ws(
             detail="无效的认证凭据"
         )
 
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="无效的认证凭据"
+        )
+
+    # 检查 Token 是否被撤销（黑名单检查）
+    is_valid, error_msg = await check_token_not_revoked(token, user_id)
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=error_msg
+        )
+
     try:
         user_uuid = uuid.UUID(user_id)
     except ValueError:
