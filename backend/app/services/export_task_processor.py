@@ -11,6 +11,7 @@
 - 保存文件到存储（_save_file_to_storage）
 - 生成下载URL（_generate_download_url）
 """
+
 import logging
 import uuid
 from datetime import datetime
@@ -129,8 +130,7 @@ class ExportTaskProcessor:
             task = await self._get_task(task_id)
             if not task:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"导出任务不存在: {task_id}"
+                    status_code=status.HTTP_404_NOT_FOUND, detail=f"导出任务不存在: {task_id}"
                 )
 
             # 2. 验证格式
@@ -138,14 +138,10 @@ class ExportTaskProcessor:
                 export_format = ExportFormat(format)
             except ValueError:
                 await self._update_task_status(
-                    task_id,
-                    TaskStatus.FAILED,
-                    0,
-                    f"不支持的导出格式: {format}"
+                    task_id, TaskStatus.FAILED, 0, f"不支持的导出格式: {format}"
                 )
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"不支持的导出格式: {format}"
+                    status_code=status.HTTP_400_BAD_REQUEST, detail=f"不支持的导出格式: {format}"
                 )
 
             # 3. 更新任务状态为处理中
@@ -153,21 +149,15 @@ class ExportTaskProcessor:
                 task_id,
                 TaskStatus.PROCESSING,
                 self.PROGRESS_STAGES["loading"],
-                "正在加载教案数据..."
+                "正在加载教案数据...",
             )
 
             # 4. 获取教案数据
             lesson = await self._get_lesson_plan(lesson_plan_id)
             if not lesson:
-                await self._update_task_status(
-                    task_id,
-                    TaskStatus.FAILED,
-                    0,
-                    "教案不存在"
-                )
+                await self._update_task_status(task_id, TaskStatus.FAILED, 0, "教案不存在")
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"教案不存在: {lesson_plan_id}"
+                    status_code=status.HTTP_404_NOT_FOUND, detail=f"教案不存在: {lesson_plan_id}"
                 )
 
             # 5. 获取模板（如果指定）
@@ -176,15 +166,9 @@ class ExportTaskProcessor:
             if template_id:
                 template = await self._get_template(template_id)
                 if not template:
-                    await self._update_task_status(
-                        task_id,
-                        TaskStatus.FAILED,
-                        0,
-                        "模板不存在"
-                    )
+                    await self._update_task_status(task_id, TaskStatus.FAILED, 0, "模板不存在")
                     raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND,
-                        detail=f"模板不存在: {template_id}"
+                        status_code=status.HTTP_404_NOT_FOUND, detail=f"模板不存在: {template_id}"
                     )
                 # 验证模板格式匹配
                 if template.format != format:
@@ -192,11 +176,11 @@ class ExportTaskProcessor:
                         task_id,
                         TaskStatus.FAILED,
                         0,
-                        f"模板格式({template.format})与请求格式({format})不匹配"
+                        f"模板格式({template.format})与请求格式({format})不匹配",
                     )
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"模板格式({template.format})与请求格式({format})不匹配"
+                        detail=f"模板格式({template.format})与请求格式({format})不匹配",
                     )
 
                 # 从选项中获取模板变量
@@ -205,44 +189,28 @@ class ExportTaskProcessor:
 
             # 6. 渲染内容
             await self._notify_progress(
-                task_id,
-                self.PROGRESS_STAGES["rendering"],
-                "正在渲染教案内容..."
+                task_id, self.PROGRESS_STAGES["rendering"], "正在渲染教案内容..."
             )
 
-            rendered_content = await self._render_content(
-                lesson,
-                template,
-                options
-            )
+            rendered_content = await self._render_content(lesson, template, options)
 
             # 7. 生成文档
             await self._notify_progress(
                 task_id,
                 self.PROGRESS_STAGES["generating"],
-                f"正在生成{export_format.value.upper()}文档..."
+                f"正在生成{export_format.value.upper()}文档...",
             )
 
             file_content = await self._execute_generation(
-                lesson,
-                rendered_content,
-                export_format,
-                template_vars
+                lesson, rendered_content, export_format, template_vars
             )
 
             # 8. 保存文件
-            await self._notify_progress(
-                task_id,
-                self.PROGRESS_STAGES["saving"],
-                "正在保存文件..."
-            )
+            await self._notify_progress(task_id, self.PROGRESS_STAGES["saving"], "正在保存文件...")
 
             filename = self._generate_filename(lesson, export_format)
             file_path, file_size = await self._save_file_to_storage(
-                file_content,
-                filename,
-                lesson_plan_id,
-                user_id
+                file_content, filename, lesson_plan_id, user_id
             )
 
             # 9. 生成下载URL
@@ -256,7 +224,7 @@ class ExportTaskProcessor:
                 None,
                 file_path=file_path,
                 file_size=file_size,
-                download_url=download_url
+                download_url=download_url,
             )
 
             # 11. 通知完成
@@ -282,12 +250,7 @@ class ExportTaskProcessor:
             # HTTP异常也记录错误并通知
             error_message = http_exc.detail
             if task:
-                await self._update_task_status(
-                    task_id,
-                    TaskStatus.FAILED,
-                    0,
-                    error_message
-                )
+                await self._update_task_status(task_id, TaskStatus.FAILED, 0, error_message)
                 await self.notifier.notify_error(str(task_id), error_message)
             raise
         except Exception as e:
@@ -296,12 +259,7 @@ class ExportTaskProcessor:
             # 更新任务为失败状态
             error_message = f"文档生成失败: {str(e)}"
             if task:
-                await self._update_task_status(
-                    task_id,
-                    TaskStatus.FAILED,
-                    0,
-                    error_message
-                )
+                await self._update_task_status(task_id, TaskStatus.FAILED, 0, error_message)
                 await self.notifier.notify_error(str(task_id), error_message)
 
             raise RuntimeError(f"导出任务处理失败: {e}") from e
@@ -462,9 +420,7 @@ class ExportTaskProcessor:
 
             await self.db.commit()
             logger.debug(
-                f"任务状态已更新: {task_id}, "
-                f"状态: {status.value}, "
-                f"进度: {progress}%"
+                f"任务状态已更新: {task_id}, " f"状态: {status.value}, " f"进度: {progress}%"
             )
 
         except Exception as e:
@@ -492,9 +448,7 @@ class ExportTaskProcessor:
         # 使用 FileStorageService 保存文件
         # 注意：需要将format转换为ExportFormat枚举
         file_path, file_size = await self.storage.save_file(
-            content=file_content,
-            filename=filename,
-            format=self._get_format_from_filename(filename)
+            content=file_content, filename=filename, format=self._get_format_from_filename(filename)
         )
 
         logger.info(
@@ -538,7 +492,7 @@ class ExportTaskProcessor:
         """
         # 清理标题中的非法字符
         safe_title = "".join(
-            c for c in lesson.title if c.isalnum() or c in (' ', '-', '_', '.')
+            c for c in lesson.title if c.isalnum() or c in (" ", "-", "_", ".")
         ).strip()
 
         # 限制长度
@@ -639,6 +593,7 @@ class ExportTaskProcessor:
 
 
 # ========== 模块级便捷函数 ==========
+
 
 def get_export_task_processor(
     db: AsyncSession,

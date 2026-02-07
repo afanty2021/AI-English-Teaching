@@ -8,6 +8,7 @@
 - 文件存储
 - 任务状态更新
 """
+
 import uuid
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -20,8 +21,8 @@ from app.models.export_template import ExportTemplate
 from app.models.lesson_plan import LessonPlan
 from app.services.export_task_processor import ExportTaskProcessor, get_export_task_processor
 
-
 # ========== 测试夹具 ==========
+
 
 @pytest.fixture
 def mock_db():
@@ -63,47 +64,35 @@ def sample_lesson_plan():
     lesson.target_exam = "CET4"
     lesson.objectives = {
         "language_knowledge": ["掌握过去完成时的构成"],
-        "language_skills": ["能够正确使用过去完成时"]
+        "language_skills": ["能够正确使用过去完成时"],
     }
     lesson.vocabulary = {
-        "words": [
-            {"word": "had done", "definition": "过去完成时", "example": "I had finished."}
-        ]
+        "words": [{"word": "had done", "definition": "过去完成时", "example": "I had finished."}]
     }
     lesson.grammar_points = {
         "points": [
             {
                 "name": "过去完成时",
                 "explanation": "表示在过去某时间之前已完成的动作",
-                "examples": ["I had left when he arrived."]
+                "examples": ["I had left when he arrived."],
             }
         ]
     }
     lesson.teaching_structure = {
-        "stages": [
-            {"name": "热身", "duration": 5, "activities": ["问候学生"]}
-        ]
+        "stages": [{"name": "热身", "duration": 5, "activities": ["问候学生"]}]
     }
-    lesson.leveled_materials = {
-        "basic": {"title": "基础阅读", "content": "简单内容..."}
-    }
+    lesson.leveled_materials = {"basic": {"title": "基础阅读", "content": "简单内容..."}}
     lesson.exercises = {
         "items": [
             {
                 "question": "选择正确形式",
                 "options": ["A. had done", "B. have done"],
-                "correct_answer": "A"
+                "correct_answer": "A",
             }
         ]
     }
-    lesson.ppt_outline = {
-        "slides": [
-            {"title": "过去完成时", "bullet_points": ["定义", "用法"]}
-        ]
-    }
-    lesson.resources = {
-        "links": ["https://example.com"]
-    }
+    lesson.ppt_outline = {"slides": [{"title": "过去完成时", "bullet_points": ["定义", "用法"]}]}
+    lesson.resources = {"links": ["https://example.com"]}
     lesson.teaching_notes = "注意学生容易混淆过去完成时和一般过去时"
     return lesson
 
@@ -116,9 +105,7 @@ def sample_template():
     template.name = "标准教案模板"
     template.format = ExportFormat.WORD.value
     template.template_path = "/templates/standard.docx"
-    template.variables = [
-        {"name": "teacher_name", "type": "text", "default": "教师"}
-    ]
+    template.variables = [{"name": "teacher_name", "type": "text", "default": "教师"}]
     template.increment_usage = Mock()
     return template
 
@@ -142,10 +129,10 @@ def sample_task():
 @pytest.fixture
 def processor(mock_db, mock_notifier, mock_storage):
     """创建处理器实例并注入模拟依赖"""
-    with patch('app.services.export_task_processor.FileStorageService', return_value=mock_storage):
-        with patch('app.services.export_task_processor.WordDocumentGenerator'):
-            with patch('app.services.export_task_processor.PDFDocumentGenerator'):
-                with patch('app.services.export_task_processor.PPTXDocumentGenerator'):
+    with patch("app.services.export_task_processor.FileStorageService", return_value=mock_storage):
+        with patch("app.services.export_task_processor.WordDocumentGenerator"):
+            with patch("app.services.export_task_processor.PDFDocumentGenerator"):
+                with patch("app.services.export_task_processor.PPTXDocumentGenerator"):
                     proc = ExportTaskProcessor(mock_db, mock_notifier)
                     proc.storage = mock_storage
                     return proc
@@ -160,6 +147,7 @@ def create_mock_result(value):
 
 # ========== 核心功能测试 ==========
 
+
 @pytest.mark.asyncio
 async def test_process_export_task_word(processor, sample_task, sample_lesson_plan, mock_db):
     """测试处理Word格式导出任务"""
@@ -172,11 +160,13 @@ async def test_process_export_task_word(processor, sample_task, sample_lesson_pl
         return result
 
     # 模拟多次查询返回不同结果
-    mock_db.execute = AsyncMock(side_effect=[
-        create_result(sample_task),      # 第一次查询获取任务
-        create_result(sample_lesson_plan),  # 第二次查询获取教案
-        create_result(sample_task),      # 后续查询返回任务
-    ])
+    mock_db.execute = AsyncMock(
+        side_effect=[
+            create_result(sample_task),  # 第一次查询获取任务
+            create_result(sample_lesson_plan),  # 第二次查询获取教案
+            create_result(sample_task),  # 后续查询返回任务
+        ]
+    )
 
     # 模拟生成器
     mock_word_gen = MagicMock()
@@ -184,7 +174,7 @@ async def test_process_export_task_word(processor, sample_task, sample_lesson_pl
     processor.word_generator = mock_word_gen
 
     # 模拟ContentRendererService
-    with patch('app.services.export_task_processor.ContentRendererService') as mock_renderer:
+    with patch("app.services.export_task_processor.ContentRendererService") as mock_renderer:
         mock_renderer_instance = MagicMock()
         mock_renderer_instance.render_lesson_plan = Mock(return_value="# Test Content")
         mock_renderer.return_value = mock_renderer_instance
@@ -195,7 +185,7 @@ async def test_process_export_task_word(processor, sample_task, sample_lesson_pl
             lesson_plan_id=sample_lesson_plan.id,
             template_id=None,
             format=ExportFormat.WORD.value,
-            user_id=uuid.uuid4()
+            user_id=uuid.uuid4(),
         )
 
         # 验证结果
@@ -214,11 +204,13 @@ async def test_process_export_task_pdf(processor, sample_task, sample_lesson_pla
     """测试处理PDF格式导出任务"""
 
     # 设置数据库查询返回序列
-    mock_db.execute = AsyncMock(side_effect=[
-        create_mock_result(sample_task),
-        create_mock_result(sample_lesson_plan),
-        create_mock_result(sample_task),
-    ])
+    mock_db.execute = AsyncMock(
+        side_effect=[
+            create_mock_result(sample_task),
+            create_mock_result(sample_lesson_plan),
+            create_mock_result(sample_task),
+        ]
+    )
 
     # 模拟PDF生成器
     mock_pdf_gen = MagicMock()
@@ -226,7 +218,7 @@ async def test_process_export_task_pdf(processor, sample_task, sample_lesson_pla
     processor.pdf_generator = mock_pdf_gen
 
     # 模拟ContentRendererService
-    with patch('app.services.export_task_processor.ContentRendererService') as mock_renderer:
+    with patch("app.services.export_task_processor.ContentRendererService") as mock_renderer:
         mock_renderer_instance = MagicMock()
         mock_renderer_instance.render_lesson_plan = Mock(return_value="# Test Content")
         mock_renderer.return_value = mock_renderer_instance
@@ -236,7 +228,7 @@ async def test_process_export_task_pdf(processor, sample_task, sample_lesson_pla
             lesson_plan_id=sample_lesson_plan.id,
             template_id=None,
             format=ExportFormat.PDF.value,
-            user_id=uuid.uuid4()
+            user_id=uuid.uuid4(),
         )
 
         assert result is not None
@@ -248,11 +240,13 @@ async def test_process_export_task_pptx(processor, sample_task, sample_lesson_pl
     """测试处理PPTX格式导出任务"""
 
     # 设置数据库查询返回序列
-    mock_db.execute = AsyncMock(side_effect=[
-        create_mock_result(sample_task),
-        create_mock_result(sample_lesson_plan),
-        create_mock_result(sample_task),
-    ])
+    mock_db.execute = AsyncMock(
+        side_effect=[
+            create_mock_result(sample_task),
+            create_mock_result(sample_lesson_plan),
+            create_mock_result(sample_task),
+        ]
+    )
 
     # 模拟PPTX生成器
     mock_pptx_gen = MagicMock()
@@ -260,7 +254,7 @@ async def test_process_export_task_pptx(processor, sample_task, sample_lesson_pl
     processor.pptx_generator = mock_pptx_gen
 
     # 模拟ContentRendererService
-    with patch('app.services.export_task_processor.ContentRendererService') as mock_renderer:
+    with patch("app.services.export_task_processor.ContentRendererService") as mock_renderer:
         mock_renderer_instance = MagicMock()
         mock_renderer_instance.render_lesson_plan = Mock(return_value="# Test Content")
         mock_renderer.return_value = mock_renderer_instance
@@ -270,7 +264,7 @@ async def test_process_export_task_pptx(processor, sample_task, sample_lesson_pl
             lesson_plan_id=sample_lesson_plan.id,
             template_id=None,
             format=ExportFormat.PPTX.value,
-            user_id=uuid.uuid4()
+            user_id=uuid.uuid4(),
         )
 
         assert result is not None
@@ -281,14 +275,16 @@ async def test_process_export_task_markdown(processor, sample_task, sample_lesso
     """测试处理Markdown格式导出任务"""
 
     # 设置数据库查询返回序列
-    mock_db.execute = AsyncMock(side_effect=[
-        create_mock_result(sample_task),
-        create_mock_result(sample_lesson_plan),
-        create_mock_result(sample_task),
-    ])
+    mock_db.execute = AsyncMock(
+        side_effect=[
+            create_mock_result(sample_task),
+            create_mock_result(sample_lesson_plan),
+            create_mock_result(sample_task),
+        ]
+    )
 
     # Mock ContentRendererService
-    with patch('app.services.export_task_processor.ContentRendererService') as mock_renderer:
+    with patch("app.services.export_task_processor.ContentRendererService") as mock_renderer:
         mock_renderer_instance = MagicMock()
         mock_renderer_instance.render_lesson_plan = Mock(return_value="# Test Markdown")
         mock_renderer.return_value = mock_renderer_instance
@@ -298,7 +294,7 @@ async def test_process_export_task_markdown(processor, sample_task, sample_lesso
             lesson_plan_id=sample_lesson_plan.id,
             template_id=None,
             format=ExportFormat.MARKDOWN.value,
-            user_id=uuid.uuid4()
+            user_id=uuid.uuid4(),
         )
 
         assert result is not None
@@ -306,18 +302,23 @@ async def test_process_export_task_markdown(processor, sample_task, sample_lesso
 
 # ========== 错误处理测试 ==========
 
+
 @pytest.mark.asyncio
-async def test_process_export_task_lesson_not_found(processor, sample_task, sample_lesson_plan, mock_db):
+async def test_process_export_task_lesson_not_found(
+    processor, sample_task, sample_lesson_plan, mock_db
+):
     """测试教案不存在的情况"""
 
     # 第一次返回任务，第二次返回None（教案不存在）
-    mock_db.execute = AsyncMock(side_effect=[
-        create_mock_result(sample_task),
-        create_mock_result(None),
-    ])
+    mock_db.execute = AsyncMock(
+        side_effect=[
+            create_mock_result(sample_task),
+            create_mock_result(None),
+        ]
+    )
 
     # 模拟ContentRendererService
-    with patch('app.services.export_task_processor.ContentRendererService') as mock_renderer:
+    with patch("app.services.export_task_processor.ContentRendererService") as mock_renderer:
         mock_renderer_instance = MagicMock()
         mock_renderer_instance.render_lesson_plan = Mock(return_value="# Test")
         mock_renderer.return_value = mock_renderer_instance
@@ -328,7 +329,7 @@ async def test_process_export_task_lesson_not_found(processor, sample_task, samp
                 lesson_plan_id=sample_lesson_plan.id,
                 template_id=None,
                 format=ExportFormat.WORD.value,
-                user_id=uuid.uuid4()
+                user_id=uuid.uuid4(),
             )
 
         # 验证错误通知被调用
@@ -336,7 +337,9 @@ async def test_process_export_task_lesson_not_found(processor, sample_task, samp
 
 
 @pytest.mark.asyncio
-async def test_process_export_task_invalid_format(processor, sample_task, sample_lesson_plan, mock_db):
+async def test_process_export_task_invalid_format(
+    processor, sample_task, sample_lesson_plan, mock_db
+):
     """测试无效的导出格式"""
 
     mock_db.execute = AsyncMock(return_value=create_mock_result(sample_task))
@@ -347,20 +350,24 @@ async def test_process_export_task_invalid_format(processor, sample_task, sample
             lesson_plan_id=sample_lesson_plan.id,
             template_id=None,
             format="invalid_format",
-            user_id=uuid.uuid4()
+            user_id=uuid.uuid4(),
         )
 
 
 @pytest.mark.asyncio
-async def test_process_export_task_template_mismatch(processor, sample_task, sample_lesson_plan, sample_template, mock_db):
+async def test_process_export_task_template_mismatch(
+    processor, sample_task, sample_lesson_plan, sample_template, mock_db
+):
     """测试模板格式不匹配的情况"""
 
     # 模板是PDF格式，请求的是Word格式
-    mock_db.execute = AsyncMock(side_effect=[
-        create_mock_result(sample_task),
-        create_mock_result(sample_lesson_plan),
-        create_mock_result(sample_template),
-    ])
+    mock_db.execute = AsyncMock(
+        side_effect=[
+            create_mock_result(sample_task),
+            create_mock_result(sample_lesson_plan),
+            create_mock_result(sample_template),
+        ]
+    )
 
     sample_template.format = ExportFormat.PDF.value
 
@@ -370,11 +377,12 @@ async def test_process_export_task_template_mismatch(processor, sample_task, sam
             lesson_plan_id=sample_lesson_plan.id,
             template_id=sample_template.id,
             format=ExportFormat.WORD.value,
-            user_id=uuid.uuid4()
+            user_id=uuid.uuid4(),
         )
 
 
 # ========== 辅助方法测试 ==========
+
 
 def test_generate_filename(processor, sample_lesson_plan):
     """测试文件名生成"""
@@ -405,7 +413,7 @@ def test_get_format_from_filename(processor):
 
 def test_generate_download_url(processor):
     """测试下载URL生成"""
-    with patch.object(processor.settings, 'CORS_ORIGINS', ['http://localhost:5173']):
+    with patch.object(processor.settings, "CORS_ORIGINS", ["http://localhost:5173"]):
         url = processor._generate_download_url("/path/to/file.docx")
         assert url.startswith("http://localhost:5173")
         assert "/api/v1/exports/download/" in url
@@ -413,26 +421,29 @@ def test_generate_download_url(processor):
 
 # ========== 进度通知测试 ==========
 
+
 @pytest.mark.asyncio
 async def test_progress_notification_sequence(processor, sample_task, sample_lesson_plan, mock_db):
     """测试进度通知顺序"""
 
     # 设置数据库查询返回序列
-    mock_db.execute = AsyncMock(side_effect=[
-        create_mock_result(sample_task),      # 1: 获取任务
-        create_mock_result(sample_lesson_plan),  # 2: 获取教案
-        create_mock_result(sample_task),      # 3-6: 更新任务状态
-        create_mock_result(sample_task),
-        create_mock_result(sample_task),
-        create_mock_result(sample_task),
-    ])
+    mock_db.execute = AsyncMock(
+        side_effect=[
+            create_mock_result(sample_task),  # 1: 获取任务
+            create_mock_result(sample_lesson_plan),  # 2: 获取教案
+            create_mock_result(sample_task),  # 3-6: 更新任务状态
+            create_mock_result(sample_task),
+            create_mock_result(sample_task),
+            create_mock_result(sample_task),
+        ]
+    )
 
     mock_word_gen = MagicMock()
     mock_word_gen.generate = Mock(return_value=b"content")
     processor.word_generator = mock_word_gen
 
     # 模拟ContentRendererService
-    with patch('app.services.export_task_processor.ContentRendererService') as mock_renderer:
+    with patch("app.services.export_task_processor.ContentRendererService") as mock_renderer:
         mock_renderer_instance = MagicMock()
         mock_renderer_instance.render_lesson_plan = Mock(return_value="# Test")
         mock_renderer.return_value = mock_renderer_instance
@@ -442,7 +453,7 @@ async def test_progress_notification_sequence(processor, sample_task, sample_les
             lesson_plan_id=sample_lesson_plan.id,
             template_id=None,
             format=ExportFormat.WORD.value,
-            user_id=uuid.uuid4()
+            user_id=uuid.uuid4(),
         )
 
         # 验证进度通知被调用多次
@@ -451,6 +462,7 @@ async def test_progress_notification_sequence(processor, sample_task, sample_les
 
 # ========== 文件存储测试 ==========
 
+
 @pytest.mark.asyncio
 async def test_save_file_to_storage(processor, sample_lesson_plan):
     """测试文件保存到存储"""
@@ -458,10 +470,7 @@ async def test_save_file_to_storage(processor, sample_lesson_plan):
     filename = "test.docx"
 
     file_path, file_size = await processor._save_file_to_storage(
-        file_content,
-        filename,
-        sample_lesson_plan.id,
-        uuid.uuid4()
+        file_content, filename, sample_lesson_plan.id, uuid.uuid4()
     )
 
     assert file_path == "/path/to/file.docx"
@@ -471,18 +480,14 @@ async def test_save_file_to_storage(processor, sample_lesson_plan):
 
 # ========== 任务状态更新测试 ==========
 
+
 @pytest.mark.asyncio
 async def test_update_task_status_processing(processor, sample_task, mock_db):
     """测试更新任务为处理中状态"""
 
     mock_db.execute = AsyncMock(return_value=create_mock_result(sample_task))
 
-    await processor._update_task_status(
-        sample_task.id,
-        TaskStatus.PROCESSING,
-        50,
-        "处理中..."
-    )
+    await processor._update_task_status(sample_task.id, TaskStatus.PROCESSING, 50, "处理中...")
 
     assert sample_task.status == TaskStatus.PROCESSING.value
     assert sample_task.progress == 50
@@ -501,7 +506,7 @@ async def test_update_task_status_completed(processor, sample_task, mock_db):
         None,
         file_path="/path/to/file.pdf",
         file_size=54321,
-        download_url="http://example.com/download"
+        download_url="http://example.com/download",
     )
 
     assert sample_task.status == TaskStatus.COMPLETED.value
@@ -517,12 +522,7 @@ async def test_update_task_status_failed(processor, sample_task, mock_db):
 
     mock_db.execute = AsyncMock(return_value=create_mock_result(sample_task))
 
-    await processor._update_task_status(
-        sample_task.id,
-        TaskStatus.FAILED,
-        0,
-        "生成失败"
-    )
+    await processor._update_task_status(sample_task.id, TaskStatus.FAILED, 0, "生成失败")
 
     assert sample_task.status == TaskStatus.FAILED.value
     assert sample_task.error_message == "生成失败"
@@ -530,9 +530,10 @@ async def test_update_task_status_failed(processor, sample_task, mock_db):
 
 # ========== 便捷函数测试 ==========
 
+
 def test_get_export_task_processor(mock_db, mock_notifier):
     """测试获取处理器实例的便捷函数"""
-    with patch('app.services.export_task_processor.ExportTaskProcessor') as mock_processor_class:
+    with patch("app.services.export_task_processor.ExportTaskProcessor") as mock_processor_class:
         mock_instance = MagicMock()
         mock_processor_class.return_value = mock_instance
 
@@ -544,18 +545,17 @@ def test_get_export_task_processor(mock_db, mock_notifier):
 
 # ========== 内容渲染测试 ==========
 
+
 @pytest.mark.asyncio
 async def test_render_content_with_template(processor, sample_lesson_plan, sample_template):
     """测试使用模板渲染内容"""
-    with patch('app.services.export_task_processor.ContentRendererService') as mock_renderer:
+    with patch("app.services.export_task_processor.ContentRendererService") as mock_renderer:
         mock_renderer_instance = MagicMock()
         mock_renderer_instance.render_lesson_plan = Mock(return_value="# Rendered Content")
         mock_renderer.return_value = mock_renderer_instance
 
         content = await processor._render_content(
-            sample_lesson_plan,
-            sample_template,
-            {"sections": ["metadata", "objectives"]}
+            sample_lesson_plan, sample_template, {"sections": ["metadata", "objectives"]}
         )
 
         assert content["title"] == sample_lesson_plan.title
@@ -566,16 +566,12 @@ async def test_render_content_with_template(processor, sample_lesson_plan, sampl
 @pytest.mark.asyncio
 async def test_render_content_without_template(processor, sample_lesson_plan):
     """测试不使用模板渲染内容"""
-    with patch('app.services.export_task_processor.ContentRendererService') as mock_renderer:
+    with patch("app.services.export_task_processor.ContentRendererService") as mock_renderer:
         mock_renderer_instance = MagicMock()
         mock_renderer_instance.render_lesson_plan = Mock(return_value="# Full Content")
         mock_renderer.return_value = mock_renderer_instance
 
-        content = await processor._render_content(
-            sample_lesson_plan,
-            None,
-            None
-        )
+        content = await processor._render_content(sample_lesson_plan, None, None)
 
         assert content["title"] == sample_lesson_plan.title
         assert "markdown_content" in content

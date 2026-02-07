@@ -3,6 +3,7 @@
 包含所有业务逻辑服务
 """
 from app.services import auth_service, recommendation_service
+from app.services import export_task_processor
 from app.services import question_service, question_bank_service, practice_session_service
 from app.services import template_service
 from app.services.document_generators import WordDocumentGenerator
@@ -10,6 +11,7 @@ from app.services.document_generators import WordDocumentGenerator
 __all__ = [
     "auth_service",
     "recommendation_service",
+    "export_task_processor",
     "question_service",
     "question_bank_service",
     "practice_session_service",
