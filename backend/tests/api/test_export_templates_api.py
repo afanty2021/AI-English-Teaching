@@ -490,3 +490,189 @@ async def test_increment_template_usage(client, mock_teacher_user, mock_template
 
     # 验证响应
     assert response.status_code == status.HTTP_200_OK
+
+
+@pytest.mark.asyncio
+async def test_template_preview_markdown_success(client, mock_teacher_user, mock_template):
+    """测试模板预览 - Markdown 格式成功"""
+    from datetime import datetime
+    from app.models.lesson_plan import LessonPlan
+
+    # 设置模板为 Markdown 格式
+    mock_template.format = "markdown"
+
+    # 创建模拟教案
+    mock_lesson = MagicMock(spec=LessonPlan)
+    mock_lesson.id = uuid.uuid4()
+    mock_lesson.teacher_id = mock_teacher_user.id
+    mock_lesson.title = "测试教案"
+    mock_lesson.topic = "过去完成时"
+    mock_lesson.level = "B1"
+    mock_lesson.duration = 45
+    mock_lesson.target_exam = "CET4"
+    mock_lesson.objectives = {"language_knowledge": ["学习目标"]}
+    mock_lesson.vocabulary = {"noun": [{"word": "test", "meaning_cn": "测试"}]}
+    mock_lesson.grammar_points = []
+    mock_lesson.teaching_structure = {}
+    mock_lesson.leveled_materials = {}
+    mock_lesson.exercises = {}
+    mock_lesson.ppt_outline = []
+    mock_lesson.resources = {}
+    mock_lesson.teaching_notes = "教学反思"
+    mock_lesson.is_public = False
+    mock_lesson.is_shared = False
+    mock_lesson.created_at = datetime.now()
+
+    async def mock_get_db():
+        db = AsyncMock()
+        # 返回模板
+        template_result = MagicMock()
+        template_result.scalar_one_or_none.return_value = mock_template
+        # 返回教案
+        lesson_result = MagicMock()
+        lesson_result.scalar_one_or_none.return_value = mock_lesson
+
+        def execute_side_effect(query):
+            if "lesson_plans" in str(query):
+                return lesson_result
+            return template_result
+
+        db.execute.side_effect = execute_side_effect
+        yield db
+
+    async def mock_get_current_user():
+        return mock_teacher_user
+
+    from unittest.mock import patch
+
+    with patch("app.api.v1.export_templates.get_db", mock_get_db):
+        with patch("app.api.v1.export_templates.get_current_user", mock_get_current_user):
+            response = client.post(
+                f"/api/v1/export-templates/{mock_template.id}/preview",
+                params={"lesson_id": str(mock_lesson.id)}
+            )
+
+    # 验证响应
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response.content) > 0
+    assert response.headers.get("content-type") == "text/markdown; charset=utf-8"
+    assert "preview_" in response.headers.get("x-preview-filename", "")
+
+
+@pytest.mark.asyncio
+async def test_template_preview_lesson_not_found(client, mock_teacher_user, mock_template):
+    """测试模板预览 - 教案不存在"""
+    lesson_id = uuid.uuid4()
+
+    async def mock_get_db():
+        db = AsyncMock()
+        # 返回模板
+        template_result = MagicMock()
+        template_result.scalar_one_or_none.return_value = mock_template
+        # 返回教案不存在
+        lesson_result = MagicMock()
+        lesson_result.scalar_one_or_none.return_value = None
+
+        def execute_side_effect(query):
+            if "lesson_plans" in str(query):
+                return lesson_result
+            return template_result
+
+        db.execute.side_effect = execute_side_effect
+        yield db
+
+    async def mock_get_current_user():
+        return mock_teacher_user
+
+    from unittest.mock import patch
+
+    with patch("app.api.v1.export_templates.get_db", mock_get_db):
+        with patch("app.api.v1.export_templates.get_current_user", mock_get_current_user):
+            response = client.post(
+                f"/api/v1/export-templates/{mock_template.id}/preview",
+                params={"lesson_id": str(lesson_id)}
+            )
+
+    # 验证响应
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.asyncio
+async def test_template_preview_permission_denied(client, mock_teacher_user, mock_student_user, mock_template):
+    """测试模板预览 - 权限不足"""
+    from datetime import datetime
+    from app.models.lesson_plan import LessonPlan
+
+    # 创建另一个教师的教案
+    other_teacher_id = uuid.uuid4()
+
+    mock_lesson = MagicMock(spec=LessonPlan)
+    mock_lesson.id = uuid.uuid4()
+    mock_lesson.teacher_id = other_teacher_id  # 不是当前用户
+    mock_lesson.title = "其他教师的教案"
+    mock_lesson.is_public = False
+    mock_lesson.is_shared = False
+    mock_lesson.created_at = datetime.now()
+
+    async def mock_get_db():
+        db = AsyncMock()
+        # 返回模板
+        template_result = MagicMock()
+        template_result.scalar_one_or_none.return_value = mock_template
+        # 返回教案
+        lesson_result = MagicMock()
+        lesson_result.scalar_one_or_none.return_value = mock_lesson
+
+        def execute_side_effect(query):
+            if "lesson_plans" in str(query):
+                return lesson_result
+            return template_result
+
+        db.execute.side_effect = execute_side_effect
+        yield db
+
+    async def mock_get_current_user():
+        return mock_student_user
+
+    from unittest.mock import patch
+
+    with patch("app.api.v1.export_templates.get_db", mock_get_db):
+        with patch("app.api.v1.export_templates.get_current_user", mock_get_current_user):
+            response = client.post(
+                f"/api/v1/export-templates/{mock_template.id}/preview",
+                params={"lesson_id": str(mock_lesson.id)}
+            )
+
+    # 验证响应
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.asyncio
+async def test_template_preview_unsupported_format(client, mock_teacher_user, mock_template):
+    """测试模板预览 - 不支持的格式"""
+    mock_template.format = "html"  # 不支持的格式
+
+    lesson_id = uuid.uuid4()
+
+    async def mock_get_db():
+        db = AsyncMock()
+        template_result = MagicMock()
+        template_result.scalar_one_or_none.return_value = mock_template
+        db.execute.return_value = template_result
+        yield db
+
+    async def mock_get_current_user():
+        return mock_teacher_user
+
+    from unittest.mock import patch
+
+    with patch("app.api.v1.export_templates.get_db", mock_get_db):
+        with patch("app.api.v1.export_templates.get_current_user", mock_get_current_user):
+            response = client.post(
+                f"/api/v1/export-templates/{mock_template.id}/preview",
+                params={"lesson_id": str(lesson_id)}
+            )
+
+    # 验证响应
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "不支持的预览格式" in response.json()["detail"]

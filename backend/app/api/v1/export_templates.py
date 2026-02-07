@@ -5,11 +5,19 @@
 import uuid
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Response, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_db
+from app.models.lesson_plan import LessonPlan
 from app.models.user import User, UserRole
+from app.services.content_renderer_service import ContentRendererService
+from app.services.document_generators import (
+    PDFDocumentGenerator,
+    PPTXDocumentGenerator,
+    WordDocumentGenerator,
+)
 from app.services.template_service import (
     ExportTemplateService,
     TemplateCreateRequest,
@@ -351,3 +359,207 @@ async def increment_template_usage(
     service = ExportTemplateService()
     await service.increment_usage(template_id, db)
     return {"message": "使用次数已更新"}
+
+
+@router.post("/{template_id}/preview", status_code=status.HTTP_200_OK)
+async def preview_template(
+    template_id: uuid.UUID,
+    lesson_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Response:
+    """
+    预览模板效果
+
+    使用指定模板和教案数据生成预览文档
+
+    权限：所有认证用户（只能预览有权限访问的教案）
+
+    Args:
+        template_id: 模板ID
+        lesson_id: 教案ID
+        db: 数据库会话
+        current_user: 当前用户
+
+    Returns:
+        Response: 预览文档（二进制内容）
+
+    Raises:
+        HTTPException: 模板不存在、教案不存在或无权限访问
+    """
+    from fastapi import HTTPException
+
+    # 获取模板
+    service = ExportTemplateService()
+    template = await service.get_template(template_id, db)
+
+    # 验证格式支持
+    supported_formats = {"word", "pdf", "pptx", "markdown"}
+    if template.format not in supported_formats:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"不支持的预览格式: {template.format}",
+        )
+
+    # 获取教案数据
+    result = await db.execute(
+        select(LessonPlan).where(LessonPlan.id == lesson_id)
+    )
+    lesson = result.scalar_one_or_none()
+
+    if not lesson:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="教案不存在",
+        )
+
+    # 权限检查：只能预览自己创建的教案或公开的教案
+    is_owner = lesson.teacher_id == current_user.id
+    is_public = lesson.is_public
+    is_shared = lesson.is_shared
+
+    if not (is_owner or is_public or is_shared):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="无权访问此教案",
+        )
+
+    # 准备模板变量
+    template_vars = {
+        "teacher_name": current_user.username or current_user.full_name or "教师",
+        "school": current_user.organization.name if current_user.organization else "",
+        "date": lesson.created_at.strftime("%Y-%m-%d") if lesson.created_at else "",
+    }
+
+    # 生成预览文档
+    try:
+        generator = _get_document_generator(template.format)
+
+        if template.format == "pdf":
+            # PDF 生成器使用异步方法
+            preview_bytes = await generator.generate_from_lesson_plan(lesson)
+        elif template.format == "word":
+            # Word 生成器需要处理数据结构
+            content = _prepare_lesson_plan_content(lesson)
+            preview_bytes = generator.generate(content, template_vars)
+        elif template.format == "pptx":
+            # PPTX 生成器需要处理数据结构
+            content = _prepare_lesson_plan_content(lesson)
+            preview_bytes = generator.generate(content, template_vars)
+        else:  # markdown
+            # Markdown 直接使用 ContentRendererService
+            renderer = ContentRendererService(format="markdown")
+            markdown_content = renderer.render_lesson_plan(lesson)
+            preview_bytes = markdown_content.encode("utf-8")
+
+        # 返回预览
+        media_type = _get_media_type(template.format)
+        filename = f"preview_{lesson.title}.{_get_extension(template.format)}"
+
+        return Response(
+            content=preview_bytes,
+            media_type=media_type,
+            headers={
+                "Content-Disposition": f'inline; filename="{filename}"',
+                "X-Preview-Filename": filename,
+                "X-Preview-Format": template.format,
+            },
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"预览生成失败: {str(e)}",
+        )
+
+
+def _get_document_generator(format: str):
+    """
+    获取对应格式的文档生成器
+
+    Args:
+        format: 文档格式
+
+    Returns:
+        文档生成器实例
+
+    Raises:
+        ValueError: 不支持的格式
+    """
+    generators = {
+        "word": WordDocumentGenerator(),
+        "pdf": PDFDocumentGenerator(),
+        "pptx": PPTXDocumentGenerator(),
+    }
+    generator = generators.get(format)
+    if generator is None:
+        raise ValueError(f"不支持的格式: {format}")
+    return generator
+
+
+def _get_media_type(format: str) -> str:
+    """
+    获取格式的 MIME 类型
+
+    Args:
+        format: 文档格式
+
+    Returns:
+        MIME 类型字符串
+    """
+    media_types = {
+        "word": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "pdf": "application/pdf",
+        "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "markdown": "text/markdown",
+    }
+    return media_types.get(format, "application/octet-stream")
+
+
+def _get_extension(format: str) -> str:
+    """
+    获取格式的文件扩展名
+
+    Args:
+        format: 文档格式
+
+    Returns:
+        文件扩展名
+    """
+    extensions = {
+        "word": "docx",
+        "pdf": "pdf",
+        "pptx": "pptx",
+        "markdown": "md",
+    }
+    return extensions.get(format, "bin")
+
+
+def _prepare_lesson_plan_content(lesson: LessonPlan) -> Dict[str, Any]:
+    """
+    准备教案数据用于文档生成
+
+    将 LessonPlan 模型转换为文档生成器需要的格式。
+
+    Args:
+        lesson: 教案模型实例
+
+    Returns:
+        Dict[str, Any]: 格式化后的教案内容
+    """
+    return {
+        "title": lesson.title,
+        "level": lesson.level,
+        "topic": lesson.topic,
+        "duration": lesson.duration,
+        "target_exam": lesson.target_exam,
+        "objectives": lesson.objectives or {},
+        "vocabulary": lesson.vocabulary or {},
+        "grammar_points": lesson.grammar_points or [],
+        "teaching_structure": lesson.teaching_structure or {},
+        "leveled_materials": lesson.leveled_materials or {},
+        "exercises": lesson.exercises or {},
+        "ppt_outline": lesson.ppt_outline or [],
+        "resources": lesson.resources or {},
+        "teaching_notes": lesson.teaching_notes,
+    }
