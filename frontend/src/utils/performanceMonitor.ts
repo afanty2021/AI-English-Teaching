@@ -4,6 +4,12 @@
  */
 
 import { LatencyProfiler, createLatencyProfiler, LatencyProfile } from './latencyProfiler'
+import {
+  RecognitionQualityMonitor,
+  createRecognitionQualityMonitor,
+  QualityMetrics,
+  RecognitionResult
+} from './recognitionQualityMonitor'
 
 export interface RecognitionMetrics {
   accuracy: number
@@ -491,12 +497,14 @@ export class PerformanceMonitor {
   private latencyMonitor: LatencyMonitor
   private resultCache: ResultCache
   private latencyProfiler: LatencyProfiler | null = null
+  private qualityMonitor: RecognitionQualityMonitor | null = null
 
   constructor() {
     this.accuracyTracker = new AccuracyTracker()
     this.latencyMonitor = new LatencyMonitor()
     this.resultCache = new ResultCache(1000)
     this.latencyProfiler = null
+    this.qualityMonitor = null
   }
 
   /**
@@ -711,6 +719,72 @@ export class PerformanceMonitor {
     this.latencyMonitor.reset()
     this.resultCache.clear()
     this.latencyProfiler?.reset()
+    this.qualityMonitor?.reset()
+  }
+
+  // ========== 识别质量监控相关方法 ==========
+
+  /**
+   * 初始化质量监控器
+   */
+  initQualityMonitoring(): void {
+    if (!this.qualityMonitor) {
+      this.qualityMonitor = createRecognitionQualityMonitor()
+    }
+  }
+
+  /**
+   * 记录识别结果（用于质量监控）
+   * @param result 识别结果，包含置信度和延迟
+   */
+  recordRecognitionResult(result: RecognitionResult): void {
+    this.initQualityMonitoring()
+    this.qualityMonitor!.recordResult(result)
+  }
+
+  /**
+   * 记录识别错误（用于质量监控）
+   */
+  recordRecognitionError(): void {
+    this.initQualityMonitoring()
+    this.qualityMonitor!.recordError()
+  }
+
+  /**
+   * 记录准确率修正
+   * 当用户修正识别结果时调用，用于计算实际准确率
+   * @param userCorrection 用户修正后的文本
+   * @param originalTranscript 原始识别结果
+   */
+  recordAccuracyCorrection(userCorrection: string, originalTranscript: string): void {
+    this.initQualityMonitoring()
+    this.qualityMonitor!.recordAccuracy(userCorrection, originalTranscript)
+  }
+
+  /**
+   * 获取质量指标
+   * @returns 质量指标，如果未初始化则返回 null
+   */
+  getQualityMetrics(): QualityMetrics | null {
+    return this.qualityMonitor?.getMetrics() || null
+  }
+
+  /**
+   * 重置质量指标
+   */
+  resetQualityMetrics(): void {
+    this.qualityMonitor?.reset()
+  }
+
+  /**
+   * 获取格式化的质量报告
+   * @returns 格式化的质量报告字符串
+   */
+  getQualityReport(): string {
+    if (!this.qualityMonitor) {
+      return '质量监控未初始化'
+    }
+    return this.qualityMonitor.getFormattedReport()
   }
 }
 
@@ -723,7 +797,8 @@ export const performanceMonitor = {
   LatencyMonitor,
   ResultCache,
   AudioHasher,
-  LRUCache
+  LRUCache,
+  RecognitionQualityMonitor
 }
 
 export default PerformanceMonitor
