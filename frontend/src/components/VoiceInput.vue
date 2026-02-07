@@ -35,13 +35,22 @@
       >
         <!-- 图标 -->
         <div class="button-icon">
-          <el-icon v-if="!isListening && !isProcessing" size="32">
+          <el-icon
+            v-if="!isListening && !isProcessing"
+            size="32"
+          >
             <Microphone />
           </el-icon>
-          <el-icon v-else-if="isProcessing" size="32">
+          <el-icon
+            v-else-if="isProcessing"
+            size="32"
+          >
             <Loading />
           </el-icon>
-          <el-icon v-else size="32">
+          <el-icon
+            v-else
+            size="32"
+          >
             <SwitchButton />
           </el-icon>
         </div>
@@ -49,12 +58,21 @@
         <!-- 状态文字 -->
         <div class="button-text">
           <span class="primary-text">{{ buttonText }}</span>
-          <span class="secondary-text" v-if="secondaryText">{{ secondaryText }}</span>
+          <span
+            v-if="secondaryText"
+            class="secondary-text"
+          >{{ secondaryText }}</span>
         </div>
 
         <!-- 动画效果 -->
-        <div v-if="isListening" class="button-ripple"></div>
-        <div v-if="isListening" class="button-glow"></div>
+        <div
+          v-if="isListening"
+          class="button-ripple"
+        ></div>
+        <div
+          v-if="isListening"
+          class="button-glow"
+        ></div>
       </button>
 
       <!-- 状态指示器 -->
@@ -65,20 +83,39 @@
           size="small"
           round
         >
-          <el-icon v-if="isProcessing" class="status-icon">
+          <el-icon
+            v-if="isProcessing"
+            class="status-icon"
+          >
             <Loading />
           </el-icon>
-          <el-icon v-else-if="isListening" class="status-icon">
+          <el-icon
+            v-else-if="isListening"
+            class="status-icon"
+          >
             <Microphone />
           </el-icon>
-          <el-icon v-else-if="hasError" class="status-icon">
+          <el-icon
+            v-else-if="hasError"
+            class="status-icon"
+          >
             <Warning />
           </el-icon>
-          <el-icon v-else class="status-icon">
+          <el-icon
+            v-else
+            class="status-icon"
+          >
             <CircleCheck />
           </el-icon>
           {{ statusText }}
         </el-tag>
+
+        <!-- 置信度显示 -->
+        <RecognitionConfidence
+          v-if="(isListening || isProcessing) && recognitionConfidence > 0"
+          :confidence="recognitionConfidence"
+          class="confidence-display"
+        />
       </div>
 
       <!-- 进度条 -->
@@ -98,8 +135,8 @@
         type="error"
         :closable="true"
         show-icon
-        @close="clearError"
         class="error-alert"
+        @close="clearError"
       />
 
       <!-- 提示信息 -->
@@ -146,13 +183,26 @@
         <!-- 引擎选择 -->
         <div class="setting-section">
           <h4>识别引擎</h4>
-          <el-radio-group v-model="selectedEngine" @change="onEngineChange">
-            <el-radio label="adaptive">智能切换</el-radio>
-            <el-radio label="webspeech">Web Speech API</el-radio>
-            <el-radio label="cloud">云端识别</el-radio>
-            <el-radio label="offline">离线识别</el-radio>
+          <el-radio-group
+            v-model="selectedEngine"
+            @change="onEngineChange"
+          >
+            <el-radio label="adaptive">
+              智能切换
+            </el-radio>
+            <el-radio label="webspeech">
+              Web Speech API
+            </el-radio>
+            <el-radio label="cloud">
+              云端识别
+            </el-radio>
+            <el-radio label="offline">
+              离线识别
+            </el-radio>
           </el-radio-group>
-          <p class="setting-hint">{{ engineHint }}</p>
+          <p class="setting-hint">
+            {{ engineHint }}
+          </p>
         </div>
 
         <!-- 音频设置 -->
@@ -195,19 +245,28 @@
           <div class="compatibility-info">
             <div class="info-item">
               <span>浏览器:</span>
-              <el-tag :type="compatibilityInfo.browserSupported ? 'success' : 'danger'" size="small">
+              <el-tag
+                :type="compatibilityInfo.browserSupported ? 'success' : 'danger'"
+                size="small"
+              >
                 {{ compatibilityInfo.browser }}
               </el-tag>
             </div>
             <div class="info-item">
               <span>兼容性评分:</span>
-              <el-tag :type="compatibilityInfo.score >= 80 ? 'success' : 'warning'" size="small">
+              <el-tag
+                :type="compatibilityInfo.score >= 80 ? 'success' : 'warning'"
+                size="small"
+              >
                 {{ compatibilityInfo.score }}/100
               </el-tag>
             </div>
             <div class="info-item">
               <span>网络质量:</span>
-              <el-tag :type="compatibilityInfo.networkQuality.type" size="small">
+              <el-tag
+                :type="compatibilityInfo.networkQuality.type"
+                size="small"
+              >
                 {{ compatibilityInfo.networkQuality.label }}
               </el-tag>
             </div>
@@ -216,8 +275,15 @@
 
         <!-- 按钮组 -->
         <div class="settings-actions">
-          <el-button @click="resetToDefaults">恢复默认</el-button>
-          <el-button type="primary" @click="saveSettings">保存设置</el-button>
+          <el-button @click="resetToDefaults">
+            恢复默认
+          </el-button>
+          <el-button
+            type="primary"
+            @click="saveSettings"
+          >
+            保存设置
+          </el-button>
         </div>
       </div>
     </el-drawer>
@@ -246,6 +312,7 @@ import {
   QuestionFilled
 } from '@element-plus/icons-vue'
 import VoiceWaveform from './VoiceWaveform.vue'
+import RecognitionConfidence from './RecognitionConfidence.vue'
 import { BrowserCompatibility } from '../utils/browserCompatibility'
 
 // Props
@@ -290,6 +357,7 @@ const isProcessing = ref(false)
 const hasError = ref(false)
 const errorMessage = ref('')
 const showSettings = ref(false)
+const recognitionConfidence = ref(0) // 语音识别置信度
 
 // 配置
 const selectedLanguage = ref(props.language)
@@ -440,6 +508,7 @@ const startListening = async () => {
   try {
     hasError.value = false
     errorMessage.value = ''
+    recognitionConfidence.value = 0 // 重置置信度
 
     // 检查权限
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -451,10 +520,21 @@ const startListening = async () => {
 
     isListening.value = true
 
+    // 模拟置信度更新（实际应该来自语音识别服务）
+    const confidenceInterval = setInterval(() => {
+      if (!isListening.value && !isProcessing.value) {
+        clearInterval(confidenceInterval)
+        return
+      }
+      // 模拟置信度波动（0.5 到 1.0 之间）
+      recognitionConfidence.value = 0.5 + Math.random() * 0.5
+    }, 500)
+
     // 如果启用连续识别，设置自动停止
     if (continuous.value) {
       setTimeout(() => {
         stopListening()
+        clearInterval(confidenceInterval)
       }, 5000) // 5秒后自动停止
     }
 
@@ -470,9 +550,12 @@ const stopListening = async () => {
   isProcessing.value = true
   processingProgress.value = 0
 
-  // 模拟处理进度
+  // 模拟处理进度和置信度更新
   const progressInterval = setInterval(() => {
     processingProgress.value += 10
+    // 处理过程中置信度逐渐提高
+    recognitionConfidence.value = Math.min(0.95, recognitionConfidence.value + 0.05)
+
     if (processingProgress.value >= 100) {
       clearInterval(progressInterval)
       processingProgress.value = 100
@@ -481,6 +564,7 @@ const stopListening = async () => {
       const mockResult = '这是模拟的语音识别结果'
       emit('end', mockResult)
       isProcessing.value = false
+      recognitionConfidence.value = 0 // 重置置信度
     }
   }, 100)
 }
@@ -788,10 +872,18 @@ defineExpose({
   position: absolute;
   top: -12px;
   right: -12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .status-icon {
   margin-right: 4px;
+}
+
+/* 置信度显示 */
+.confidence-display {
+  font-size: 11px;
 }
 
 /* 进度条 */
