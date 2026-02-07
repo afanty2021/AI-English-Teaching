@@ -190,16 +190,12 @@ export class TextToSpeech {
 
       this.utterance = this.setupUtterance(text)
 
-      // 添加一次性结束回调
-      const originalOnEnd = this.utterance.onend
-      this.utterance.onend = () => {
-        originalOnEnd?.()
+      // 添加一次性回调
+      this.utterance.onend = (_event: any) => {
         resolve()
       }
 
-      const originalOnError = this.utterance.onerror
       this.utterance.onerror = (event: any) => {
-        originalOnError?.(event)
         reject(new Error(event.error || '语音合成失败'))
       }
 

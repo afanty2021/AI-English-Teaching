@@ -115,12 +115,9 @@ import {
   ZoomIn,
   ZoomOut,
   RefreshRight,
-  FullScreen,
   Grid,
   Document,
-  Download,
-  VideoPlay,
-  VideoPause
+  Download
 } from '@element-plus/icons-vue'
 
 interface Props {

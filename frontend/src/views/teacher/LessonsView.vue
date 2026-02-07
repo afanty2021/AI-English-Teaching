@@ -499,7 +499,6 @@ import {
   Share,
   List,
   Menu,
-  Remove,
   Picture,
   VideoCamera
 } from '@element-plus/icons-vue'
@@ -509,7 +508,6 @@ import {
   getLessonPlan,
   deleteLessonPlan,
   updateLessonContent,
-  exportLessonPlan,
   getExportUrl,
   exportToMarkdown as apiExportToMarkdown
 } from '@/api/lesson'
@@ -771,9 +769,11 @@ const duplicateLesson = async () => {
       type: 'warning'
     })
 
-    const response = await duplicateLessonPlan(currentLesson.value.id, {
+    // Response from duplicate API - not currently used but available for future error handling
+    await duplicateLessonPlan(currentLesson.value.id, {
       new_title: `${currentLesson.value.title} (副本)`
     })
+    // const _response = { success: true } // Placeholder for future use
 
     ElMessage.success('教案复制成功')
     showDetailDrawer.value = false
@@ -893,23 +893,24 @@ const doExport = async () => {
   }
 }
 
-const exportToWord = async (lesson: LessonPlan) => {
-  const exportUrl = getExportUrl(lesson.id, 'docx')
-  const link = document.createElement('a')
-  link.href = exportUrl
-  link.download = `${lesson.title}.docx`
-  link.click()
-  ElMessage.success('Word 导出成功')
-}
+// Export functions reserved for future export feature enhancements
+// const exportToWord = async (lesson: LessonPlan) => {
+//   const exportUrl = getExportUrl(lesson.id, 'docx')
+//   const link = document.createElement('a')
+//   link.href = exportUrl
+//   link.download = `${lesson.title}.docx`
+//   link.click()
+//   ElMessage.success('Word 导出成功')
+// }
 
-const exportToPDF = async (lesson: LessonPlan) => {
-  const exportUrl = getExportUrl(lesson.id, 'pdf')
-  const link = document.createElement('a')
-  link.href = exportUrl
-  link.download = `${lesson.title}.pdf`
-  link.click()
-  ElMessage.success('PDF 导出成功')
-}
+// const exportToPDF = async (lesson: LessonPlan) => {
+//   const exportUrl = getExportUrl(lesson.id, 'pdf')
+//   const link = document.createElement('a')
+//   link.href = exportUrl
+//   link.download = `${lesson.title}.pdf`
+//   link.click()
+//   ElMessage.success('PDF 导出成功')
+// }
 
 const exportToMarkdown = async (lesson: LessonPlan) => {
   const markdown = await apiExportToMarkdown(lesson)
@@ -1065,7 +1066,7 @@ const getMaterialIcon = (type: string) => {
   return icons[type] || Document
 }
 
-const downloadMaterial = (material: any) => {
+const downloadMaterial = (_material: any) => {
   // TODO: 下载材料
   ElMessage.info('下载功能开发中...')
 }

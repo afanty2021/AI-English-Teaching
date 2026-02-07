@@ -835,7 +835,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
-import type { LoadingInstance } from 'element-plus/es/components/loading/src/loading'
 import {
   Document,
   Collection,
@@ -1049,7 +1048,8 @@ const loadReviewCalendar = async () => {
 // 开始复习
 const handleStartReview = (item: ReviewItem) => {
   // 查找对应的错题并打开重做对话框
-  currentMistake.value = mistakes.value.find(m => m.id === item.id) as Mistake & { ai_analysis?: any } | undefined
+  const foundMistake = mistakes.value.find(m => m.id === item.id)
+  currentMistake.value = (foundMistake as Mistake & { ai_analysis?: AIAnalysis } | null)
   if (currentMistake.value) {
     showSmartReview.value = false
     retryForm.user_answer = ''
@@ -1067,20 +1067,21 @@ const calendarDays = ref<Array<{
   tasks: any[]
 }>>([])
 
-const changeCalendarMonth = async (delta: number) => {
+const changeCalendarMonth = async (_delta: number) => {
   // 简化的月份切换，实际可能需要更复杂的逻辑
   await loadReviewCalendar()
 }
 
-const initCalendarDays = () => {
+// initCalendarDays reserved for future calendar initialization
+// const _initCalendarDays = () => {
   const now = new Date()
   const year = now.getFullYear()
   const month = now.getMonth()
   calendarMonth.value = `${year}年${month + 1}月`
 
   // 简化的日历初始化
-  calendarDays.value = []
-}
+  // calendarDays.value = []
+// }
 
 // 查看详情
 const handleViewDetail = (mistake: Mistake) => {

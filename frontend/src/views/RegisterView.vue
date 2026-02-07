@@ -116,7 +116,7 @@ const formData = reactive<RegisterRequest>({
 
 // 自定义验证规则
 const validateConfirmPassword = (
-  rule: unknown,
+  _rule: unknown,
   value: string,
   callback: (error?: Error) => void
 ) => {

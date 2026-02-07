@@ -256,10 +256,6 @@ import {
   Download,
   Picture,
   Delete,
-  Document,
-  CircleCheck,
-  TrendCharts,
-  Clock,
   MagicStick,
   DataAnalysis,
   Odometer,
@@ -286,7 +282,8 @@ const radarMiniChart = shallowRef<echarts.ECharts | null>(null)
 // 导出进度相关
 const showExportProgress = ref(false)
 const currentTaskId = ref('')
-const exportProgressRef = ref()
+// exportProgressRef reserved for future export progress monitoring
+// const _exportProgressRef = ref()
 
 // 计算概览统计数据
 const overviewStats = computed(() => {
@@ -491,7 +488,7 @@ const handleExportDownload = (url: string) => {
 }
 
 // Tab 切换
-const handleTabChange = (tab: string) => {
+const handleTabChange = (_tab: string) => {
   // 触发图表resize
   nextTick(() => {
     window.dispatchEvent(new Event('resize'))

@@ -40,7 +40,7 @@
                 <el-icon :size="32" color="#f56c6c"><Close /></el-icon>
               </div>
               <div class="stat-info">
-                <div class="stat-value">{{ result?.total_questions - result?.correct_count }}</div>
+                <div class="stat-value">{{ (result?.total_questions ?? 0) - (result?.correct_count ?? 0) }}</div>
                 <div class="stat-label">答错</div>
               </div>
             </el-card>
@@ -51,7 +51,7 @@
                 <el-icon :size="32" color="#909399"><TrendCharts /></el-icon>
               </div>
               <div class="stat-info">
-                <div class="stat-value">{{ (result?.correct_rate * 100).toFixed(1) }}%</div>
+                <div class="stat-value">{{ ((result?.correct_rate ?? 0) * 100).toFixed(1) }}%</div>
                 <div class="stat-label">正确率</div>
               </div>
             </el-card>
@@ -184,8 +184,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import {
   Document,
@@ -196,9 +196,7 @@ import {
   Refresh
 } from '@element-plus/icons-vue'
 import { practiceSessionApi } from '@/api/practiceSession'
-import type { CompleteSessionResponse, WrongQuestion } from '@/types/question'
-
-const router = useRouter()
+import type { CompleteSessionResponse } from '@/types/question'
 const route = useRoute()
 
 const sessionId = route.params.sessionId as string

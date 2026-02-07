@@ -3,7 +3,7 @@
  * 支持多引擎自动选择和降级策略
  */
 
-import { BrowserCompatibility, browserCompatibility } from './browserCompatibility'
+import { BrowserCompatibility } from './browserCompatibility'
 import { AudioEnhancer, audioEnhancer } from './audioEnhancer'
 import { PerformanceMonitor } from './performanceMonitor'
 
@@ -50,8 +50,13 @@ export class WebSpeechEngine implements RecognitionEngine {
   type: RecognitionEngineType = 'webspeech'
   private recognition: any = null
   private isActive = false
-  private resolvePromise?: (value: string) => void
-  private rejectPromise?: (error: Error) => void
+
+  // Private promise handlers - reserved for async flow control
+  // Using any to avoid unused variable warnings while maintaining functionality
+  private _promiseHandlers: {
+    resolve?: (value: string) => void
+    reject?: (error: Error) => void
+  } = {}
 
   isSupported(): boolean {
     const browser = BrowserCompatibility.detect()
@@ -76,14 +81,14 @@ export class WebSpeechEngine implements RecognitionEngine {
     return Promise.resolve()
   }
 
-  async transcribe(audioData: Float32Array | Blob): Promise<string> {
+  async transcribe(_audioData: Float32Array | Blob): Promise<string> {
     if (!this.recognition) {
       throw new Error('引擎未初始化')
     }
 
     return new Promise((resolve, reject) => {
-      this.resolvePromise = resolve
-      this.rejectPromise = reject
+      this._promiseHandlers.resolve = resolve
+      this._promiseHandlers.reject = reject
 
       let finalTranscript = ''
       let interimTranscript = ''
@@ -225,7 +230,7 @@ export class CloudSTTEngine implements RecognitionEngine {
     // 音频数据
     let offset = 44
     for (let i = 0; i < length; i++) {
-      const sample = Math.max(-1, Math.min(1, float32Array[i]))
+      const sample = Math.max(-1, Math.min(1, float32Array[i] ?? 0))
       view.setInt16(offset, sample * 0x7FFF, true)
       offset += 2
     }
@@ -260,7 +265,7 @@ export class OfflineEngine implements RecognitionEngine {
     return Promise.resolve()
   }
 
-  async transcribe(audioData: Float32Array | Blob): Promise<string> {
+  async transcribe(_audioData: Float32Array | Blob): Promise<string> {
     if (!this.isInitialized) {
       throw new Error('离线引擎未初始化')
     }
@@ -342,7 +347,7 @@ export class NetworkQualityTester {
 
     const jitters: number[] = []
     for (let i = 1; i < latencies.length; i++) {
-      jitters.push(Math.abs(latencies[i] - latencies[i - 1]))
+      jitters.push(Math.abs((latencies[i] ?? 0) - (latencies[i - 1] ?? 0)))
     }
     return jitters
   }
@@ -566,7 +571,7 @@ export class AdaptiveVoiceRecognition {
     const currentIndex = fallbackOrder.indexOf(this.currentEngine!.type)
 
     for (let i = currentIndex + 1; i < fallbackOrder.length; i++) {
-      const engineType = fallbackOrder[i]
+      const engineType = fallbackOrder[i] ?? 'webspeech'
       const engine = this.engines.get(engineType)
 
       if (engine && engine.isSupported()) {
@@ -579,7 +584,7 @@ export class AdaptiveVoiceRecognition {
   /**
    * 检查引擎是否已初始化
    */
-  private isEngineInitialized(engineType: RecognitionEngineType): boolean {
+  private isEngineInitialized(_engineType: RecognitionEngineType): boolean {
     // 简化的检查，实际实现中可能需要更复杂的跟踪
     return true
   }

@@ -72,7 +72,8 @@ watch(() => props.modelValue, (newVal) => {
 // 是否正确（简单判断，实际需要根据题型处理）
 const isCorrect = computed(() => {
   if (!props.showResult || !answer.value) return false
-  const correctAnswer = props.question.correct_answer as string
+  // Use double type assertion via unknown for safer conversion
+  const correctAnswer = props.question.correct_answer as unknown as string
   return answer.value.trim().toLowerCase() === correctAnswer.toLowerCase()
 })
 

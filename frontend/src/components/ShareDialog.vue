@@ -107,7 +107,6 @@ const dialogVisible = computed({
   set: (value) => emit('update:modelValue', value)
 })
 
-const formRef = ref()
 const sharing = ref(false)
 const searchLoading = ref(false)
 
@@ -170,7 +169,7 @@ const handleShare = async () => {
       shared_to: form.shared_to,
       permission: form.permission,
       message: form.message || undefined,
-      expires_days: expiresType.value === 'custom' ? form.expires_days : undefined
+      expires_days: expiresType.value === 'custom' ? (form.expires_days ?? undefined) : undefined
     })
 
     ElMessage.success('教案已分享')

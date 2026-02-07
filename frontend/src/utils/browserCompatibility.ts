@@ -115,7 +115,7 @@ export class BrowserCompatibility {
         match = ua.match(/Edg\/(\d+)/i)
         break
     }
-    return match ? match[1] : 'unknown'
+    return match ? match[1] ?? 'unknown' : 'unknown'
   }
 
   /**

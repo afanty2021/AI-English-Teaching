@@ -381,7 +381,8 @@ import {
   ChatDotSquare,
   Microphone
 } from '@element-plus/icons-vue'
-import { useAuthStore } from '@/stores/auth'
+// useAuthStore imported but not currently used - reserved for future auth features
+// import { useAuthStore } from '@/stores/auth'
 
 // 类型定义
 interface MessageScore {
@@ -419,7 +420,6 @@ interface LearningRecommendation {
 
 const route = useRoute()
 const router = useRouter()
-const authStore = useAuthStore()
 
 // 基础状态
 const activeMenu = computed(() => route.path)
@@ -478,7 +478,6 @@ const scoreOverview = computed(() => {
 })
 
 const totalRounds = computed(() => messages.value.filter(m => m.role === 'user').length)
-const canComplete = computed(() => totalRounds.value >= 3)
 
 // 状态文本和类型
 const statusText = computed(() => {

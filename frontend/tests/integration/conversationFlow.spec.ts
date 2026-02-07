@@ -779,7 +779,7 @@ describe('对话流程集成测试', () => {
       ]
       wrapper.vm.userInput = 'Partial input'
 
-      wrapper.vm.saveCurrentState()
+      wrapper.vm._saveCurrentState()
 
       expect(wrapper.vm.conversationRecovery.saveConversationState).toHaveBeenCalledWith(
         'conv-1',

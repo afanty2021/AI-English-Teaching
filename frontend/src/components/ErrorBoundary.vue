@@ -49,7 +49,7 @@ const errorMessage = computed(() => {
 /**
  * 捕获子组件错误
  */
-onErrorCaptured((err: Error, instance, info) => {
+onErrorCaptured((err: Error, instance, _info) => {
   console.error('[ErrorBoundary] 捕获到错误:', err)
 
   error.value = {

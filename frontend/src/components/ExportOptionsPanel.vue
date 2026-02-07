@@ -134,7 +134,6 @@ import {
   MagicStick
 } from '@element-plus/icons-vue'
 import type { ExportOptions, ExportSection } from '@/types/lessonExport'
-import { DEFAULT_EXPORT_OPTIONS } from '@/api/lessonExport'
 
 interface Props {
   modelValue: ExportOptions

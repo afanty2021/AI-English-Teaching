@@ -4,6 +4,13 @@
  * 包含图表数据、异步任务状态等增强功能的TypeScript类型
  */
 
+import type {
+  ReportStatistics,
+  AbilityAnalysis,
+  WeakPoints,
+  Recommendations
+} from '@/api/report'
+
 /**
  * 学习趋势图表数据类型
  */

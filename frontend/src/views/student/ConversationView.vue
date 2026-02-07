@@ -259,10 +259,8 @@ import ConversationMessageComponent from '@/components/ConversationMessage.vue'
 import ConversationStatusComponent from '@/components/ConversationStatus.vue'
 import ConversationFeedbackDrawer from '@/components/ConversationFeedbackDrawer.vue'
 import ConversationScoreCard from '@/components/ConversationScoreCard.vue'
-import VoiceControlButton from '@/components/VoiceControlButton.vue'
 import {
   createConversation,
-  sendMessage as sendApiMessage,
   completeConversation,
   streamMessage
 } from '@/api/conversation'
@@ -287,7 +285,6 @@ import {
   TTSStatus
 } from '@/utils/textToSpeech'
 import {
-  retryAsync,
   createConversationRecovery,
   createNetworkMonitor
 } from '@/utils/errorRecovery'
@@ -411,7 +408,8 @@ const isComplete = ref(false)
 const highlightedMessageId = ref<string>('')
 const showSettings = ref(false)
 const messagesContainer = ref<HTMLElement>()
-const messageInput = ref()
+// messageInput reserved for future direct input handling
+// const messageInput = ref()
 
 // 快捷回复
 const quickReplies = computed(() => {
@@ -639,16 +637,17 @@ const handleSendError = (error: Error, originalContent: string) => {
   }
 }
 
-// 保存当前对话状态
-const saveCurrentState = () => {
-  if (conversationId.value) {
-    conversationRecovery.saveConversationState(conversationId.value, {
-      messages: messages.value,
-      userInput: userInput.value,
-      timestamp: Date.now()
-    })
-  }
-}
+// 保存当前对话状态（暂时禁用）
+// saveCurrentState reserved for future state persistence
+// const _saveCurrentState = () => {
+//   if (conversationId.value) {
+//     conversationRecovery.saveConversationState(conversationId.value, {
+//       messages: messages.value,
+//       userInput: userInput.value,
+//       timestamp: Date.now()
+//     })
+//   }
+// }
 
 // 恢复对话状态
 const recoverConversationState = () => {
@@ -814,9 +813,9 @@ const toggleMessagePlayback = (message: ConversationMessage) => {
   if (currentPlayingMessageId.value === message.id && ttsStatus.value === TTSStatus.Speaking) {
     // 当前正在播放，暂停
     if (textToSpeech.value?.isPaused()) {
-      textToSpeech.value.resume()
+      textToSpeech.value?.resume()
     } else {
-      textToSpeech.value.pause()
+      textToSpeech.value?.pause()
     }
   } else {
     // 播放新消息

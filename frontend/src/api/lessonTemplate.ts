@@ -3,8 +3,6 @@
  */
 import request from '@/utils/request'
 import type {
-  LessonTemplate,
-  TemplateListItem,
   CreateTemplateRequest,
   UpdateTemplateRequest,
   TemplateQueryParams,

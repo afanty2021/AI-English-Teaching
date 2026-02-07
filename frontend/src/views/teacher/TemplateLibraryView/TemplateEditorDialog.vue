@@ -106,7 +106,7 @@
 import { ref, reactive, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import type { TemplateListItem, CreateTemplateRequest } from '@/types/lessonTemplate'
+import type { TemplateListItem, CreateTemplateRequest, CEFRLevel } from '@/types/lessonTemplate'
 import { createTemplate, updateTemplate } from '@/api/lessonTemplate'
 
 interface Props {
@@ -132,7 +132,7 @@ const submitting = ref(false)
 const formData = reactive({
   name: '',
   category_key: '',
-  level: 'B1' as const,
+  level: 'B1' as CEFRLevel,
   duration: 45,
   description: '',
   is_public: false

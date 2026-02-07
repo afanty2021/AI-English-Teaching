@@ -1,7 +1,7 @@
 /**
  * 推荐系统API客户端
  */
-import request from '@/utils/request'
+import { get, post, put } from '@/utils/request'
 import type {
   DailyRecommendations,
   StudentProfile,
@@ -41,7 +41,7 @@ export const getDailyRecommendations = async (
   const queryString = params.toString()
   const url = `/api/v1/contents/recommend${queryString ? '?' + queryString : ''}`
 
-  return request.get(url)
+  return get(url)
 }
 
 /**
@@ -57,7 +57,7 @@ export const markContentCompleted = async (
     completed_at: new Date().toISOString()
   }
 
-  return request.post('/api/v1/contents/complete', data)
+  return post('/api/v1/contents/complete', data)
 }
 
 /**
@@ -75,7 +75,7 @@ export const submitFeedback = async (
     feedback_type: 'recommendation'
   }
 
-  return request.post('/api/v1/contents/feedback', data)
+  return post('/api/v1/contents/feedback', data)
 }
 
 /**
@@ -85,7 +85,7 @@ export const getRecommendationHistory = async (
   page = 1,
   limit = 20
 ): Promise<RecommendationHistory> => {
-  return request.get('/api/v1/contents/recommend/history', {
+  return get('/api/v1/contents/recommend/history', {
     params: { page, limit }
   })
 }
@@ -94,7 +94,7 @@ export const getRecommendationHistory = async (
  * 获取推荐统计
  */
 export const getRecommendationStats = async () => {
-  return request.get('/api/v1/contents/recommend/stats')
+  return get('/api/v1/contents/recommend/stats')
 }
 
 /**
@@ -108,14 +108,14 @@ export const updateRecommendationPreferences = async (
     studyTimePreference?: number
   }
 ) => {
-  return request.put('/api/v1/contents/recommend/preferences', preferences)
+  return put('/api/v1/contents/recommend/preferences', preferences)
 }
 
 /**
  * 获取推荐内容详情
  */
 export const getContentDetail = async (contentId: string) => {
-  return request.get(`/api/v1/contents/${contentId}`)
+  return get(`/api/v1/contents/${contentId}`)
 }
 
 /**
@@ -141,7 +141,7 @@ export const searchContents = async (
     params.topic = filters.topic
   }
 
-  return request.get('/api/v1/contents/search', { params })
+  return get('/api/v1/contents/search', { params })
 }
 
 export const recommendationApi = {

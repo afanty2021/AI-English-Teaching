@@ -175,7 +175,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
 import {
   Clock,
   CircleCheck,
@@ -303,7 +303,7 @@ async function loadData() {
   }
 }
 
-function goToContent(item: any) {
+function goToContent(_item: any) {
   // 跳转到学习内容页面并查看详情
   router.push('/student/learning')
 }

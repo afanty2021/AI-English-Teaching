@@ -115,7 +115,7 @@
 
                 <!-- 我分享的：取消按钮 -->
                 <template v-else>
-                  <el-dropdown @command="(cmd) => handleAction(cmd, share)">
+                  <el-dropdown @command="(cmd: string) => handleAction(cmd, share)">
                     <el-button size="small">
                       操作 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
                     </el-button>
@@ -182,7 +182,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
@@ -408,8 +408,7 @@ const loadStatistics = async () => {
   }
 }
 
-// 暴露常量给模板
-const SHARE_STATUSES = SHARE_STATUSES
+// SHARE_STATUSES is automatically exposed to template in Vue 3 <script setup>
 </script>
 
 <style scoped>

@@ -57,7 +57,7 @@ export class VoiceActivityDetector {
       source.connect(this.analyser)
 
       // 获取频域数据
-      this.analyser.getByteFrequencyData(this.dataArray)
+      this.analyser.getByteFrequencyData(this.dataArray as Uint8Array<ArrayBuffer>)
 
       // 计算平均音量
       const average = this.dataArray.reduce((sum, value) => sum + value, 0) / this.dataArray.length
@@ -88,7 +88,7 @@ export class VoiceActivityDetector {
     const lowFreqCount = Math.floor(this.bufferLength * 0.3) // 30%低频
     let energy = 0
     for (let i = 0; i < lowFreqCount; i++) {
-      energy += this.dataArray[i] * this.dataArray[i]
+      energy += (this.dataArray[i] || 0) * (this.dataArray[i] || 0)
     }
     return energy / lowFreqCount
   }
@@ -101,7 +101,7 @@ export class VoiceActivityDetector {
     let energy = 0
     let count = 0
     for (let i = highFreqStart; i < this.bufferLength; i++) {
-      energy += this.dataArray[i] * this.dataArray[i]
+      energy += (this.dataArray[i] || 0) * (this.dataArray[i] || 0)
       count++
     }
     return energy / count
@@ -277,7 +277,7 @@ export class VolumeDetector {
     const source = this.audioContext.createMediaStreamSource(stream)
     source.connect(this.analyser)
 
-    this.analyser.getByteFrequencyData(this.dataArray)
+    this.analyser.getByteFrequencyData(this.dataArray as Uint8Array<ArrayBuffer>)
 
     const average = this.dataArray.reduce((sum, value) => sum + value, 0) / this.dataArray.length
     return average / 255
@@ -335,7 +335,8 @@ export class AudioEnhancer {
   private options: AudioEnhancementOptions
 
   constructor(options: AudioEnhancementOptions) {
-    this.options = {
+    // Merge provided options with defaults
+    const defaults: AudioEnhancementOptions = {
       enableVAD: true,
       enableNoiseReduction: true,
       enableVolumeDetection: true,
@@ -346,9 +347,9 @@ export class AudioEnhancer {
         ratio: 12,
         attack: 0.003,
         release: 0.25
-      },
-      ...options
+      }
     }
+    this.options = { ...defaults, ...options }
 
     this.voiceDetector = new VoiceActivityDetector()
     this.noiseSuppressor = new NoiseSuppressor()
@@ -460,7 +461,11 @@ export class AudioEnhancer {
  * 便利函数
  */
 export const audioEnhancer = {
-  create: (options?: AudioEnhancementOptions) => new AudioEnhancer(options || {}),
+  create: (options?: AudioEnhancementOptions) => new AudioEnhancer(options || {
+    enableVAD: true,
+    enableNoiseReduction: true,
+    enableVolumeDetection: true
+  }),
   VoiceActivityDetector,
   NoiseSuppressor,
   VolumeDetector

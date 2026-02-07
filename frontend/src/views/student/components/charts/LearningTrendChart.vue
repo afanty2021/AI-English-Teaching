@@ -199,15 +199,16 @@ function updateChart() {
       axisPointer: {
         type: 'cross'
       },
-      formatter: function (params) {
+      formatter: function (params: any) {
         if (!Array.isArray(params)) return ''
-        let result = `<div style="font-weight: bold; margin-bottom: 8px;">${params[0]?.axisValue || ''}</div>`
+        let result = `<div style="font-weight: bold; margin-bottom: 8px;">${params[0]?.axisValue ?? ''}</div>`
         params.forEach(param => {
           if (param.value !== undefined && param.value !== null) {
-            const unit = param.seriesName.includes('率') ? '%' : ''
+            const seriesName = param.seriesName ?? ''
+            const unit = seriesName.includes('率') ? '%' : ''
             result += `<div style="display: flex; justify-content: space-between; min-width: 120px; margin: 4px 0;">
               <span style="color: ${param.color}; margin-right: 8px;">●</span>
-              <span>${param.seriesName}:</span>
+              <span>${seriesName}:</span>
               <span style="font-weight: bold;">${param.value}${unit}</span>
             </div>`
           }

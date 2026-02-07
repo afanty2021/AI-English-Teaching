@@ -265,8 +265,12 @@ const handleExport = async () => {
 
     if (lessonIds.length === 1) {
       // 单个导出
+      const lessonId = lessonIds[0]
+      if (!lessonId) {
+        throw new Error('未选择教案')
+      }
       const response = await createExportTask({
-        lesson_id: lessonIds[0],
+        lesson_id: lessonId,
         format: exportOptions.value.format,
         options: exportOptions.value
       })

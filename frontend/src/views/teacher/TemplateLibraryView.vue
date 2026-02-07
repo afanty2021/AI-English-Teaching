@@ -234,13 +234,14 @@ import {
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getTemplates,
-  getTemplate,
+  // getTemplate reserved for future template detail viewing
+  // getTemplate,
   deleteTemplate,
   duplicateTemplate,
   toggleFavoriteTemplate,
   applyTemplate
 } from '@/api/lessonTemplate'
-import type { TemplateListItem, TemplateQueryParams } from '@/types/lessonTemplate'
+import type { TemplateListItem, TemplateQueryParams, CEFRLevel } from '@/types/lessonTemplate'
 import TemplateCard from '@/components/TemplateCard.vue'
 import TemplatePreviewDrawer from './TemplateLibraryView/TemplatePreviewDrawer.vue'
 import TemplateEditorDialog from './TemplateLibraryView/TemplateEditorDialog.vue'
@@ -293,7 +294,7 @@ const loadTemplates = async () => {
     const params: TemplateQueryParams = {
       page: currentPage.value,
       page_size: pageSize.value,
-      level: filterLevel.value || undefined,
+      level: (filterLevel.value || undefined) as CEFRLevel | undefined,
       category: filterCategory.value || undefined,
       search: searchQuery.value || undefined,
       sort_by: sortBy.value as any,

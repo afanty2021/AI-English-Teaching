@@ -128,6 +128,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { ElMessage } from 'element-plus'
 import type { PPTSlide } from '@/types/lesson'
 import PPTPreview from '@/components/PPTPreview.vue'
 

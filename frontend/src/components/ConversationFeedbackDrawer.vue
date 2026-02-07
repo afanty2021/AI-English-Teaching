@@ -48,11 +48,7 @@
               :color="getScoreColor(getDimensionPercentage(dimension.score, dimension.max_score))"
               :stroke-width="8"
               :show-text="true"
-            >
-              <template #default="{ percentage }">
-                <span class="progress-text">{{ dimension.score }}/{{ dimension.max_score }}</span>
-              </template>
-            </el-progress>
+            />
             <div v-if="dimension.feedback" class="dimension-feedback">
               {{ dimension.feedback }}
             </div>
@@ -116,7 +112,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import {
   Check,
   Star,

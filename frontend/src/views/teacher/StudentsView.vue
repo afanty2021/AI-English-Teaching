@@ -311,7 +311,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
@@ -456,7 +456,7 @@ function initRadarChart() {
   const chart = echarts.init(radarChartRef.value)
   const abilities = currentGraph.value.abilities
 
-  const indicator = Object.entries(abilities).map(([name, value]) => ({
+  const indicator = Object.entries(abilities).map(([name, _value]) => ({
     name,
     max: 100
   }))

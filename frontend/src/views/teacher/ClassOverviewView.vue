@@ -336,8 +336,8 @@ onMounted(() => {
   const startDate = new Date()
   startDate.setDate(endDate.getDate() - 30)
   dateRange.value = [
-    startDate.toISOString().split('T')[0],
-    endDate.toISOString().split('T')[0]
+    startDate.toISOString().split('T')[0] ?? '',
+    endDate.toISOString().split('T')[0] ?? ''
   ]
 
   loadClassSummary()

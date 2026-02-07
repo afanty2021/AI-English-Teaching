@@ -7,7 +7,6 @@ import type {
   ExportOptions,
   ExportTask,
   ExportTaskStatus,
-  ExportTemplate,
   CreateExportTaskRequest,
   BatchExportRequest,
   ExportTaskResponse,

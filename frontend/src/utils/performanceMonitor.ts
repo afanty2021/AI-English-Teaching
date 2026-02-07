@@ -249,7 +249,7 @@ export class LatencyMonitor {
     ]
 
     phases.sort((a, b) => b.value - a.value)
-    return phases[0].name
+    return phases[0]?.name ?? '未知'
   }
 
   /**
@@ -303,7 +303,7 @@ export class LRUCache<K, V> {
 
     // 如果超过最大大小，删除最旧的项
     if (this.cache.size > this.maxSize) {
-      const firstKey = this.cache.keys().next().value
+      const firstKey = this.cache.keys().next().value as K
       this.cache.delete(firstKey)
     }
   }
@@ -368,12 +368,13 @@ export class AudioHasher {
     let zeroCrossings = 0
 
     for (let i = 0; i < audioData.length; i++) {
-      const sample = audioData[i]
+      const sample = audioData[i] ?? 0
       sum += sample
       sumSquares += sample * sample
 
       // 计算过零率
-      if (i > 0 && (audioData[i - 1] >= 0) !== (sample >= 0)) {
+      const prevSample = audioData[i - 1] ?? 0
+      if (i > 0 && (prevSample >= 0) !== (sample >= 0)) {
         zeroCrossings++
       }
     }

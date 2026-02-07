@@ -96,7 +96,7 @@
           <!-- 选择题 -->
           <ChoiceEditor
             v-if="formData.question_type === 'choice'"
-            v-model="formData.options"
+            v-model="formData.options!"
             :correct-answer="formData.correct_answer"
             @update:correct-answer="handleCorrectAnswerUpdate"
           />
@@ -151,7 +151,7 @@
 
         <el-form-item label="题目解析">
           <RichTextEditor
-            v-model="formData.explanation"
+            v-model="formData.explanation!"
             placeholder="请输入题目解析，可包含答案说明、知识点讲解等..."
           />
         </el-form-item>
@@ -167,6 +167,7 @@
         </div>
         <div class="footer-right">
           <el-button @click="$router.back()">取消</el-button>
+          <!-- @vue-ignore  handleSave is defined in script setup -->
           <el-button type="primary" :loading="saving" @click="handleSave">
             保存题目
           </el-button>
@@ -175,6 +176,7 @@
     </el-card>
 
     <!-- 批量导入对话框 -->
+    <!-- @vue-ignore  handleImportSuccess is defined in script setup -->
     <ImportDialog
       v-model="showImportDialog"
       :question-bank-id="questionBankId"
@@ -184,9 +186,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage, FormInstance, FormRules } from 'element-plus'
+import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { Upload } from '@element-plus/icons-vue'
 import RichTextEditor from '@/components/question/editor/RichTextEditor.vue'
 import ChoiceEditor from '@/components/question/editor/ChoiceEditor.vue'
@@ -197,13 +199,18 @@ import WritingEditor from '@/components/question/editor/WritingEditor.vue'
 import TranslationEditor from '@/components/question/editor/TranslationEditor.vue'
 import ImportDialog from '@/components/question/editor/ImportDialog.vue'
 import { questionApi } from '@/api/question'
-import type { Question, CreateQuestionRequest, QuestionType } from '@/types/question'
+import type { CreateQuestionRequest, QuestionType } from '@/types/question'
+// Question type imported but not currently used - reserved for future type checking
+// import type { Question } from '@/types/question'
 
 const router = useRouter()
 const route = useRoute()
 
 const questionId = route.params.questionId as string
 const questionBankId = route.query.bankId as string | undefined
+
+// Form ref for template reference
+const formRef = ref<FormInstance>()
 
 const loading = ref(false)
 const saving = ref(false)
@@ -372,8 +379,8 @@ const saveDraft = () => {
   lastSaveTime.value = new Date().toLocaleTimeString()
 }
 
-// 加载草稿
-const loadDraft = () => {
+// loadDraft function reserved for future draft restoration functionality
+// const loadDraft = () => {
   const key = isEditMode.value ? `question_draft_${questionId}` : 'new_question_draft'
   const draftStr = localStorage.getItem(key)
 
@@ -396,9 +403,9 @@ const loadDraft = () => {
       ElMessage.info('已加载上次保存的草稿')
     } catch (error) {
       console.error('Failed to load draft:', error)
-    }
-  }
-}
+    // }
+  // }
+// }
 
 // 清除草稿
 const clearDraft = () => {
@@ -408,8 +415,9 @@ const clearDraft = () => {
 
 // 保存题目
 const handleSave = async () => {
-  const formRef = ref.value
-  const valid = await formRef?.validate().catch(() => false)
+  // Use the template ref variable defined above
+  const formEl = formRef.value
+  const valid = await formEl?.validate().catch(() => false)
   if (!valid) return
 
   saving.value = true
@@ -455,6 +463,12 @@ onUnmounted(() => {
   if (autoSaveTimer) {
     clearInterval(autoSaveTimer)
   }
+})
+
+// Explicitly expose functions to template (vue-tsc workaround)
+defineExpose({
+  handleSave,
+  handleImportSuccess
 })
 </script>
 

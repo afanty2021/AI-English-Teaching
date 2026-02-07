@@ -101,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import {
   Loading,
   CircleCheck,
@@ -113,7 +113,7 @@ import {
   Bottom
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import type { ExportProgressInfo, AsyncTaskStatus } from '@/types/report'
+import type { AsyncTaskStatus } from '@/types/report'
 
 // Props
 interface Props {

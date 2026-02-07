@@ -158,7 +158,7 @@ const loadCurrentQuestion = async () => {
     const response = await practiceSessionApi.getCurrentQuestion(sessionId)
     currentQuestion.value = response.question
     currentQuestionIndex.value = response.question_index
-    totalQuestions.value = response.total
+    totalQuestions.value = response.total_questions
     currentAnswer.value = response.previous_answer ?? null
     showResult.value = response.is_answered
 

@@ -105,6 +105,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { PPTSlide } from '@/types/lesson'
 import { Picture, Document } from '@element-plus/icons-vue'
 

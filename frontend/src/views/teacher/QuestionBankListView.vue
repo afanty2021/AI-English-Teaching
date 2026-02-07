@@ -156,7 +156,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, FormInstance, FormRules } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { questionBankApi } from '@/api/questionBank'
-import type { QuestionBank } from '@/types/question'
+import type { QuestionBank, PracticeType, CEFRLevel } from '@/types/question'
 
 const router = useRouter()
 
@@ -323,10 +323,19 @@ const handleSubmitBank = async () => {
   submitting.value = true
   try {
     if (editMode.value && editingId.value) {
-      await questionBankApi.update(editingId.value, bankForm)
+      const updateData = {
+        ...bankForm,
+        difficulty_level: (bankForm.difficulty_level || undefined) as CEFRLevel | undefined
+      }
+      await questionBankApi.update(editingId.value, updateData)
       ElMessage.success('更新成功')
     } else {
-      await questionBankApi.create(bankForm)
+      const createData = {
+        ...bankForm,
+        practice_type: bankForm.practice_type as PracticeType,
+        difficulty_level: (bankForm.difficulty_level || undefined) as CEFRLevel | undefined
+      }
+      await questionBankApi.create(createData)
       ElMessage.success('创建成功')
     }
     showEditDialog.value = false

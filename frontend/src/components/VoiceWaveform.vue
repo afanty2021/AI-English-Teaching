@@ -1,6 +1,6 @@
 <template>
   <div class="voice-waveform-container">
-    <div class="waveform" ref="waveformRef">
+    <div class="waveform">
       <div
         v-for="(bar, index) in waveformBars"
         :key="index"
@@ -89,7 +89,8 @@ interface Emits {
 const emit = defineEmits<Emits>()
 
 // Refs
-const waveformRef = ref<HTMLDivElement | null>(null)
+// waveformRef reserved for future ref functionality
+// const _waveformRef = ref<HTMLDivElement | null>(null)
 const audioContext = ref<AudioContext | null>(props.audioContext || null)
 const analyserNode = ref<AnalyserNode | null>(props.analyserNode || null)
 const animationFrameId = ref<number | null>(null)
@@ -160,7 +161,7 @@ const updateWaveform = () => {
 
     // 应用平滑
     const currentBar = waveformBars.value[i]
-    const smoothedHeight = currentBar.height * (1 - props.smoothing) + normalizedValue * props.smoothing
+    const smoothedHeight = (currentBar?.height ?? 0) * (1 - props.smoothing) + normalizedValue * props.smoothing
 
     // 更新波形条
     waveformBars.value[i] = {

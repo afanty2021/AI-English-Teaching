@@ -96,6 +96,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted, readonly } from 'vue'
+import { ElMessage } from 'element-plus'
 import type { PPTSlide } from '@/types/lesson'
 import { Document } from '@element-plus/icons-vue'
 import SlideNavigation from './ppt/SlideNavigation.vue'

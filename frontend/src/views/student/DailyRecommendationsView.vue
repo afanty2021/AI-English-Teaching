@@ -252,18 +252,15 @@ import {
   Calendar,
   Refresh,
   Document,
-  Headphone,
   EditPen,
   Edit,
   Microphone,
   Star
 } from '@element-plus/icons-vue'
-import { useAuthStore } from '@/stores/auth'
 import { useRecommendationStore } from '@/stores/recommendation'
-import type { DailyRecommendations } from '@/types/recommendation'
+import type { DailyRecommendations, StudentProfile } from '@/types/recommendation'
 
 const router = useRouter()
-const authStore = useAuthStore()
 const recommendationStore = useRecommendationStore()
 
 // 响应式数据
@@ -275,7 +272,7 @@ const recommendations = ref<DailyRecommendations>({
   grammar: [],
   speaking: null
 })
-const studentProfile = ref(null)
+const studentProfile = ref<StudentProfile | null>(null)
 const feedbackDialogVisible = ref(false)
 const feedbackForm = reactive({
   contentId: '',
@@ -363,12 +360,13 @@ const markVocabularyKnown = (item: any) => {
   // TODO: 调用API标记词汇为已掌握
 }
 
-const showFeedbackDialog = (contentId: string) => {
-  feedbackForm.contentId = contentId
-  feedbackForm.satisfaction = 0
-  feedbackForm.reason = ''
-  feedbackDialogVisible.value = true
-}
+// showFeedbackDialog reserved for future feedback functionality
+// const _showFeedbackDialog = (contentId: string) => {
+//   feedbackForm.contentId = contentId
+//   feedbackForm.satisfaction = 0
+//   feedbackForm.reason = ''
+//   feedbackDialogVisible.value = true
+// }
 
 const submitFeedback = () => {
   if (feedbackForm.satisfaction === 0) {

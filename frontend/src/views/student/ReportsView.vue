@@ -145,7 +145,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Document, Calendar, Clock } from '@element-plus/icons-vue'
-import reportApi, { type GenerateReportRequest, type LearningReport } from '@/api/report'
+import reportApi, { type GenerateReportRequest } from '@/api/report'
 
 const router = useRouter()
 

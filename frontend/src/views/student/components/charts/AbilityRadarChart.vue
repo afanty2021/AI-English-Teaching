@@ -214,9 +214,9 @@ function updateChart() {
   // 对比数据
   const comparisonData = compareMode.value === 'class_avg' && radarData.value.classAverage
     ? indicator.map((_, idx) => {
-        const abilityKey = Object.keys(abilityLabels).find(
+        const abilityKey = (Object.keys(abilityLabels).find(
           key => abilityLabels[key] === abilities[idx]?.name
-        ) || abilities[idx]?.name?.toLowerCase()
+        ) || abilities[idx]?.name?.toLowerCase()) as string
         return radarData.value?.classAverage?.[abilityKey] || 0
       })
     : []
@@ -259,15 +259,16 @@ function updateChart() {
   const option: echarts.EChartsOption = {
     tooltip: {
       trigger: 'item',
-      formatter: function (params) {
-        const ability = abilities[params.dataIndex]
+      formatter: function (params: any) {
+        const dataIndex = params.dataIndex ?? 0
+        const ability = abilities[dataIndex]
         if (!ability) return ''
 
         let result = `<div style="font-weight: bold; margin-bottom: 8px;">${ability.name}</div>`
         result += `<div>当前水平: ${ability.value.toFixed(1)}</div>`
 
         if (params.seriesIndex === 1) {
-          const compValue = comparisonData[params.dataIndex]
+          const compValue = comparisonData[dataIndex]
           result += `<div>对比数据: ${compValue?.toFixed(1) || '-'}</div>`
         }
 

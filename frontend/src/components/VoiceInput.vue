@@ -245,9 +245,8 @@ import {
   Setting,
   QuestionFilled
 } from '@element-plus/icons-vue'
-import { VoiceWaveform } from './VoiceWaveform.vue'
-import { AdaptiveVoiceRecognition } from '../utils/adaptiveVoiceRecognition'
-import { BrowserCompatibility, browserCompatibility } from '../utils/browserCompatibility'
+import VoiceWaveform from './VoiceWaveform.vue'
+import { BrowserCompatibility } from '../utils/browserCompatibility'
 
 // Props
 interface Props {
@@ -330,7 +329,6 @@ const performanceSettings = ref({
 
 // 进度和统计
 const processingProgress = ref(0)
-const currentEngine = ref('')
 const networkQuality = ref({ bandwidth: 0, latency: 0 })
 
 // 兼容性信息

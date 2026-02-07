@@ -168,7 +168,11 @@ const loadLessons = async () => {
       level: filterLevel.value || undefined
     })
 
-    lessons.value = response.lesson_plans
+    // Cast LessonPlanSummary[] to LessonPlan[] with proper status type assertion
+    lessons.value = response.lesson_plans.map(plan => ({
+      ...plan,
+      status: plan.status as 'completed' | 'draft' | 'archived'
+    }))
     total.value = response.total
   } catch (error) {
     console.error('加载教案失败:', error)

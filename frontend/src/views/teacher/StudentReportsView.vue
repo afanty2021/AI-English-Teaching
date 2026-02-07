@@ -116,7 +116,8 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Document, Clock, Refresh } from '@element-plus/icons-vue'
 import teacherReportApi, { type StudentReportSummary } from '@/api/teacherReport'
-import { useAuthStore } from '@/stores/auth'
+// useAuthStore imported but not currently used - reserved for future auth features
+// import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 
