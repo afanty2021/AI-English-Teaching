@@ -484,3 +484,39 @@ def test_teacher(db: AsyncSession, test_organization: Organization) -> Teacher:
     db.add(user)
     db.add(teacher)
     return teacher
+
+
+@pytest.fixture
+def test_user(db: AsyncSession) -> User:
+    """测试用户（User对象）"""
+    user = User(
+        id=uuid4(),
+        username="test_user",
+        email="test_user@test.com",
+        hashed_password="hashed_password",
+        role="student",
+        is_active=True
+    )
+    db.add(user)
+    return user
+
+
+@pytest.fixture
+def inactive_user(db: AsyncSession) -> User:
+    """被禁用的测试用户"""
+    user = User(
+        id=uuid4(),
+        username="inactive_user",
+        email="inactive@test.com",
+        hashed_password="hashed_password",
+        role="student",
+        is_active=False  # 被禁用
+    )
+    db.add(user)
+    return user
+
+
+@pytest.fixture
+def db_session(db: AsyncSession) -> AsyncSession:
+    """数据库会话别名（用于测试）"""
+    return db
