@@ -48,6 +48,9 @@ def mock_notifier():
 def mock_storage():
     """模拟文件存储服务"""
     storage = MagicMock()
+    # 添加 save_file_async 方法（AsyncFileStorageService 使用）
+    storage.save_file_async = AsyncMock(return_value=("/path/to/file.docx", 12345))
+    # 保留 save_file 方法以兼容旧测试
     storage.save_file = AsyncMock(return_value=("/path/to/file.docx", 12345))
     return storage
 
@@ -129,12 +132,12 @@ def sample_task():
 @pytest.fixture
 def processor(mock_db, mock_notifier, mock_storage):
     """创建处理器实例并注入模拟依赖"""
-    with patch("app.services.export_task_processor.FileStorageService", return_value=mock_storage):
+    with patch("app.services.export_task_processor.AsyncFileStorageService", return_value=mock_storage):
         with patch("app.services.export_task_processor.WordDocumentGenerator"):
             with patch("app.services.export_task_processor.PDFDocumentGenerator"):
                 with patch("app.services.export_task_processor.PPTXDocumentGenerator"):
                     proc = ExportTaskProcessor(mock_db, mock_notifier)
-                    proc.storage = mock_storage
+                    proc.async_storage = mock_storage
                     return proc
 
 
@@ -195,8 +198,8 @@ async def test_process_export_task_word(processor, sample_task, sample_lesson_pl
         assert processor.notifier.notify_progress.call_count >= 3
         processor.notifier.notify_complete.assert_called_once()
 
-        # 验证文件保存
-        processor.storage.save_file.assert_called_once()
+        # 验证文件保存（现在使用 async_storage.save_file_async）
+        processor.async_storage.save_file_async.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -470,12 +473,12 @@ async def test_save_file_to_storage(processor, sample_lesson_plan):
     filename = "test.docx"
 
     file_path, file_size = await processor._save_file_to_storage(
-        file_content, filename, sample_lesson_plan.id, uuid.uuid4()
+        file_content, filename, sample_lesson_plan.id, uuid.uuid4(), uuid.uuid4()
     )
 
     assert file_path == "/path/to/file.docx"
     assert file_size == 12345
-    processor.storage.save_file.assert_called_once()
+    processor.async_storage.save_file_async.assert_called_once()
 
 
 # ========== 任务状态更新测试 ==========

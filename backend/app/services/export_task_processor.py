@@ -34,10 +34,10 @@ from app.models.export_task import ExportFormat, ExportTask, TaskStatus
 from app.models.export_template import ExportTemplate
 from app.models.lesson_plan import LessonPlan
 from app.services.content_renderer_service import ContentRendererService
+from app.services.async_file_storage_service import AsyncFileStorageService, FileStorageError
 from app.services.document_generators.pdf_generator import PDFDocumentGenerator
 from app.services.document_generators.pptx_generator import PPTXDocumentGenerator
 from app.services.document_generators.word_generator import WordDocumentGenerator
-from app.services.file_storage_service import FileStorageService
 from app.services.progress_notifier import ProgressNotifier
 from app.utils.concurrency import get_export_concurrency_controller
 
@@ -107,8 +107,8 @@ class ExportTaskProcessor:
         self.pdf_generator = PDFDocumentGenerator()
         self.pptx_generator = PPTXDocumentGenerator()
 
-        # 初始化存储服务
-        self.storage = FileStorageService()
+        # 初始化异步存储服务
+        self.async_storage = AsyncFileStorageService()
 
     async def process_export_task(
         self,
@@ -538,6 +538,8 @@ class ExportTaskProcessor:
         """
         保存文件到存储
 
+        使用 AsyncFileStorageService 异步保存文件，避免阻塞事件循环。
+
         Args:
             file_content: 文件内容（字节）
             filename: 文件名
@@ -547,12 +549,19 @@ class ExportTaskProcessor:
 
         Returns:
             tuple[str, int]: (文件路径, 文件大小)
+
+        Raises:
+            FileStorageError: 文件保存失败时抛出
         """
         try:
-            # 使用 FileStorageService 保存文件
-            # 注意：需要将format转换为ExportFormat枚举
-            file_path, file_size = await self.storage.save_file(
-                content=file_content, filename=filename, format=self._get_format_from_filename(filename)
+            # 获取导出格式
+            export_format = self._get_format_from_filename(filename)
+
+            # 使用 AsyncFileStorageService 异步保存文件
+            file_path, file_size = await self.async_storage.save_file_async(
+                content=file_content,
+                filename=filename,
+                format=export_format
             )
 
             logger.info(
@@ -563,9 +572,9 @@ class ExportTaskProcessor:
             )
 
             return file_path, file_size
-        except Exception as e:
-            error_message = f"{type(e).__name__}: {str(e)}"
+        except FileStorageError as e:
             # 记录 CRITICAL 告警
+            error_message = f"{type(e).__name__}: {str(e)}"
             self.alert_logger.critical(
                 "文件保存失败",
                 task_id=str(task_id),
@@ -573,6 +582,16 @@ class ExportTaskProcessor:
                 error_message=error_message
             )
             raise
+        except Exception as e:
+            # 记录未预期的错误
+            error_message = f"{type(e).__name__}: {str(e)}"
+            self.alert_logger.critical(
+                "文件保存失败（未预期错误）",
+                task_id=str(task_id),
+                filename=filename,
+                error_message=error_message
+            )
+            raise RuntimeError(f"文件保存失败: {e}") from e
 
     def _generate_download_url(self, file_path: str) -> str:
         """
