@@ -29,6 +29,7 @@ from app.metrics import (
     record_export_task_completed,
     record_export_task_failed,
 )
+from app.utils.alerts import AlertLogger
 from app.models.export_task import ExportFormat, ExportTask, TaskStatus
 from app.models.export_template import ExportTemplate
 from app.models.lesson_plan import LessonPlan
@@ -95,6 +96,9 @@ class ExportTaskProcessor:
         self.notifier = notifier or ProgressNotifier()
         self.settings = get_settings()
 
+        # 初始化告警器
+        self.alert_logger = AlertLogger("export_processor")
+
         # 初始化并发控制器
         self.concurrency_controller = get_export_concurrency_controller()
 
@@ -148,6 +152,12 @@ class ExportTaskProcessor:
             except ValueError:
                 # 记录验证失败指标
                 record_export_task_failed("validation", format)
+                # 记录告警
+                self.alert_logger.warning(
+                    "导出格式验证失败",
+                    task_id=str(task_id),
+                    format=format
+                )
                 await self._update_task_status(
                     task_id, TaskStatus.FAILED, 0, f"不支持的导出格式: {format}"
                 )
@@ -202,6 +212,12 @@ class ExportTaskProcessor:
                         # 5. 获取教案数据
                         lesson = await self._get_lesson_plan(lesson_plan_id)
                         if not lesson:
+                            # 记录告警
+                            self.alert_logger.error(
+                                "教案不存在",
+                                task_id=str(task_id),
+                                lesson_plan_id=str(lesson_plan_id)
+                            )
                             await self._update_task_status(task_id, TaskStatus.FAILED, 0, "教案不存在")
                             raise HTTPException(
                                 status_code=status.HTTP_404_NOT_FOUND,
@@ -214,6 +230,12 @@ class ExportTaskProcessor:
                         if template_id:
                             template = await self._get_template(template_id)
                             if not template:
+                                # 记录告警
+                                self.alert_logger.error(
+                                    "模板不存在",
+                                    task_id=str(task_id),
+                                    template_id=str(template_id)
+                                )
                                 await self._update_task_status(task_id, TaskStatus.FAILED, 0, "模板不存在")
                                 raise HTTPException(
                                     status_code=status.HTTP_404_NOT_FOUND,
@@ -221,6 +243,13 @@ class ExportTaskProcessor:
                                 )
                             # 验证模板格式匹配
                             if template.format != format:
+                                # 记录告警
+                                self.alert_logger.error(
+                                    "模板格式不匹配",
+                                    task_id=str(task_id),
+                                    template_format=template.format,
+                                    request_format=format
+                                )
                                 await self._update_task_status(
                                     task_id,
                                     TaskStatus.FAILED,
@@ -251,7 +280,7 @@ class ExportTaskProcessor:
                         )
 
                         file_content = await self._execute_generation(
-                            lesson, rendered_content, export_format, template_vars
+                            lesson, rendered_content, export_format, template_vars, task_id
                         )
 
                         # 9. 保存文件
@@ -261,7 +290,7 @@ class ExportTaskProcessor:
 
                         filename = self._generate_filename(lesson, export_format)
                         file_path, file_size = await self._save_file_to_storage(
-                            file_content, filename, lesson_plan_id, user_id
+                            file_content, filename, lesson_plan_id, user_id, task_id
                         )
 
                         # 10. 生成下载URL
@@ -379,6 +408,7 @@ class ExportTaskProcessor:
         content: Dict[str, Any],
         format: ExportFormat,
         template_vars: Dict[str, Any],
+        task_id: uuid.UUID,
     ) -> bytes:
         """
         执行文档生成
@@ -388,6 +418,7 @@ class ExportTaskProcessor:
             content: 渲染后的内容
             format: 导出格式
             template_vars: 模板变量
+            task_id: 任务ID
 
         Returns:
             bytes: 生成的文档二进制内容
@@ -422,6 +453,14 @@ class ExportTaskProcessor:
                 raise ValueError(f"不支持的导出格式: {format}")
 
         except Exception as e:
+            error_message = f"{type(e).__name__}: {str(e)}"
+            # 记录 CRITICAL 告警
+            self.alert_logger.critical(
+                "文档生成失败",
+                task_id=str(task_id),
+                format=format.value,
+                error_message=error_message
+            )
             logger.error(f"文档生成失败: {format}, 错误: {e}", exc_info=e)
             raise RuntimeError(f"文档生成失败: {e}") from e
 
@@ -494,6 +533,7 @@ class ExportTaskProcessor:
         filename: str,
         lesson_id: uuid.UUID,
         user_id: uuid.UUID,
+        task_id: uuid.UUID,
     ) -> tuple[str, int]:
         """
         保存文件到存储
@@ -503,24 +543,36 @@ class ExportTaskProcessor:
             filename: 文件名
             lesson_id: 教案ID
             user_id: 用户ID
+            task_id: 任务ID
 
         Returns:
             tuple[str, int]: (文件路径, 文件大小)
         """
-        # 使用 FileStorageService 保存文件
-        # 注意：需要将format转换为ExportFormat枚举
-        file_path, file_size = await self.storage.save_file(
-            content=file_content, filename=filename, format=self._get_format_from_filename(filename)
-        )
+        try:
+            # 使用 FileStorageService 保存文件
+            # 注意：需要将format转换为ExportFormat枚举
+            file_path, file_size = await self.storage.save_file(
+                content=file_content, filename=filename, format=self._get_format_from_filename(filename)
+            )
 
-        logger.info(
-            f"文件已保存: {file_path}, "
-            f"大小: {file_size} bytes, "
-            f"教案: {lesson_id}, "
-            f"用户: {user_id}"
-        )
+            logger.info(
+                f"文件已保存: {file_path}, "
+                f"大小: {file_size} bytes, "
+                f"教案: {lesson_id}, "
+                f"用户: {user_id}"
+            )
 
-        return file_path, file_size
+            return file_path, file_size
+        except Exception as e:
+            error_message = f"{type(e).__name__}: {str(e)}"
+            # 记录 CRITICAL 告警
+            self.alert_logger.critical(
+                "文件保存失败",
+                task_id=str(task_id),
+                filename=filename,
+                error_message=error_message
+            )
+            raise
 
     def _generate_download_url(self, file_path: str) -> str:
         """
