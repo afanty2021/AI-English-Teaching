@@ -365,6 +365,13 @@ export class AdaptiveVoiceRecognition {
   private options: AdaptiveOptions
   private isInitialized = false
 
+  /**
+   * 便利创建函数
+   */
+  static create(options: Partial<AdaptiveOptions> = {}): AdaptiveVoiceRecognition {
+    return new AdaptiveVoiceRecognition(options)
+  }
+
   constructor(options: Partial<AdaptiveOptions> = {}) {
     this.options = {
       preferCloudSTT: true,
