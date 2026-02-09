@@ -12,7 +12,6 @@
     </el-page-header>
 
     <el-card v-loading="loading" class="editor-container">
-      <!-- 编辑表单 -->
       <el-form
         ref="formRef"
         :model="formData"
@@ -20,7 +19,6 @@
         label-width="100px"
         class="question-form"
       >
-        <!-- 基础信息 -->
         <el-divider content-position="left">基础信息</el-divider>
 
         <el-row :gutter="16">
@@ -28,16 +26,15 @@
             <el-form-item label="题目类型" prop="question_type">
               <el-select
                 v-model="formData.question_type"
-                placeholder="请选择题目类型"
+                placeholder="选择题目类型"
+                style="width: 100%"
                 :disabled="isEditMode"
-                @change="handleTypeChange"
               >
                 <el-option label="选择题" value="choice" />
                 <el-option label="填空题" value="fill_blank" />
                 <el-option label="阅读理解" value="reading" />
+                <el-option label="听力题" value="audio" />
                 <el-option label="写作题" value="writing" />
-                <el-option label="口语题" value="speaking" />
-                <el-option label="听力题" value="listening" />
                 <el-option label="翻译题" value="translation" />
               </el-select>
             </el-form-item>
@@ -45,108 +42,103 @@
 
           <el-col :span="12">
             <el-form-item label="难度等级" prop="difficulty_level">
-              <el-select v-model="formData.difficulty_level" placeholder="请选择难度">
-                <el-option label="A1" value="A1" />
-                <el-option label="A2" value="A2" />
-                <el-option label="B1" value="B1" />
-                <el-option label="B2" value="B2" />
-                <el-option label="C1" value="C1" />
-                <el-option label="C2" value="C2" />
+              <el-select
+                v-model="formData.difficulty_level"
+                placeholder="选择难度"
+                style="width: 100%"
+              >
+                <el-option label="简单" value="easy" />
+                <el-option label="中等" value="medium" />
+                <el-option label="困难" value="hard" />
               </el-select>
             </el-form-item>
           </el-col>
         </el-row>
 
-        <el-form-item label="主题分类" prop="topic">
-          <el-input v-model="formData.topic" placeholder="如：语法、词汇、阅读理解等" />
-        </el-form-item>
-
-        <el-form-item label="知识点标签">
+        <el-form-item label="知识点" prop="topic">
           <el-select
-            v-model="formData.knowledge_points"
-            multiple
-            filterable
+            v-model="formData.topic"
+            placeholder="选择或输入知识点"
             allow-create
-            placeholder="请选择或输入知识点标签"
+            filterable
+            default-first-option
             style="width: 100%"
           >
-            <el-option
-              v-for="point in commonKnowledgePoints"
-              :key="point"
-              :label="point"
-              :value="point"
-            />
+            <el-option label="时态" value="时态" />
+            <el-option label="语态" value="语态" />
+            <el-option label="从句" value="从句" />
+            <el-option label="非谓语动词" value="非谓语动词" />
+            <el-option label="定语从句" value="定语从句" />
+            <el-option label="名词性从句" value="名词性从句" />
+            <el-option label="状语从句" value="状语从句" />
+            <el-option label="虚拟语气" value="虚拟语气" />
+            <el-option label="倒装句" value="倒装句" />
+            <el-option label="介词" value="介词" />
+            <el-option label="冠词" value="冠词" />
+            <el-option label="连词" value="连词" />
+            <el-option label="代词" value="代词" />
           </el-select>
         </el-form-item>
 
-        <!-- 题目内容 -->
-        <el-divider content-position="left">题目内容</el-divider>
-
-        <!-- 题目文本内容（富文本） -->
         <el-form-item label="题目内容" prop="content_text">
-          <RichTextEditor
+          <el-input
             v-model="formData.content_text"
-            placeholder="请输入题目内容..."
-            :max-length="2000"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入题目内容"
           />
         </el-form-item>
 
-        <!-- 题型特定区域 -->
-        <div class="type-specific">
-          <!-- 选择题 -->
-          <ChoiceEditor
-            v-if="formData.question_type === 'choice'"
-            v-model="formData.options"
-            :correct-answer="formData.correct_answer"
-            @update:correct-answer="handleCorrectAnswerUpdate"
-          />
+        <RichTextEditor
+          v-model="formData.content_text"
+          placeholder="请输入题目内容（支持富文本）"
+        />
 
-          <!-- 填空题 -->
-          <FillBlankEditor
-            v-else-if="formData.question_type === 'fill_blank'"
-            v-model="fillBlankAnswers"
-            @update:model-value="handleFillBlankAnswersUpdate"
-          />
+        <ChoiceEditor
+          v-if="formData.question_type === 'choice'"
+          v-model="formData.options"
+          :correct-answer="formData.correct_answer as Record<string, string>"
+          @update:correct-answer="formData.correct_answer = $event"
+        />
 
-          <!-- 阅读理解 -->
-          <ReadingEditor
-            v-else-if="formData.question_type === 'reading'"
-            v-model="passageContent"
-            @update:model-value="handlePassageUpdate"
-          />
+        <FillBlankEditor
+          v-if="formData.question_type === 'fill_blank'"
+          :answers="fillBlankAnswers"
+          :correct-answer="formData.correct_answer as Record<string, any>"
+          @update:answers="fillBlankAnswers = $event"
+          @update:correct-answer="formData.correct_answer = $event"
+        />
 
-          <!-- 听力题 -->
-          <AudioEditor
-            v-else-if="formData.question_type === 'listening'"
-            v-model="audioUrl"
-            @update:model-value="handleAudioUrlUpdate"
-          />
+        <ReadingEditor
+          v-if="formData.question_type === 'reading'"
+          v-model="formData.passage_content"
+          :correct-answer="formData.correct_answer as Record<string, any>"
+          @update:correct-answer="formData.correct_answer = $event"
+        />
 
-          <!-- 写作题 -->
-          <WritingEditor
-            v-else-if="formData.question_type === 'writing'"
-            v-model="sampleAnswer"
-            type="writing"
-          />
+        <AudioEditor
+          v-if="formData.question_type === 'audio'"
+          v-model="formData.audio_url"
+          :correct-answer="formData.correct_answer as Record<string, string>"
+          @update:correct-answer="formData.correct_answer = $event"
+        />
 
-          <!-- 口语题 -->
-          <WritingEditor
-            v-else-if="formData.question_type === 'speaking'"
-            v-model="sampleAnswer"
-            type="speaking"
-          />
+        <WritingEditor
+          v-if="formData.question_type === 'writing'"
+          :sample-answer="formData.sample_answer"
+          :correct-answer="formData.correct_answer as Record<string, string>"
+          @update:sample-answer="formData.sample_answer = $event"
+          @update:correct-answer="formData.correct_answer = $event"
+        />
 
-          <!-- 翻译题 -->
-          <TranslationEditor
-            v-else-if="formData.question_type === 'translation'"
-            :source-text-value="translationSource"
-            :target-text-value="translationTarget"
-            @update:source-text="handleTranslationSourceUpdate"
-            @update:target-text="handleTranslationTargetUpdate"
-          />
-        </div>
+        <TranslationEditor
+          v-if="formData.question_type === 'translation'"
+          :source-text-value="translationSource"
+          :target-text-value="translationTarget"
+          @update:source-text="handleTranslationSourceUpdate"
+          @update:target-text="handleTranslationTargetUpdate"
+        />
 
-        <!-- 解析说明 -->
         <el-divider content-position="left">答案解析</el-divider>
 
         <el-form-item label="题目解析">
@@ -157,7 +149,6 @@
         </el-form-item>
       </el-form>
 
-      <!-- 底部操作栏 -->
       <div class="form-footer">
         <div class="footer-left">
           <el-checkbox v-model="autoSave">自动保存草稿</el-checkbox>
@@ -167,7 +158,6 @@
         </div>
         <div class="footer-right">
           <el-button @click="$router.back()">取消</el-button>
-          <!-- @vue-ignore  handleSave is defined in script setup -->
           <el-button type="primary" :loading="saving" @click="handleSave">
             保存题目
           </el-button>
@@ -175,8 +165,6 @@
       </div>
     </el-card>
 
-    <!-- 批量导入对话框 -->
-    <!-- @vue-ignore  handleImportSuccess is defined in script setup -->
     <ImportDialog
       v-model="showImportDialog"
       :question-bank-id="questionBankId"
@@ -200,8 +188,6 @@ import TranslationEditor from '@/components/question/editor/TranslationEditor.vu
 import ImportDialog from '@/components/question/editor/ImportDialog.vue'
 import { questionApi } from '@/api/question'
 import type { CreateQuestionRequest, QuestionType } from '@/types/question'
-// Question type imported but not currently used - reserved for future type checking
-// import type { Question } from '@/types/question'
 
 const router = useRouter()
 const route = useRoute()
@@ -209,19 +195,15 @@ const route = useRoute()
 const questionId = route.params.questionId as string
 const questionBankId = route.query.bankId as string | undefined
 
-// Form ref for template reference
 const formRef = ref<FormInstance>()
-
 const loading = ref(false)
 const saving = ref(false)
 const showImportDialog = ref(false)
 const autoSave = ref(true)
 const lastSaveTime = ref('')
+const isEditMode = computed(() => !!questionId)
+let autoSaveTimer: ReturnType<typeof setInterval> | null = null
 
-// 是否为编辑模式
-const isEditMode = computed(() => !!questionId && questionId !== 'new')
-
-// 表单数据
 const formData = reactive<CreateQuestionRequest>({
   question_type: 'choice' as QuestionType,
   content_text: '',
@@ -242,7 +224,6 @@ const formData = reactive<CreateQuestionRequest>({
   sample_answer: ''
 })
 
-// 题型特定数据
 const fillBlankAnswers = ref<string[]>([])
 const passageContent = ref('')
 const audioUrl = ref('')
@@ -250,20 +231,33 @@ const sampleAnswer = ref('')
 const translationSource = ref('')
 const translationTarget = ref('')
 
-// 常用知识点
 const commonKnowledgePoints = [
   '时态', '语态', '从句', '非谓语动词', '定语从句',
   '名词性从句', '状语从句', '虚拟语气', '倒装句',
   '介词', '冠词', '连词', '代词'
 ]
 
-// 表单验证规则
 const formRules: FormRules = {
   question_type: [{ required: true, message: '请选择题目类型', trigger: 'change' }],
   content_text: [{ required: true, message: '请输入题目内容', trigger: 'blur' }]
 }
 
-// 加载题目数据（编辑模式）
+const handleTranslationSourceUpdate = (val: string) => {
+  translationSource.value = val
+  if (!formData.correct_answer || typeof formData.correct_answer === 'string') {
+    formData.correct_answer = {}
+  }
+  ;(formData.correct_answer as Record<string, any>).source = val
+}
+
+const handleTranslationTargetUpdate = (val: string) => {
+  translationTarget.value = val
+  if (!formData.correct_answer || typeof formData.correct_answer === 'string') {
+    formData.correct_answer = {}
+  }
+  ;(formData.correct_answer as Record<string, any>).target = val
+}
+
 const loadQuestion = async () => {
   if (!isEditMode.value) return
 
@@ -285,7 +279,6 @@ const loadQuestion = async () => {
       sample_answer: question.sample_answer || ''
     })
 
-    // 填空题特殊处理
     if (question.question_type === 'fill_blank') {
       const ans = question.correct_answer as any
       if (ans?.type === 'multiple') {
@@ -293,7 +286,6 @@ const loadQuestion = async () => {
       }
     }
 
-    // 翻译题特殊处理
     if (question.question_type === 'translation') {
       const ans = question.correct_answer as any
       if (ans) {
@@ -308,14 +300,12 @@ const loadQuestion = async () => {
   }
 }
 
-// 题型切换处理
 const handleTypeChange = () => {
   if (isEditMode.value) {
     ElMessage.warning('编辑模式下不能修改题目类型')
     return
   }
 
-  // 重置题型特定数据
   formData.correct_answer = {}
   fillBlankAnswers.value = []
   passageContent.value = ''
@@ -325,138 +315,93 @@ const handleTypeChange = () => {
   translationTarget.value = ''
 }
 
-// 选择题正确答案更新
-const handleCorrectAnswerUpdate = (value: any) => {
-  formData.correct_answer = value
+const formatDateTime = (date: Date) => {
+  return date.toLocaleString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  })
 }
 
-// 填空题答案更新
-const handleFillBlankAnswersUpdate = (value: string[]) => {
-  formData.correct_answer = { answers: value, type: 'multiple' }
-}
-
-// 阅读理解文章更新
-const handlePassageUpdate = (value: string) => {
-  passageContent.value = value
-  formData.passage_content = value
-}
-
-// 音频URL更新
-const handleAudioUrlUpdate = (value: string) => {
-  audioUrl.value = value
-  formData.audio_url = value
-}
-
-// 翻译题原文更新
-const handleTranslationSourceUpdate = (value: string) => {
-  translationSource.value = value
-  formData.correct_answer = { source: value, target: translationTarget.value }
-}
-
-// 翻译题译文更新
-const handleTranslationTargetUpdate = (value: string) => {
-  translationTarget.value = value
-  formData.correct_answer = { source: translationSource.value, target: value }
-}
-
-// 自动保存草稿
-const saveDraft = () => {
-  if (!autoSave.value) return
-
-  const draft = {
-    ...formData,
-    fillBlankAnswers: fillBlankAnswers.value,
-    passageContent: passageContent.value,
-    audioUrl: audioUrl.value,
-    sampleAnswer: sampleAnswer.value,
-    translationSource: translationSource.value,
-    translationTarget: translationTarget.value,
-    savedAt: new Date().toISOString()
-  }
-
-  const key = isEditMode.value ? `question_draft_${questionId}` : 'new_question_draft'
-  localStorage.setItem(key, JSON.stringify(draft))
-  lastSaveTime.value = new Date().toLocaleTimeString()
-}
-
-// loadDraft function reserved for future draft restoration functionality
-// const loadDraft = () => {
-  const key = isEditMode.value ? `question_draft_${questionId}` : 'new_question_draft'
-  const draftStr = localStorage.getItem(key)
-
-  if (draftStr) {
-    try {
-      const draft = JSON.parse(draftStr)
-
-      // 恢复表单数据（排除已保存时间）
-      const { savedAt, ...draftData } = draft
-      Object.assign(formData, draftData)
-
-      // 恢复题型特定数据
-      if (draft.fillBlankAnswers) fillBlankAnswers.value = draft.fillBlankAnswers
-      if (draft.passageContent) passageContent.value = draft.passageContent
-      if (draft.audioUrl) audioUrl.value = draft.audioUrl
-      if (draft.sampleAnswer) sampleAnswer.value = draft.sampleAnswer
-      if (draft.translationSource) translationSource.value = draft.translationSource
-      if (draft.translationTarget) translationTarget.value = draft.translationTarget
-
-      ElMessage.info('已加载上次保存的草稿')
-    } catch (error) {
-      console.error('Failed to load draft:', error)
-    // }
-  // }
-// }
-
-// 清除草稿
-const clearDraft = () => {
-  const key = isEditMode.value ? `question_draft_${questionId}` : 'new_question_draft'
-  localStorage.removeItem(key)
-}
-
-// 保存题目
 const handleSave = async () => {
-  // Use the template ref variable defined above
-  const formEl = formRef.value
-  const valid = await formEl?.validate().catch(() => false)
-  if (!valid) return
+  if (!formRef.value) return
 
-  saving.value = true
   try {
-    if (isEditMode.value) {
-      await questionApi.update(questionId, formData)
-      ElMessage.success('题目更新成功')
-    } else {
-      await questionApi.create(formData)
-      ElMessage.success('题目创建成功')
+    await formRef.value.validate()
+    saving.value = true
+
+    const data: CreateQuestionRequest = {
+      question_type: formData.question_type,
+      content_text: formData.content_text,
+      difficulty_level: formData.difficulty_level,
+      topic: formData.topic,
+      knowledge_points: formData.knowledge_points,
+      options: formData.options,
+      correct_answer: formData.correct_answer,
+      explanation: formData.explanation,
+      passage_content: formData.passage_content,
+      audio_url: formData.audio_url,
+      sample_answer: formData.sample_answer
     }
 
-    clearDraft()
-    router.back()
+    if (isEditMode.value) {
+      await questionApi.update(questionId, data)
+      ElMessage.success('更新成功')
+    } else {
+      await questionApi.create(data)
+      ElMessage.success('创建成功')
+      router.push('/teacher/question-banks')
+    }
   } catch (error) {
-    ElMessage.error(isEditMode.value ? '更新失败' : '创建失败')
+    console.error('保存失败:', error)
   } finally {
     saving.value = false
   }
 }
 
-// 导入成功处理
 const handleImportSuccess = () => {
   showImportDialog.value = false
-  if (isEditMode.value) {
-    loadQuestion() // 重新加载以更新题目列表
-  }
+  loadQuestion()
 }
 
-// 自动保存定时器
-let autoSaveTimer: ReturnType<typeof setInterval> | null = null
+const startAutoSave = () => {
+  if (!autoSave.value || isEditMode.value) return
+
+  autoSaveTimer = setInterval(async () => {
+    if (!formData.content_text.trim()) return
+
+    try {
+      const data: CreateQuestionRequest = {
+        question_type: formData.question_type,
+        content_text: formData.content_text,
+        difficulty_level: formData.difficulty_level,
+        topic: formData.topic,
+        knowledge_points: formData.knowledge_points,
+        options: formData.options,
+        correct_answer: formData.correct_answer,
+        explanation: formData.explanation,
+        passage_content: formData.passage_content,
+        audio_url: formData.audio_url,
+        sample_answer: formData.sample_answer
+      }
+
+      if (questionBankId) {
+        data.question_bank_id = questionBankId
+      }
+
+      const result = await questionApi.create(data)
+      lastSaveTime.value = formatDateTime(new Date())
+      ElMessage.success('草稿已自动保存')
+    } catch (error) {
+      console.error('自动保存失败:', error)
+    }
+  }, 60000)
+}
 
 onMounted(() => {
   loadQuestion()
-
-  // 开启自动保存
-  if (autoSave.value) {
-    autoSaveTimer = setInterval(saveDraft, 30000)
-  }
+  startAutoSave()
 })
 
 onUnmounted(() => {
@@ -465,7 +410,6 @@ onUnmounted(() => {
   }
 })
 
-// Explicitly expose functions to template (vue-tsc workaround)
 defineExpose({
   handleSave,
   handleImportSuccess
