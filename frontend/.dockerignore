@@ -1,0 +1,42 @@
+# ===========================================
+# Docker 构建忽略文件
+# ===========================================
+
+# 版本控制
+.git
+.gitignore
+README.md
+
+# 依赖目录
+node_modules/
+
+# 测试文件
+tests/
+test-results/
+playwright-report/
+*.test.ts
+*.spec.ts
+
+# 开发配置
+.vscode/
+.idea/
+*.log
+npm-debug.log*
+
+# 构建产物（重新生成）
+dist/
+
+# 临时文件
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# 本地环境文件
+.env
+.env.local
+.env.*.local
+
+# 文档
+docs/
+*.md
