@@ -1,6 +1,7 @@
 """
 学生管理API v1
 提供学生查询、知识图谱获取、初始诊断等端点
+优化：使用 joinedload 避免 N+1 查询，使用 Redis 缓存加速访问
 """
 import uuid
 from typing import Any
@@ -12,6 +13,7 @@ from app.api.deps import get_current_user, get_db
 from app.models import User, Student, UserRole, ClassStudent
 from app.schemas.recommendation import StudentProfile
 from app.services.knowledge_graph_service import KnowledgeGraphService
+from app.services.student_cache_service import get_student_cache, StudentCacheService
 
 router = APIRouter()
 
@@ -149,22 +151,21 @@ async def list_students(
     # 分页
     query = query.offset(skip).limit(limit)
 
+    # 使用 joinedload 预加载关联的 User，避免 N+1 查询
+    from sqlalchemy.orm import selectinload
+    query = query.options(selectinload(StudentModel.user))
+
     result = await db.execute(query)
     students = result.scalars().all()
 
-    # 转换为响应格式
+    # 转换为响应格式 - 现在 User 已预加载，无额外查询
     profiles = []
     for student in students:
-        # 获取关联用户信息
-        user_query = select(User).where(User.id == student.user_id)
-        user_result = await db.execute(user_query)
-        user = user_result.scalar_one_or_none()
-
         profiles.append(StudentProfile(
             id=str(student.id),
             user_id=str(student.user_id),
-            username=user.username if user else "",
-            email=user.email if user else "",
+            username=student.user.username if student.user else "",
+            email=student.user.email if student.user else "",
             target_exam=student.target_exam,
             target_score=student.target_score,
             study_goal=student.study_goal,
@@ -187,6 +188,7 @@ async def get_student(
     获取学生详情
 
     教师可以查看自己班级的学生详情，学生只能查看自己的信息。
+    优化：使用 Redis 缓存 + joinedload 预加载
 
     Args:
         db: 数据库会话
@@ -201,9 +203,24 @@ async def get_student(
         HTTPException 404: 学生不存在
     """
     from sqlalchemy import select
+    from sqlalchemy.orm import selectinload
     from app.models.student import Student as StudentModel
 
-    query = select(StudentModel).where(StudentModel.id == student_id)
+    # 1. 尝试从缓存获取
+    cache = await get_student_cache()
+    cache_key = str(student_id)
+    cached_profile = await cache.get_student_profile(cache_key)
+
+    if cached_profile:
+        # 缓存命中，直接返回
+        return cached_profile
+
+    # 2. 缓存未命中，从数据库查询
+    # 使用 joinedload 预加载 User 关联
+    query = select(StudentModel).options(
+        selectinload(StudentModel.user)
+    ).where(StudentModel.id == student_id)
+
     result = await db.execute(query)
     student = result.scalar_one_or_none()
 
@@ -233,16 +250,12 @@ async def get_student(
                 detail="无权查看该学生的信息"
             )
 
-    # 获取关联用户信息
-    user_query = select(User).where(User.id == student.user_id)
-    user_result = await db.execute(user_query)
-    user = user_result.scalar_one_or_none()
-
-    return StudentProfile(
+    # 3. 构建响应并缓存
+    profile = StudentProfile(
         id=str(student.id),
         user_id=str(student.user_id),
-        username=user.username if user else "",
-        email=user.email if user else "",
+        username=student.user.username if student.user else "",
+        email=student.user.email if student.user else "",
         target_exam=student.target_exam,
         target_score=student.target_score,
         study_goal=student.study_goal,
@@ -250,6 +263,11 @@ async def get_student(
         grade=student.grade,
         created_at=student.created_at,
     )
+
+    # 异步缓存（不阻塞响应）
+    await cache.set_student_profile(cache_key, profile.model_dump())
+
+    return profile
 
 
 @router.get("/{student_id}/knowledge-graph")
@@ -263,6 +281,7 @@ async def get_student_knowledge_graph(
     获取学生知识图谱
 
     返回学生的知识图谱JSON数据，包含各知识点的能力值。
+    优化：使用 Redis 缓存加速访问
 
     Args:
         db: 数据库会话
@@ -279,6 +298,17 @@ async def get_student_knowledge_graph(
     from sqlalchemy import select
     from app.models.knowledge_graph import KnowledgeGraph
 
+    # 1. 尝试从缓存获取
+    cache = await get_student_cache()
+    cache_key = str(student_id)
+    cached_kg = await cache.get_student_knowledge_graph(cache_key)
+
+    if cached_kg:
+        # 缓存命中，标记来源
+        cached_kg["from_cache"] = True
+        return cached_kg
+
+    # 2. 缓存未命中，从数据库查询
     # 权限检查
     if current_user.role == UserRole.STUDENT:
         if current_user.student_profile.id != student_id:
@@ -309,7 +339,8 @@ async def get_student_knowledge_graph(
             detail="知识图谱不存在，请先进行初始诊断"
         )
 
-    return {
+    # 3. 构建响应并缓存
+    kg_data = {
         "student_id": str(kg.student_id),
         "nodes": kg.nodes,
         "edges": kg.edges,
@@ -321,7 +352,13 @@ async def get_student_knowledge_graph(
         "version": kg.version,
         "created_at": kg.created_at.isoformat(),
         "updated_at": kg.updated_at.isoformat(),
+        "from_cache": False,
     }
+
+    # 异步缓存
+    await cache.set_student_knowledge_graph(cache_key, kg_data)
+
+    return kg_data
 
 
 @router.post("/{student_id}/diagnose", status_code=status.HTTP_202_ACCEPTED)
@@ -390,6 +427,10 @@ async def diagnose_student(
             student_id=student_id,
             practice_data=[],  # 实际应用中应该传入真实的练习数据
         )
+
+        # 诊断完成后使相关缓存失效，确保下次获取时拿到最新数据
+        cache = await get_student_cache()
+        await cache.invalidate_student_all(str(student_id))
 
         return {
             "message": "诊断完成",
@@ -464,35 +505,41 @@ async def get_student_progress(
             detail="学生不存在"
         )
 
+    # 优化：使用单个查询获取所有统计数据，避免多次 COUNT
+    from sqlalchemy import case, func
+
     # 统计对话次数
-    conv_query = select(func.count(Conversation.id)).where(
+    conv_count_subquery = select(func.count(Conversation.id)).where(
         Conversation.student_id == student_id
-    )
-    conv_result = await db.execute(conv_query)
-    conversation_count = conv_result.scalar() or 0
+    ).scalar_correlated_subquery()
 
     # 统计练习次数
-    practice_query = select(func.count(Practice.id)).where(
+    practice_count_subquery = select(func.count(Practice.id)).where(
         Practice.student_id == student_id
-    )
-    practice_result = await db.execute(practice_query)
-    practice_count = practice_result.scalar() or 0
+    ).scalar_correlated_subquery()
 
-    # 统计完成练习的平均分
-    avg_score_query = select(func.avg(Practice.score)).where(
+    # 计算平均分（已完成状态）
+    avg_score_subquery = select(func.avg(Practice.score)).where(
         Practice.student_id == student_id,
         Practice.status == "completed"
+    ).scalar_correlated_subquery()
+
+    # 组合查询
+    stats_query = select(
+        conv_count_subquery.label("conversation_count"),
+        practice_count_subquery.label("practice_count"),
+        avg_score_subquery.label("average_score")
     )
-    avg_score_result = await db.execute(avg_score_query)
-    average_score = avg_score_result.scalar() or 0
+
+    stats_result = await db.execute(stats_query)
+    stats = stats_result.one_or_none()
 
     return {
         "student_id": str(student_id),
         "target_exam": student.target_exam,
         "target_score": student.target_score,
         "current_cefr_level": student.current_cefr_level,
-        "conversation_count": conversation_count,
-        "practice_count": practice_count,
-        "average_score": round(average_score, 2),
-        # 更多进度统计待实现
+        "conversation_count": stats.conversation_count if stats else 0,
+        "practice_count": stats.practice_count if stats else 0,
+        "average_score": round(stats.average_score, 2) if stats and stats.average_score else 0,
     }
