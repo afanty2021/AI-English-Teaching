@@ -96,7 +96,7 @@
           <!-- 选择题 -->
           <ChoiceEditor
             v-if="formData.question_type === 'choice'"
-            v-model="formData.options!"
+            v-model="formData.options"
             :correct-answer="formData.correct_answer"
             @update:correct-answer="handleCorrectAnswerUpdate"
           />
@@ -151,7 +151,7 @@
 
         <el-form-item label="题目解析">
           <RichTextEditor
-            v-model="formData.explanation!"
+            v-model="formData.explanation"
             placeholder="请输入题目解析，可包含答案说明、知识点讲解等..."
           />
         </el-form-item>
