@@ -13,7 +13,7 @@ from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.db.base import Base
-from app.models import User, Organization, Student, Teacher, KnowledgeGraph
+from app.models import User, Organization, Student, Teacher, KnowledgeGraph, UserRole
 from app.main import app
 
 # 确保在导入应用模块之前加载 .env 文件
@@ -520,3 +520,65 @@ def inactive_user(db: AsyncSession) -> User:
 def db_session(db: AsyncSession) -> AsyncSession:
     """数据库会话别名（用于测试）"""
     return db
+
+
+# ==================== 认证相关 Fixtures ====================
+
+@pytest.fixture
+async def teacher_user(db_session: AsyncSession, test_organization: Organization) -> User:
+    """教师用户 fixture，用于API测试"""
+    user = User(
+        id=uuid4(),
+        username="teacher_user",
+        email="teacher_user@test.com",
+        password_hash="hashed_password",
+        role=UserRole.TEACHER,
+        is_active=True,
+        full_name="测试教师"
+    )
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+    # 设置 access_token 用于测试
+    user.access_token = f"fake_token_for_{user.id}"
+    return user
+
+
+@pytest.fixture
+async def another_teacher_user(db_session: AsyncSession, test_organization: Organization) -> User:
+    """另一个教师用户 fixture，用于跨用户访问测试"""
+    user = User(
+        id=uuid4(),
+        username="another_teacher",
+        email="another_teacher@test.com",
+        password_hash="hashed_password",
+        role=UserRole.TEACHER,
+        is_active=True,
+        full_name="另一个教师"
+    )
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+    # 设置 access_token 用于测试
+    user.access_token = f"fake_token_for_{user.id}"
+    return user
+
+
+@pytest.fixture
+async def student_user(db_session: AsyncSession, test_organization: Organization) -> User:
+    """学生用户 fixture，用于权限测试"""
+    user = User(
+        id=uuid4(),
+        username="student_user_api",
+        email="student_user@test.com",
+        password_hash="hashed_password",
+        role=UserRole.STUDENT,
+        is_active=True,
+        full_name="测试学生"
+    )
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+    # 设置 access_token 用于测试
+    user.access_token = f"fake_token_for_{user.id}"
+    return user

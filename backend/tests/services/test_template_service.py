@@ -30,8 +30,8 @@ def mock_template():
     template.name = "测试模板"
     template.description = "这是一个测试模板"
     template.format = TemplateFormat.WORD.value
-    template.template_path = "/templates/test.docx"
-    template.preview_path = "/previews/test.png"
+    template.template_path = "templates/test.docx"  # 使用相对路径
+    template.preview_path = "previews/test.png"  # 使用相对路径
     template.variables = [
         {"name": "title", "type": "text", "label": "标题", "required": True},
         {"name": "content", "type": "textarea", "label": "内容", "required": False},
@@ -76,7 +76,7 @@ async def test_create_template(template_service, mock_db):
             "name": "新模板",
             "description": "新模板描述",
             "format": "word",
-            "template_path": "/templates/new.docx",
+            "template_path": "templates/new.docx",  # 使用相对路径
             "variables": [{"name": "title", "type": "text", "label": "标题"}],
             "is_default": False,
         }

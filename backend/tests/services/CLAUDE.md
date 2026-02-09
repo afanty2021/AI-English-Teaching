@@ -30,4 +30,18 @@
 | #1703 | 8:00 PM | 🟣 | Export Task Processor Implemented (Task 9) | ~449 |
 | #1702 | " | 🟣 | Template Service Completed with Full CRUD API | ~400 |
 | #1699 | " | 🟣 | Content Renderer Service Tests Complete | ~327 |
+
+### Feb 8, 2026
+
+| ID | Time | T | Title | Read |
+|----|------|---|-------|------|
+| #1900 | 10:08 AM | 🔴 | Test fixture refactoring to use Mock instead of database models | ~179 |
+| #1897 | 8:54 AM | ✅ | ExportTaskProcessor Tests Passing | ~86 |
+| #1896 | 8:53 AM | 🔴 | Fixed test to use async_storage in export processor tests | ~232 |
+| #1895 | " | 🔵 | Export task processor test file reviewed | ~223 |
+| #1893 | " | ✅ | Examining export task processor tests | ~212 |
+| #1889 | 8:50 AM | 🔴 | Fixed Async Test for Sync Method | ~110 |
+| #1888 | 8:49 AM | 🔴 | Fixed sync/async test mismatch in test_file_storage_service.py | ~212 |
+| #1878 | 8:44 AM | 🟣 | Async file storage service tests passing - 22/22 tests | ~247 |
+| #1875 | 8:42 AM | 🔴 | Fixed async mock usage in permission error test | ~161 |
 </claude-mem-context>
