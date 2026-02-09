@@ -144,6 +144,20 @@ services:
     networks:
       - english_teaching_network
 
+  # Frontend Vue3 Application
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: english_teaching_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - english_teaching_network
+
 volumes:
   postgres_data:
     driver: local
