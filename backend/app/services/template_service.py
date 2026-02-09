@@ -2,6 +2,7 @@
 导出模板服务 - AI英语教学系统
 提供教案导出模板的CRUD操作和管理功能
 """
+import os
 import uuid
 from typing import Any, Dict, List, Optional
 
@@ -11,6 +12,16 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.export_template import ExportTemplate, TemplateFormat
+from app.utils.path_validation import (
+    validate_template_path,
+    PathValidationError,
+)
+
+# 获取允许的模板基础目录
+_TEMPLATE_BASE_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)),
+    "templates"
+)
 
 
 class TemplateVariable(BaseModel):
@@ -103,12 +114,45 @@ class ExportTemplateService:
                 detail=f"无效的格式: {template_data.get('format')}",
             )
 
+        # 验证模板路径安全性（防止路径遍历攻击）
+        template_path_raw = template_data.get("template_path", "")
+        if template_path_raw:
+            try:
+                validated_path = validate_template_path(
+                    template_path_raw,
+                    allowed_base_dir=_TEMPLATE_BASE_DIR
+                )
+                template_path = validated_path
+            except PathValidationError as e:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"无效的模板路径: {str(e)}",
+                )
+        else:
+            template_path = ""
+
+        # 验证预览路径安全性（可选）
+        preview_path_raw = template_data.get("preview_path")
+        if preview_path_raw:
+            try:
+                preview_path = validate_template_path(
+                    preview_path_raw,
+                    allowed_base_dir=_TEMPLATE_BASE_DIR
+                )
+            except PathValidationError as e:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"无效的预览路径: {str(e)}",
+                )
+        else:
+            preview_path = None
+
         template = ExportTemplate(
             name=template_data["name"],
             description=template_data.get("description", ""),
             format=template_format.value,
-            template_path=template_data.get("template_path", ""),
-            preview_path=template_data.get("preview_path"),
+            template_path=template_path,
+            preview_path=preview_path,
             variables=template_data.get("variables", []),
             created_by=created_by,
             is_system=template_data.get("is_system", False),
@@ -260,6 +304,32 @@ class ExportTemplateService:
             for key in list(update_data.keys()):
                 if key in protected_fields:
                     update_data.pop(key)
+
+        # 验证模板路径（如果正在更新）
+        if "template_path" in update_data and update_data["template_path"]:
+            try:
+                update_data["template_path"] = validate_template_path(
+                    update_data["template_path"],
+                    allowed_base_dir=_TEMPLATE_BASE_DIR
+                )
+            except PathValidationError as e:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"无效的模板路径: {str(e)}",
+                )
+
+        # 验证预览路径（如果正在更新）
+        if "preview_path" in update_data and update_data["preview_path"]:
+            try:
+                update_data["preview_path"] = validate_template_path(
+                    update_data["preview_path"],
+                    allowed_base_dir=_TEMPLATE_BASE_DIR
+                )
+            except PathValidationError as e:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"无效的预览路径: {str(e)}",
+                )
 
         for key, value in update_data.items():
             if hasattr(template, key):

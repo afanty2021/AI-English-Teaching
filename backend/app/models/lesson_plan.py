@@ -175,7 +175,7 @@ class LessonPlan(Base):
     # 分支来源（基于哪个教案复制）
     forked_from: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="SET NULL"),
+        ForeignKey("lesson_plans.id", ondelete="SET NULL"),
         nullable=True
     )
 

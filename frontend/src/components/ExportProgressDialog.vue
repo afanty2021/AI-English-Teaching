@@ -180,6 +180,7 @@ import {
   connectExportWebSocket,
   WebSocketState
 } from '@/utils/exportWebSocket'
+import ExportWebSocket from '@/utils/exportWebSocket'
 import type { ExportFormat } from '@/types/lessonExport'
 import type { ExportProgressEvent } from '@/types/lessonExport'
 
@@ -240,7 +241,7 @@ const reconnectAttempts = ref(0) // 重连次数
 const downloadUrl = ref('') // 下载链接
 
 // WebSocket 连接
-let ws: ReturnType<typeof connectExportWebSocket> | null = null
+let ws: ExportWebSocket | null = null
 let estimatedTimeTimer: ReturnType<typeof setInterval> | null = null
 
 // 对话框可见性
@@ -288,7 +289,6 @@ function initWebSocket(): void {
   // 连接 WebSocket
   connectExportWebSocket(props.taskId, {
     onProgress: handleProgress,
-    onStage: handleStage,
     onComplete: handleComplete,
     onError: handleError,
     onStateChange: handleStateChange
@@ -305,8 +305,10 @@ function initWebSocket(): void {
 
 /**
  * 处理进度更新
+ * 同时处理进度和阶段更新（WebSocket 的 stage 事件也通过此回调传递）
  */
 function handleProgress(event: ExportProgressEvent): void {
+  // 处理进度百分比
   if (event.data.progress !== undefined) {
     const oldProgress = progress.value
     progress.value = event.data.progress
@@ -316,12 +318,8 @@ function handleProgress(event: ExportProgressEvent): void {
       updateEstimatedTime(oldProgress, event.data.progress)
     }
   }
-}
 
-/**
- * 处理阶段更新
- */
-function handleStage(event: ExportProgressEvent): void {
+  // 处理阶段信息（WebSocket 的 stage 类型事件）
   if (event.data.stage) {
     currentStage.value = event.data.stage
   }
@@ -422,11 +420,11 @@ function getProgressStageText(progress: number): string {
 
   for (const stage of stages) {
     if (progress <= stage) {
-      return PROGRESS_STAGES[stage]
+      return PROGRESS_STAGES[stage] || '处理中...'
     }
   }
 
-  return PROGRESS_STAGES[100]
+  return PROGRESS_STAGES[100] || '处理中...'
 }
 
 /**

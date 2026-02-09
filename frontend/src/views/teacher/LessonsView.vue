@@ -1225,7 +1225,7 @@ const startExport = async () => {
             exportProgress.value = event.data.progress
           }
         },
-        onComplete: async (event) => {
+        onComplete: async (_event) => {
           exportStatus.value = 'completed'
           exportProgress.value = 100
 

@@ -14,6 +14,12 @@ from app.utils.content_validators import (
     get_content_validator,
     get_vocabulary_validator,
 )
+from app.utils.path_validation import (
+    validate_template_path,
+    is_safe_template_path,
+    sanitize_template_path,
+    PathValidationError,
+)
 
 __all__ = [
     "get_chinese_fonts",
@@ -25,4 +31,8 @@ __all__ = [
     "VocabularyValidator",
     "get_content_validator",
     "get_vocabulary_validator",
+    "validate_template_path",
+    "is_safe_template_path",
+    "sanitize_template_path",
+    "PathValidationError",
 ]

@@ -23,6 +23,7 @@ from app.api.v1 import (
     notifications,
     export_templates,
     export_websocket,
+    exports,
 )
 
 api_router = APIRouter()
@@ -47,3 +48,4 @@ api_router.include_router(practice_sessions.router, prefix="/practice-sessions",
 api_router.include_router(notifications.router, prefix="/notifications", tags=["通知设置"])
 api_router.include_router(export_templates.router, prefix="/export-templates", tags=["导出模板"])
 api_router.include_router(export_websocket.router, tags=["导出WebSocket"])
+api_router.include_router(exports.router, prefix="/exports", tags=["流式导出"])
