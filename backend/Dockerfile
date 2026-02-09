@@ -1,4 +1,5 @@
-FROM python:3.11-slim
+# 使用七牛云代理加速
+FROM docker.m.daocloud.io/library/python:3.11-slim
 
 WORKDIR /app
 

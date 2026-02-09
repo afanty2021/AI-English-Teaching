@@ -63,6 +63,11 @@ from app.models.export_template import (
     ExportTemplate,
     TemplateFormat,
 )
+from app.models.async_task import (
+    AsyncTask,
+    AsyncTaskStatus,
+    AsyncTaskType,
+)
 
 __all__ = [
     "User",
@@ -110,4 +115,7 @@ __all__ = [
     "ExportFormat",
     "ExportTemplate",
     "TemplateFormat",
+    "AsyncTask",
+    "AsyncTaskStatus",
+    "AsyncTaskType",
 ]
