@@ -96,6 +96,8 @@ dev = [
     "ruff>=0.1.9",
     "mypy>=1.8.0",
     "pre-commit>=3.6.0",
+    "locust>=2.15.0",
+    "psutil>=5.9.0",
 ]
 
 [project.urls]
@@ -126,6 +128,12 @@ minversion = "7.0"
 addopts = "-ra -q --strict-markers --cov=app --cov-report=term-missing"
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = [
+    "performance: 性能测试标记",
+    "load: 负载测试标记",
+    "unit: 单元测试标记",
+    "integration: 集成测试标记"
+]
 
 [tool.mypy]
 python_version = "3.11"
