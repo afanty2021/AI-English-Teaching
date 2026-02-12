@@ -70,9 +70,5 @@ export default defineConfig({
         pure_funcs: ['console.log', 'console.info']
       }
     }
-  },
-  // 生产环境优化
-  esbuild: {
-    drop: ['console', 'debugger']
   }
 })
