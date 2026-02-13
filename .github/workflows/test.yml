@@ -1,25 +1,185 @@
-name: Tests
+name: Comprehensive CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop, 'feature/**', 'fix/**']
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      run-e2e:
+        description: 'Run E2E tests'
+        required: false
+        type: boolean
+        default: true
+      run-performance:
+        description: 'Run performance tests'
+        required: false
+        type: boolean
+        default: false
+
+# 权限配置 - 遵循最小权限原则
+permissions:
+  contents: read
+  checks: write
+  actions: read
+  pull-requests: write
+  issues: read
+
+# 环境变量 - 全局配置
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '20'
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_DB: english_teaching_test
+  REDIS_URL: redis://localhost:6379/0
+  QDRANT_HOST: localhost
+  QDRANT_PORT: 6333
+  DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/english_teaching_test
+  COVERAGE_THRESHOLD: 60
+
+# 并发控制 - 限制同一分支的并发执行
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
+  # ========================================
+  # 代码质量检查
+  # ========================================
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: |
+            backend/poetry.lock
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry install --with dev
+
+      - name: Run Black formatter check
+        working-directory: ./backend
+        run: poetry run black --check app tests
+
+      - name: Run Ruff linter
+        working-directory: ./backend
+        run: poetry run ruff check app tests --output-format=github
+
+      - name: Run MyPy type checker
+        working-directory: ./backend
+        run: poetry run mypy app --ignore-missing-imports
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: ./frontend
+        run: npm run lint
+
+      - name: Run TypeScript type check
+        working-directory: ./frontend
+        run: npm run type-check
+
+  # ========================================
+  # 安全扫描
+  # ========================================
+  security-scan:
+    name: Security Vulnerability Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+        continue-on-error: true
+
+  # ========================================
+  # 依赖审查
+  # ========================================
+  dependencies-review:
+    name: Dependencies Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Run pip-audit
+        working-directory: ./backend
+        run: |
+          pip install pip-audit
+          pip-audit
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Run npm audit
+        working-directory: ./frontend
+        run: npm audit --production
+        continue-on-error: true
+
   # ========================================
   # 后端测试
   # ========================================
   backend-test:
+    name: Backend Test Suite
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     services:
       postgres:
         image: postgres:15-alpine
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: english_teaching_test
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -44,73 +204,103 @@ jobs:
           - 6333:6333
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
+          cache-dependency-path: |
+            backend/poetry.lock
 
       - name: Install dependencies
         working-directory: ./backend
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install poetry
+          poetry install --with dev
 
       - name: Run type checks
         working-directory: ./backend
-        run: |
-          mypy app --ignore-missing-imports
+        run: poetry run mypy app --ignore-missing-imports
 
       - name: Run linter
         working-directory: ./backend
-        run: |
-          ruff check app tests
+        run: poetry run ruff check app tests
 
       - name: Run API contract tests
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/english_teaching_test
-          REDIS_URL: redis://localhost:6379/0
-          QDRANT_HOST: localhost
-          QDRANT_PORT: 6333
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          REDIS_URL: ${{ env.REDIS_URL }}
+          QDRANT_HOST: ${{ env.QDRANT_HOST }}
+          QDRANT_PORT: ${{ env.QDRANT_PORT }}
         run: |
-          pytest tests/api_contracts/ -v --tb=short
+          poetry run pytest tests/api_contracts/ -v --tb=short --junitxml=test-results/backend-api.xml
 
       - name: Run database schema sync tests
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/english_teaching_test
+          DATABASE_URL: ${{ env.DATABASE_URL }}
         run: |
-          pytest tests/integration/test_schema_sync.py -v --tb=short
+          poetry run pytest tests/integration/test_schema_sync.py -v --tb=short --junitxml=test-results/backend-schema.xml
 
-      - name: Run unit tests
+      - name: Run unit tests with coverage
         working-directory: ./backend
         env:
-          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/english_teaching_test
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          REDIS_URL: ${{ env.REDIS_URL }}
+          QDRANT_HOST: ${{ env.QDRANT_HOST }}
+          QDRANT_PORT: ${{ env.QDRANT_PORT }}
         run: |
-          pytest tests/unit/ -v --cov=app --cov-report=xml
+          poetry run pytest tests/ -v --cov=app --cov-report=xml --cov-report=term-missing --junitxml=test-results/backend-unit.xml
+
+      - name: Check coverage threshold
+        working-directory: ./backend
+        run: |
+          COVERAGE=$(python -c "import xml.etree.ElementTree as ET; tree = ET.parse('coverage.xml'); root = tree.getroot(); print(float(root.attrib.get('line-rate', 0)) * 100)")
+          echo "Coverage: $COVERAGE%"
+          if (( $(echo "$COVERAGE < ${{ env.COVERAGE_THRESHOLD }}" | bc -l) )); then
+            echo "Coverage $COVERAGE% is below ${{ env.COVERAGE_THRESHOLD }}% threshold"
+            exit 1
+          fi
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        if: success()
+        uses: codecov/codecov-action@v4
         with:
           files: ./backend/coverage.xml
           flags: backend
+          fail_ci_if_error: false
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: |
+            test-results/
+            backend/htmlcov/
+          retention-days: 7
 
   # ========================================
   # 前端测试
   # ========================================
   frontend-test:
+    name: Frontend Test Suite
     runs-on: ubuntu-latest
+    timeout-minutes: 25
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
@@ -124,29 +314,139 @@ jobs:
 
       - name: Run linter
         working-directory: ./frontend
-        run: npm run lint || true  # 允许 lint 失败，先让类型检查通过
+        run: npm run lint || true
 
-      - name: Run unit tests
+      - name: Run unit tests with coverage
         working-directory: ./frontend
-        run: npm run test:run
+        run: npm run test:run -- --coverage --json --outputFile=test-results/frontend-unit.json
 
       - name: Build project
         working-directory: ./frontend
         run: npm run build
 
+      - name: Upload coverage to Codecov
+        if: success()
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./frontend/coverage/coverage-final.json
+          flags: frontend
+          fail_ci_if_error: false
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-results
+          path: |
+            test-results/
+            frontend/coverage/
+          retention-days: 7
+
   # ========================================
-  # 集成测试
+  # 性能测试
   # ========================================
-  integration-test:
+  performance-test:
+    name: Performance Test Suite
     runs-on: ubuntu-latest
-    needs: [backend-test, frontend-test]
+    if: |
+      github.event_name == 'workflow_dispatch' && inputs.run-performance == true
+      || github.event_name == 'push' && github.ref == 'refs/heads/main'
+    timeout-minutes: 45
 
     services:
       postgres:
         image: postgres:15-alpine
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+      qdrant:
+        image: qdrant/qdrant:latest
+        ports:
+          - 6333:6333
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: |
+            backend/poetry.lock
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry install --with dev
+
+      - name: Run load tests
+        working-directory: ./backend
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          REDIS_URL: ${{ env.REDIS_URL }}
+          QDRANT_HOST: ${{ env.QDRANT_HOST }}
+          QDRANT_PORT: ${{ env.QDRANT_PORT }}
+        run: |
+          poetry run pytest tests/ -m load -v --tb=short
+
+      - name: Run performance benchmarks
+        working-directory: ./backend
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          REDIS_URL: ${{ env.REDIS_URL }}
+          QDRANT_HOST: ${{ env.QDRANT_HOST }}
+          QDRANT_PORT: ${{ env.QDRANT_PORT }}
+        run: |
+          poetry run pytest tests/ -m performance -v --tb=short --benchmark-json=test-results/performance.json
+
+      - name: Upload performance results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-test-results
+          path: test-results/performance.json
+          retention-days: 30
+
+  # ========================================
+  # E2E 测试
+  # ========================================
+  e2e-test:
+    name: End-to-End Test Suite
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test]
+    if: |
+      github.event_name != 'workflow_dispatch' || inputs.run-e2e == true
+    timeout-minutes: 45
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
           POSTGRES_DB: english_teaching
         options: >-
           --health-cmd pg_isready
@@ -158,6 +458,11 @@ jobs:
 
       redis:
         image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
         ports:
           - 6379:6379
 
@@ -167,45 +472,201 @@ jobs:
           - 6333:6333
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Install backend dependencies
         working-directory: ./backend
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install poetry
+          poetry install --with dev
 
       - name: Install frontend dependencies
         working-directory: ./frontend
         run: npm ci
 
+      - name: Install Playwright browsers
+        working-directory: ./frontend
+        run: npx playwright install --with-deps chromium
+
       - name: Start backend server
         working-directory: ./backend
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/english_teaching
-          REDIS_URL: redis://localhost:6379/0
-          QDRANT_HOST: localhost
-          QDRANT_PORT: 6333
+          REDIS_URL: ${{ env.REDIS_URL }}
+          QDRANT_HOST: ${{ env.QDRANT_HOST }}
+          QDRANT_PORT: ${{ env.QDRANT_PORT }}
         run: |
-          uvicorn app.main:app &
-          sleep 10
+          poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          sleep 15
 
       - name: Start frontend dev server
         working-directory: ./frontend
         run: |
-          npm run dev &
-          sleep 10
+          npm run dev -- --port 5174 &
+          sleep 15
 
       - name: Run E2E tests
         working-directory: ./frontend
-        run: npm run test:e2e || echo "E2E tests not yet configured"
+        run: |
+          npx playwright test --reporter=html,junit --output=test-results/e2e
+        continue-on-error: true
+
+      - name: Upload E2E test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: |
+            frontend/test-results/
+            frontend/playwright-report/
+          retention-days: 14
+
+      - name: Upload Playwright traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: frontend/test-results/
+          retention-days: 7
+
+  # ========================================
+  # 测试质量门禁
+  # ========================================
+  quality-gate:
+    name: Test Quality Gate
+    runs-on: ubuntu-latest
+    needs: [code-quality, backend-test, frontend-test]
+    if: always()
+
+    steps:
+      - name: Check test results
+        run: |
+          echo "Checking test results..."
+
+          # 检查后端测试
+          if [ -f "backend-test-results/backend-unit.xml" ]; then
+            echo "Backend tests completed"
+          fi
+
+          # 检查前端测试
+          if [ -f "frontend-test-results/frontend-unit.json" ]; then
+            echo "Frontend tests completed"
+          fi
+
+      - name: Generate test summary
+        run: |
+          echo "## Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Suite | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Quality | ${{ needs.code-quality.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Tests | ${{ needs.backend-test.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Tests | ${{ needs.frontend-test.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All test suites completed successfully!" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check for failures
+        run: |
+          if [ "${{ needs.code-quality.result }}" != "success" ] || \
+             [ "${{ needs.backend-test.result }}" != "success" ] || \
+             [ "${{ needs.frontend-test.result }}" != "success" ]; then
+            echo "One or more test suites failed!"
+            exit 1
+          fi
+
+  # ========================================
+  # 构建产物
+  # ========================================
+  build-artifacts:
+    name: Build Production Artifacts
+    runs-on: ubuntu-latest
+    needs: [quality-gate]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: |
+            backend/poetry.lock
+
+      - name: Build backend wheel
+        working-directory: ./backend
+        run: |
+          pip install poetry
+          poetry build
+
+      - name: Upload backend wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-wheel
+          path: backend/dist/
+          retention-days: 90
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build frontend for production
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Upload frontend dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 90
+
+  # ========================================
+  # 发布/发布
+  # ========================================
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [build-artifacts]
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            backend-wheel/*
+            frontend-dist/*
+          draft: false
+          generate_release_notes: true
+          api_key: ${{ secrets.GITHUB_TOKEN }}
