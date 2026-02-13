@@ -27,11 +27,16 @@
           'disabled': isDisabled
         }"
         :disabled="isDisabled || isProcessing"
+        :aria-label="buttonText"
+        tabindex="0"
+        role="button"
         @click="handleButtonClick"
+        @keydown.enter.prevent="handleKeyPress"
+        @keydown.space.prevent="handleKeyPress"
         @mousedown="handleMouseDown"
         @mouseup="handleMouseUp"
-        @touchstart="handleTouchStart"
-        @touchend="handleTouchEnd"
+        @touchstart.prevent="handleTouchStart"
+        @touchend.prevent="handleTouchEnd"
       >
         <!-- 图标 -->
         <div class="button-icon">
@@ -314,6 +319,14 @@ import {
 import VoiceWaveform from './VoiceWaveform.vue'
 import RecognitionConfidence from './RecognitionConfidence.vue'
 import { BrowserCompatibility } from '../utils/browserCompatibility'
+import {
+  createVoiceRecognition,
+  VoiceRecognition,
+  VoiceRecognitionCallbacks,
+  VoiceRecognitionConfig,
+  VoiceRecognitionStatus,
+  VoiceRecognitionResult
+} from '../utils/voiceRecognition'
 
 // Props
 interface Props {
@@ -351,13 +364,26 @@ const emit = defineEmits<Emits>()
 const waveformRef = ref<InstanceType<typeof VoiceWaveform> | null>(null)
 const voiceButtonRef = ref<HTMLButtonElement | null>(null)
 
+// 语音识别器
+let recognition: VoiceRecognition | null = null
+let recognitionConfig: VoiceRecognitionConfig = {
+  language: 'zh-CN',
+  continuous: false,
+  interimResults: true
+}
+
+// 音频流引用（用于内存管理）
+const audioStream = ref<MediaStream | null>(null)
+
 // 状态
 const isListening = ref(false)
 const isProcessing = ref(false)
 const hasError = ref(false)
 const errorMessage = ref('')
 const showSettings = ref(false)
-const recognitionConfidence = ref(0) // 语音识别置信度
+const recognitionConfidence = ref(0)
+const interimTranscript = ref('') // 临时识别结果
+const finalTranscript = ref('') // 最终识别结果
 
 // 配置
 const selectedLanguage = ref(props.language)
@@ -397,6 +423,7 @@ const performanceSettings = ref({
 
 // 进度和统计
 const processingProgress = ref(0)
+let progressInterval: ReturnType<typeof setInterval> | null = null
 const networkQuality = ref({ bandwidth: 0, latency: 0 })
 
 // 兼容性信息
@@ -414,16 +441,16 @@ const isDisabled = computed(() => {
 
 const buttonText = computed(() => {
   if (isProcessing.value) return '识别中...'
-  if (isListening.value) return '点击停止'
+  if (isListening.value) return '松开结束'
   if (hasError.value) return '重新开始'
-  return '点击说话'
+  return '按住说话'
 })
 
 const secondaryText = computed(() => {
-  if (isListening.value) return '正在监听...'
+  if (isListening.value) return interimTranscript.value || '正在监听...'
   if (isProcessing.value) return '正在处理语音...'
   if (hasError.value) return errorMessage.value
-  return '按住按钮或点击开始'
+  return '按住按钮开始语音输入'
 })
 
 const statusText = computed(() => {
@@ -485,15 +512,25 @@ const handleButtonClick = async () => {
 }
 
 const handleMouseDown = () => {
+  console.log('[VoiceInput] 🖱️ handleMouseDown 触发')
   if (voiceButtonRef.value) {
     voiceButtonRef.value.classList.add('pressed')
+    console.log('[VoiceInput] ✅ 添加 pressed 样式类')
   }
+  // 开始语音识别
+  console.log('[VoiceInput] 🎤️ 调用 startListening')
+  startListening()
 }
 
 const handleMouseUp = () => {
+  console.log('[VoiceInput] 🖱️📍 handleMouseUp 触发')
   if (voiceButtonRef.value) {
     voiceButtonRef.value.classList.remove('pressed')
+    console.log('[VoiceInput] ✅ 移除 pressed 样式类')
   }
+  // 停止语音识别
+  console.log('[VoiceInput] ⏸️ 调用 stopListening')
+  stopListening()
 }
 
 const handleTouchStart = () => {
@@ -504,69 +541,172 @@ const handleTouchEnd = () => {
   handleMouseUp()
 }
 
-const startListening = async () => {
-  try {
-    hasError.value = false
-    errorMessage.value = ''
-    recognitionConfidence.value = 0 // 重置置信度
+// 键盘处理函数
+const handleKeyPress = () => {
+  if (isDisabled.value || isProcessing.value) return
 
-    // 检查权限
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-
-    // 初始化音频分析器
-    if (waveformRef.value) {
-      waveformRef.value.setAudioSource(stream)
-    }
-
-    isListening.value = true
-
-    // 模拟置信度更新（实际应该来自语音识别服务）
-    const confidenceInterval = setInterval(() => {
-      if (!isListening.value && !isProcessing.value) {
-        clearInterval(confidenceInterval)
-        return
-      }
-      // 模拟置信度波动（0.5 到 1.0 之间）
-      recognitionConfidence.value = 0.5 + Math.random() * 0.5
-    }, 500)
-
-    // 如果启用连续识别，设置自动停止
-    if (continuous.value) {
-      setTimeout(() => {
-        stopListening()
-        clearInterval(confidenceInterval)
-      }, 5000) // 5秒后自动停止
-    }
-
-  } catch (error) {
-    handleError('无法访问麦克风，请检查权限设置')
+  if (isListening.value) {
+    stopListening()
+  } else {
+    startListening()
   }
 }
 
-const stopListening = async () => {
-  isListening.value = false
+const startListening = async () => {
+  console.log('[VoiceInput] 🎤️ ===== startListening 开始 =====')
+  try {
+    hasError.value = false
+    errorMessage.value = ''
+    recognitionConfidence.value = 0
+    interimTranscript.value = ''
+    finalTranscript.value = ''
 
-  // 模拟处理延迟
-  isProcessing.value = true
-  processingProgress.value = 0
+    // 检查浏览器支持
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    console.log('[VoiceInput] 🔍 检查浏览器支持:', !!SpeechRecognition)
 
-  // 模拟处理进度和置信度更新
-  const progressInterval = setInterval(() => {
-    processingProgress.value += 10
-    // 处理过程中置信度逐渐提高
-    recognitionConfidence.value = Math.min(0.95, recognitionConfidence.value + 0.05)
-
-    if (processingProgress.value >= 100) {
-      clearInterval(progressInterval)
-      processingProgress.value = 100
-
-      // 模拟识别结果
-      const mockResult = '这是模拟的语音识别结果'
-      emit('end', mockResult)
-      isProcessing.value = false
-      recognitionConfidence.value = 0 // 重置置信度
+    if (!SpeechRecognition) {
+      console.log('[VoiceInput] ❌ 浏览器不支持语音识别')
+      handleError('您的浏览器不支持语音识别，请使用 Chrome 或 Edge 浏览器')
+      return
     }
-  }, 100)
+
+    console.log('[VoiceInput] 🔍 检查是否已有 recognition 实例:', !!recognition)
+
+    // 初始化语音识别器
+    if (!recognition) {
+      console.log('[VoiceInput] 🔧 需要初始化 recognition，调用 initVoiceRecognition')
+      initVoiceRecognition()
+    } else {
+      console.log('[VoiceInput] ✅ recognition 已存在，跳过初始化')
+    }
+
+    // 检查麦克风权限
+    console.log('[VoiceInput] 🎤️ 请求麦克风权限...')
+    audioStream.value = await navigator.mediaDevices.getUserMedia({ audio: true })
+    console.log('[VoiceInput] ✅ 麦克风权限已获取, stream:', audioStream.value)
+
+    // 设置音频源到波形显示
+    if (waveformRef.value && audioStream.value) {
+      waveformRef.value.setAudioSource(audioStream.value)
+      console.log('[VoiceInput] ✅ 音频已设置到波形显示')
+    }
+
+    // 启动语音识别
+    console.log('[VoiceInput] 🎙️ 调用 recognition.start()')
+    recognition?.start()
+    console.log('[VoiceInput] ✅ ===== startListening 完成 =====')
+
+  } catch (error: any) {
+    console.error('[VoiceInput] ❌ 启动语音识别失败:', error)
+    console.error('[VoiceInput] 错误名称:', error.name)
+    console.error('[VoiceInput] 错误信息:', error.message)
+
+    if (error.name === 'NotAllowedError') {
+      console.log('[VoiceInput] ❌ 用户拒绝了麦克风权限')
+      handleError('未授权使用麦克风，请在浏览器设置中允许麦克风权限')
+    } else if (error.name === 'NotFoundError') {
+      console.log('[VoiceInput] ❌ 没有找到麦克风设备')
+      handleError('未找到麦克风设备，请确保已连接麦克风')
+    } else {
+      console.log('[VoiceInput] ❌ 其他麦克风错误')
+      handleError('无法访问麦克风：' + (error.message || '未知错误'))
+    }
+  }
+}
+
+const stopListening = () => {
+  console.log('[VoiceInput] 🛑 ===== stopListening 开始 =====')
+  console.log('[VoiceInput] 🔍 recognition 实例:', recognition)
+  console.log('[VoiceInput] 🔍 recognition.isListening():', recognition?.isListening())
+
+  if (recognition && recognition.isListening()) {
+    console.log('[VoiceInput] 🛑 停止语音识别器')
+    recognition?.stop()
+  } else {
+    console.log('[VoiceInput] ℹ️ recognition 未运行或不存在，无需停止')
+  }
+
+  isListening.value = false
+  interimTranscript.value = ''
+  console.log('[VoiceInput] ✅ ===== stopListening 完成 =====')
+}
+
+// 初始化语音识别
+const initVoiceRecognition = () => {
+  try {
+    recognition = createVoiceRecognition(recognitionConfig)
+
+    const callbacks: VoiceRecognitionCallbacks = {
+      onStart: () => {
+        console.log('[VoiceInput] 语音识别开始')
+        isListening.value = true
+        emit('start', new Float32Array(0))
+      },
+      onStop: () => {
+        console.log('[VoiceInput] 语音识别停止')
+        isListening.value = false
+      },
+      onResult: (result: VoiceRecognitionResult) => {
+        console.log('[VoiceInput] 识别结果:', result)
+        handleRecognitionResult(result)
+      },
+      onInterimResult: (result: VoiceRecognitionResult) => {
+        console.log('[VoiceInput] 临时识别结果:', result)
+        interimTranscript.value = result.transcript
+        recognitionConfidence.value = result.confidence || 0.5
+      },
+      onError: (error: any) => {
+        console.error('[VoiceInput] 识别错误:', error)
+        handleError(error.message || '语音识别失败')
+      },
+      onStatusChange: (status: VoiceRecognitionStatus) => {
+        console.log('[VoiceInput] 状态变化:', status)
+        if (status === VoiceRecognitionStatus.Error) {
+          hasError.value = true
+        }
+      }
+    }
+
+    recognition.on(callbacks)
+  } catch (error: any) {
+    console.error('[VoiceInput] 初始化语音识别失败:', error)
+    handleError('语音识别初始化失败，请检查浏览器支持')
+  }
+}
+
+// 处理识别结果
+const handleRecognitionResult = (result: VoiceRecognitionResult) => {
+  // 先清理之前的定时器
+  if (progressInterval) {
+    clearInterval(progressInterval)
+    progressInterval = null
+  }
+
+  if (result.isFinal) {
+    finalTranscript.value = result.transcript
+    interimTranscript.value = ''
+
+    isProcessing.value = true
+    processingProgress.value = 0
+
+    // 模拟处理进度
+    progressInterval = setInterval(() => {
+      processingProgress.value += 20
+
+      if (processingProgress.value >= 100) {
+        clearInterval(progressInterval)
+        progressInterval = null
+        processingProgress.value = 100
+
+        emit('end', result.transcript)
+
+        isProcessing.value = false
+        recognitionConfidence.value = 0
+        processingProgress.value = 0
+      }
+    }, 100)
+  }
 }
 
 const onVoiceStart = () => {
@@ -662,27 +802,64 @@ const testNetworkQuality = async () => {
 
 // 生命周期
 onMounted(() => {
+  console.log('[VoiceInput] 🏗️ ===== onMounted 组件挂载 =====')
+  console.log('[VoiceInput] 📋 props:', {
+    disabled: props.disabled,
+    showWaveform: props.showWaveform,
+    language: props.language,
+    engine: props.engine,
+    continuous: props.continuous,
+    autoStart: props.autoStart
+  })
+
   updateCompatibilityInfo()
   testNetworkQuality()
 
   if (props.autoStart) {
+    console.log('[VoiceInput] 🚀 autoStart=true，自动启动语音识别')
     startListening()
+  } else {
+    console.log('[VoiceInput] ℹ️ autoStart=false，等待用户操作')
   }
+  console.log('[VoiceInput] ✅ ===== onMounted 完成 =====')
 })
 
 onUnmounted(() => {
-  if (isListening.value) {
-    stopListening()
+  // 清理定时器
+  if (progressInterval) {
+    clearInterval(progressInterval)
+    progressInterval = null
   }
+
+  // 释放音频流
+  if (audioStream.value) {
+    audioStream.value.getTracks().forEach(track => track.stop())
+    audioStream.value = null
+  }
+
+  // 销毁识别器（这会触发 onStop 回调）
+  recognition?.destroy()
 })
 
 // 监听属性变化
 watch(() => props.language, (newLang) => {
   selectedLanguage.value = newLang
+  recognitionConfig.language = newLang
+
+  if (recognition) {
+    recognition.updateConfig({ language: newLang })
+  }
 })
 
 watch(() => props.engine, (newEngine) => {
   selectedEngine.value = newEngine
+})
+
+watch(() => props.continuous, (newVal) => {
+  continuous.value = newVal
+  if (recognition) {
+    recognition.updateConfig({ continuous: newVal })
+  }
 })
 
 watch(() => props.disabled, (newDisabled) => {

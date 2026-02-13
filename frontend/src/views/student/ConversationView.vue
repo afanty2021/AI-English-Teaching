@@ -63,8 +63,24 @@
       v-else-if="currentStep === 'conversation'"
       class="conversation-interface"
     >
-      <!-- 顶部栏 -->
-      <div class="conversation-header">
+      <!-- 连接中状态 -->
+      <div
+        v-if="conversationStatus === 'connecting'"
+        class="loading-overlay"
+      >
+        <div class="loading-content">
+          <el-icon class="is-loading" :size="48">
+            <Loading />
+          </el-icon>
+          <p>正在连接对话...</p>
+          <el-skeleton :rows="2" animated style="margin-top: 16px" />
+        </div>
+      </div>
+
+      <!-- 正常对话界面 -->
+      <template v-else>
+        <!-- 顶部栏 -->
+        <div class="conversation-header">
         <el-button
           link
           @click="goBack"
@@ -227,6 +243,7 @@
           </el-button>
         </div>
       </div>
+      </template>
     </div>
 
     <!-- 反馈抽屉 -->
@@ -644,6 +661,7 @@ const sendMessage = async () => {
         isAIThinking.value = false
         conversationStatus.value = 'in_progress'
         streamingMessage.value = null
+        streamCleanup.value = null
 
         // 高亮最新消息
         highlightedMessageId.value = aiMessageId
@@ -658,16 +676,19 @@ const sendMessage = async () => {
       },
       onError: (error: Error) => {
         console.error('Stream error:', error)
+
         // 移除流式消息占位符
         if (streamingMessage.value) {
-          const index = messages.value.findIndex(m => m.id === aiMessageId)
+          const index = messages.value.findIndex(m => m.id === streamingMessage.value!.id)
           if (index !== -1) {
             messages.value.splice(index, 1)
           }
         }
+
         isAIThinking.value = false
         conversationStatus.value = 'in_progress'
         streamingMessage.value = null
+        streamCleanup.value = null
 
         // 尝试重试
         handleSendError(error, content)
@@ -774,10 +795,13 @@ const handleEnterKey = (event: KeyboardEvent) => {
 
 // 切换语音输入
 const toggleVoiceInput = () => {
+  console.log('🎤 [DEBUG] toggleVoiceInput 被调用')
   // 检查浏览器兼容性
   const detection = BrowserCompatibility.detect()
+  console.log('🎤 [DEBUG] 浏览器兼容性检测结果:', detection)
 
   if (!detection.webSpeechSupported) {
+    console.log('❌ [DEBUG] 浏览器不支持 Web Speech API')
     // 完全不支持，显示提示对话框
     unsupportedDialogRef.value?.show(true)
     return
@@ -785,33 +809,44 @@ const toggleVoiceInput = () => {
 
   // Safari 部分支持，显示警告但允许使用
   if (detection.engine === 'safari') {
+    console.log('⚠️ [DEBUG] Safari 浏览器，可能不稳定')
     ElMessage.warning('Safari 浏览器的语音识别功能可能不稳定，建议使用 Chrome 或 Edge')
   }
 
   isVoiceInput.value = !isVoiceInput.value
+  console.log('🎤 [DEBUG] isVoiceInput 设置为:', isVoiceInput.value)
+
   if (isVoiceInput.value) {
+    console.log('🎤 [DEBUG] 准备启动语音识别...')
     startVoiceRecognition()
   } else {
+    console.log('🎤 [DEBUG] 准备停止语音识别')
     stopVoiceRecognition()
   }
 }
 
 // 开始语音识别
 const startVoiceRecognition = () => {
+  console.log('🎙 [DEBUG] startVoiceRecognition 被调用')
+
   if (!voiceRecognition.value) {
+    console.log('🎙 [DEBUG] 创建新的语音识别实例...')
     voiceRecognition.value = createVoiceRecognition({
       language: 'en-US',
       continuous: false,
       interimResults: true
     })
+    console.log('🎙 [DEBUG] 语音识别实例创建完成:', voiceRecognition.value)
 
     // 注册回调
     voiceRecognition.value.on({
       onStart: () => {
+        console.log('✅ [DEBUG] 语音识别 onStart 回调触发')
         conversationStatus.value = 'listening'
         interimTranscript.value = ''
       },
       onStop: () => {
+        console.log('⏸ [DEBUG] 语音识别 onStop 回调触发')
         conversationStatus.value = 'in_progress'
         if (userInput.value.trim()) {
           // 自动发送
@@ -819,28 +854,40 @@ const startVoiceRecognition = () => {
         }
       },
       onResult: (result) => {
+        console.log('📝 [DEBUG] 语音识别结果:', result)
         userInput.value = result.transcript
         interimTranscript.value = ''
         // 自动停止并发送
         stopVoiceRecognition()
       },
       onInterimResult: (result) => {
+        console.log('📝 [DEBUG] 语音识别临时结果:', result)
         interimTranscript.value = result.transcript
         userInput.value = result.transcript
       },
       onError: (error) => {
-        console.error('Voice recognition error:', error)
+        console.error('❌ [DEBUG] 语音识别错误:', error)
         ElMessage.error(error.message)
         isVoiceInput.value = false
         conversationStatus.value = 'in_progress'
       },
       onStatusChange: (status) => {
+        console.log('🔄 [DEBUG] 语音识别状态变化:', status)
         voiceRecognitionStatus.value = status
       }
     })
+    console.log('🎙 [DEBUG] 回调注册完成')
+  } else {
+    console.log('🎙 [DEBUG] 复用已有语音识别实例')
   }
 
-  voiceRecognition.value.start()
+  try {
+    console.log('🎙 [DEBUG] 调用 voiceRecognition.start()...')
+    voiceRecognition.value.start()
+    console.log('🎙 [DEBUG] voiceRecognition.start() 调用完成')
+  } catch (error) {
+    console.error('❌ [DEBUG] voiceRecognition.start() 抛出异常:', error)
+  }
 }
 
 // 停止语音识别
@@ -950,14 +997,19 @@ const handleComplete = async () => {
     conversationScores.value = result.scores
     isComplete.value = true
 
-    // 提取关键词（从评分中获取）
-    if (result.scores?.vocabulary.feedback) {
-      // TODO: 从反馈中提取关键词
-      keyWords.value = [
-        { word: 'excellent', score: 95, phonetic: '/ˈeksələnt/' },
-        { word: 'pronunciation', score: 88, phonetic: '/prəˌnʌnsiˈeɪʃn/' },
-        { word: 'vocabulary', score: 92, phonetic: '/vəˈkæbjələri/' }
-      ]
+    // 从 API 响应中提取关键词
+    if (result.scores?.vocabulary?.keywords) {
+      keyWords.value = result.scores.vocabulary.keywords.map((kw: any) => ({
+        word: kw.word,
+        score: kw.score,
+        phonetic: kw.phonetic || ''
+      }))
+    } else if (result.keywords && Array.isArray(result.keywords)) {
+      // 备选：从 result 直接获取
+      keyWords.value = result.keywords
+    } else {
+      // 如果 API 未返回关键词，使用空数组
+      keyWords.value = []
     }
 
     showFeedbackDrawer.value = true
@@ -1182,6 +1234,30 @@ onUnmounted(() => {
   border-radius: 8px;
   color: var(--el-text-color-secondary);
   align-self: flex-start;
+}
+
+/* 加载覆盖层 */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--el-bg-color-page);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.loading-content {
+  text-align: center;
+  color: var(--el-text-color-secondary);
+}
+
+.loading-content p {
+  margin-top: 16px;
+  font-size: 16px;
 }
 
 .input-area {

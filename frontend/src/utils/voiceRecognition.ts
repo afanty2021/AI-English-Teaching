@@ -3,6 +3,61 @@
  * 支持 Web Speech API 和后端 STT 服务
  */
 
+import { createLogger } from '../utils/logger'
+
+const log = createLogger('VoiceRecognition')
+
+/**
+ * Web Speech API 类型定义
+ */
+// 扩展 Window 接口以支持 SpeechRecognition
+interface Window {
+  SpeechRecognition: new () => SpeechRecognitionInterface
+  webkitSpeechRecognition: new () => SpeechRecognitionInterface
+}
+
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList
+  resultIndex: number
+}
+
+interface SpeechRecognitionResultList {
+  length: number
+  item(index: number): SpeechRecognitionResult
+  [index: number]: SpeechRecognitionResult
+}
+
+interface SpeechRecognitionResult {
+  length: number
+  isFinal: boolean
+  item(index: number): SpeechRecognitionAlternative
+  [index: number]: SpeechRecognitionAlternative
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string
+  confidence: number
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string
+  message: string
+}
+
+interface SpeechRecognitionInterface extends EventTarget {
+  lang: string
+  continuous: boolean
+  interimResults: boolean
+  maxAlternatives: number
+  onstart: ((this: SpeechRecognitionInterface, ev: Event) => void) | null
+  onend: ((this: SpeechRecognitionInterface, ev: Event) => void) | null
+  onresult: ((this: SpeechRecognitionInterface, ev: SpeechRecognitionEvent) => void) | null
+  onerror: ((this: SpeechRecognitionInterface, ev: SpeechRecognitionErrorEvent) => void) | null
+  start(): void
+  stop(): void
+  abort(): void
+}
+
 /**
  * 语音识别事件类型
  */
@@ -68,7 +123,7 @@ export interface VoiceRecognitionCallbacks {
  * 语音识别器类
  */
 export class VoiceRecognition {
-  private recognition: any = null
+  private recognition: SpeechRecognitionInterface | null = null
   private status: VoiceRecognitionStatus = VoiceRecognitionStatus.Idle
   private callbacks: VoiceRecognitionCallbacks = {}
   private config: VoiceRecognitionConfig = {}
@@ -89,10 +144,14 @@ export class VoiceRecognition {
    * 初始化语音识别
    */
   private initRecognition() {
+    log.info('🎙 [VoiceRecognition] initRecognition 开始初始化')
+
     // 检查浏览器支持
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    log.info('🎙 [VoiceRecognition] 浏览器语音识别API:', SpeechRecognition ? '已找到' : '未找到')
 
     if (!SpeechRecognition) {
+      log.error('❌ [VoiceRecognition] 浏览器不支持语音识别')
       this.setStatus(VoiceRecognitionStatus.Error)
       this.triggerError({
         code: 'not_supported',
@@ -102,9 +161,12 @@ export class VoiceRecognition {
     }
 
     try {
+      log.info('🎙 [VoiceRecognition] 创建 SpeechRecognition 实例...')
       this.recognition = new SpeechRecognition()
+      log.info('✅ [VoiceRecognition] SpeechRecognition 实例创建成功:', this.recognition)
       this.setupRecognition()
     } catch (error) {
+      log.error('❌ [VoiceRecognition] 创建实例失败:', error)
       this.setStatus(VoiceRecognitionStatus.Error)
       this.triggerError({
         code: 'init_failed',
@@ -117,38 +179,78 @@ export class VoiceRecognition {
    * 配置语音识别事件
    */
   private setupRecognition() {
+    log.info('⚙️ [VoiceRecognition] setupRecognition 开始配置')
+
     const recognition = this.recognition
+    log.info('⚙️ [VoiceRecognition] 当前配置:', this.config)
 
     recognition.lang = this.config.language || 'en-US'
     recognition.continuous = this.config.continuous || false
     recognition.interimResults = this.config.interimResults || true
     recognition.maxAlternatives = this.config.maxAlternatives || 1
 
+    log.info('⚙️ [VoiceRecognition] 语音识别配置完成:')
+    log.info('  - lang:', recognition.lang)
+    log.info('  - continuous:', recognition.continuous)
+    log.info('  - interimResults:', recognition.interimResults)
+    log.info('  - maxAlternatives:', recognition.maxAlternatives)
+
     // 开始识别
     recognition.onstart = () => {
+      log.info('✅ [VoiceRecognition] Web Speech API onstart 事件触发')
       this.setStatus(VoiceRecognitionStatus.Listening)
       this.callbacks.onStart?.()
     }
 
     // 识别结束
     recognition.onend = () => {
-      if (this.status === VoiceRecognitionStatus.Listening) {
-        // 如果状态还是 listening，说明是正常结束
+      log.info('⏸ [VoiceRecognition] Web Speech API onend 事件触发, 当前状态:', this.status)
+
+      // 如果 recognition 已被销毁，不尝试重启
+      if (!this.recognition) {
         this.setStatus(VoiceRecognitionStatus.Idle)
         this.callbacks.onStop?.()
+        return
+      }
+
+      if (this.status === VoiceRecognitionStatus.Listening) {
+        if (this.config.continuous) {
+          // 连续模式下自动重启识别
+          log.info('⏸ [VoiceRecognition] 连续模式，自动重启识别')
+          try {
+            this.setStatus(VoiceRecognitionStatus.Initializing)
+            this.recognition.start()
+            // 成功启动后，onstart 会将状态设为 Listening
+          } catch (error) {
+            log.error('❌ [VoiceRecognition] 连续模式重启失败:', error)
+            this.setStatus(VoiceRecognitionStatus.Error)
+            this.triggerError({
+              code: 'continuous_restart_failed',
+              message: '连续识别模式重启失败'
+            })
+            this.callbacks.onStop?.()
+          }
+        } else {
+          this.setStatus(VoiceRecognitionStatus.Idle)
+          this.callbacks.onStop?.()
+        }
       }
     }
 
     // 获取结果
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      log.info('📝 [VoiceRecognition] Web Speech API onresult 事件触发')
       const last = event.results.length - 1
       const result = event.results[last]
+      log.info('📝 [VoiceRecognition] 识别结果数量:', event.results.length)
 
       const recognitionResult: VoiceRecognitionResult = {
         transcript: result[0].transcript,
         isFinal: result.isFinal,
         confidence: result[0].confidence
       }
+
+      log.info('📝 [VoiceRecognition] 识别结果:', recognitionResult)
 
       if (result.isFinal) {
         this.callbacks.onResult?.(recognitionResult)
@@ -158,15 +260,18 @@ export class VoiceRecognition {
     }
 
     // 错误处理
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      log.error('❌ [VoiceRecognition] Web Speech API onerror 事件触发:', event)
       this.handleRecognitionError(event)
     }
+
+    log.info('⚙️ [VoiceRecognition] 事件监听器注册完成')
   }
 
   /**
    * 处理识别错误
    */
-  private handleRecognitionError(event: any) {
+  private handleRecognitionError(event: SpeechRecognitionErrorEvent) {
     let error: VoiceRecognitionError
 
     switch (event.error) {
@@ -235,7 +340,10 @@ export class VoiceRecognition {
    * 开始识别
    */
   public start() {
+    log.info('🎙 [VoiceRecognition] start() 方法被调用')
+
     if (!this.recognition) {
+      log.error('❌ [VoiceRecognition] recognition 实例不存在!')
       this.triggerError({
         code: 'not_initialized',
         message: '语音识别未初始化'
@@ -243,10 +351,17 @@ export class VoiceRecognition {
       return
     }
 
+    log.info('🎙 [VoiceRecognition] 当前状态:', this.status)
+    log.info('🎙 [VoiceRecognition] recognition 对象:', this.recognition)
+
     try {
+      log.info('🎙 [VoiceRecognition] 设置状态为 Initializing...')
       this.setStatus(VoiceRecognitionStatus.Initializing)
+      log.info('🎙 [VoiceRecognition] 调用 recognition.start()...')
       this.recognition.start()
+      log.info('✅ [VoiceRecognition] recognition.start() 调用成功')
     } catch (error) {
+      log.error('❌ [VoiceRecognition] recognition.start() 抛出异常:', error)
       this.setStatus(VoiceRecognitionStatus.Error)
       this.triggerError({
         code: 'start_failed',
@@ -334,10 +449,41 @@ export function createVoiceRecognition(
 }
 
 /**
+ * Web Speech API 类型定义
+ */
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList
+  resultIndex: number
+}
+
+interface SpeechRecognitionResultList {
+  length: number
+  item(index: number): SpeechRecognitionResult
+  [index: number]: SpeechRecognitionResult
+}
+
+interface SpeechRecognitionResult {
+  length: number
+  isFinal: boolean
+  item(index: number): SpeechRecognitionAlternative
+  [index: number]: SpeechRecognitionAlternative
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string
+  confidence: number
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string
+  message: string
+}
+
+/**
  * 检查浏览器是否支持语音识别
  */
 export function isVoiceRecognitionSupported(): boolean {
   return !!(
-    (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    window.SpeechRecognition || window.webkitSpeechRecognition
   )
 }
